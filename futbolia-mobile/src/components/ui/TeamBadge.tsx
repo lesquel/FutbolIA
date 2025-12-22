@@ -1,6 +1,8 @@
 /**
  * TeamBadge - Display team information with logo/icon
+ * Fixed: Removed text nodes from View components (React Native Web compatibility)
  */
+import React from "react";
 import { View, Image, StyleSheet } from "react-native";
 import { useTheme } from "@/src/theme";
 import { ThemedText } from "./ThemedText";
@@ -20,7 +22,7 @@ export function TeamBadge({
   size = "md",
   showForm = false,
 }: TeamBadgeProps) {
-  const { theme, isDark } = useTheme();
+  const { theme } = useTheme();
 
   const getSizes = () => {
     switch (size) {
@@ -35,12 +37,16 @@ export function TeamBadge({
 
   const sizes = getSizes();
 
-  // Get initials if no logo
-  const initials = name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 3);
+  // Get initials if no logo - ensure it's always a valid string
+  const getInitials = (): string => {
+    if (!name || typeof name !== "string") return "?";
+    return name
+      .split(" ")
+      .filter(Boolean)
+      .map((w) => w[0]?.toUpperCase() || "")
+      .join("")
+      .slice(0, 3) || "?";
+  };
 
   // Form indicator colors
   const getFormColor = (result: string) => {
@@ -56,9 +62,11 @@ export function TeamBadge({
     }
   };
 
+  // Parse form string safely
+  const formResults = form ? form.split("").filter((r) => r.trim()) : [];
+
   return (
     <View style={styles.container}>
-      {/* Logo or Initials */}
       <View
         style={[
           styles.logoContainer,
@@ -78,25 +86,21 @@ export function TeamBadge({
           />
         ) : (
           <ThemedText weight="bold" style={{ fontSize: sizes.logo / 3 }}>
-            {initials}
+            {getInitials()}
           </ThemedText>
         )}
       </View>
-
-      {/* Team Name */}
       <ThemedText
         size={sizes.font}
         weight="semibold"
         style={styles.name}
         numberOfLines={2}
       >
-        {name}
+        {name || "Unknown Team"}
       </ThemedText>
-
-      {/* Form Indicator */}
-      {showForm && form && (
+      {showForm && formResults.length > 0 && (
         <View style={styles.formContainer}>
-          {form.split("").map((result, index) => (
+          {formResults.map((result, index) => (
             <View
               key={index}
               style={[

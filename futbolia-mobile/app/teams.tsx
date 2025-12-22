@@ -1,0 +1,457 @@
+/**
+ * FutbolIA - Teams Search Screen
+ * Search and add favorite teams from multiple leagues
+ */
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  Image,
+  FlatList,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
+
+import { useTheme } from "@/src/theme";
+import { useAuth, FavoriteTeam } from "@/src/context";
+import { ThemedView, ThemedText, Button } from "@/src/components/ui";
+
+// Available leagues with their teams (free tier Football-Data.org)
+const LEAGUES = [
+  { id: "PL", name: "Premier League", country: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", countryName: "England" },
+  { id: "PD", name: "La Liga", country: "🇪🇸", countryName: "Spain" },
+  { id: "SA", name: "Serie A", country: "🇮🇹", countryName: "Italy" },
+  { id: "BL1", name: "Bundesliga", country: "🇩🇪", countryName: "Germany" },
+  { id: "FL1", name: "Ligue 1", country: "🇫🇷", countryName: "France" },
+  { id: "CL", name: "Champions League", country: "🇪🇺", countryName: "Europe" },
+];
+
+// Popular teams data (hardcoded for offline access + quick loading)
+const POPULAR_TEAMS: FavoriteTeam[] = [
+  // Premier League
+  { id: "MCI", name: "Manchester City", shortName: "MCI", league: "Premier League", country: "England", logoUrl: "https://crests.football-data.org/65.png" },
+  { id: "ARS", name: "Arsenal", shortName: "ARS", league: "Premier League", country: "England", logoUrl: "https://crests.football-data.org/57.png" },
+  { id: "LIV", name: "Liverpool", shortName: "LIV", league: "Premier League", country: "England", logoUrl: "https://crests.football-data.org/64.png" },
+  { id: "MUN", name: "Manchester United", shortName: "MUN", league: "Premier League", country: "England", logoUrl: "https://crests.football-data.org/66.png" },
+  { id: "CHE", name: "Chelsea", shortName: "CHE", league: "Premier League", country: "England", logoUrl: "https://crests.football-data.org/61.png" },
+  { id: "TOT", name: "Tottenham Hotspur", shortName: "TOT", league: "Premier League", country: "England", logoUrl: "https://crests.football-data.org/73.png" },
+  { id: "NEW", name: "Newcastle United", shortName: "NEW", league: "Premier League", country: "England", logoUrl: "https://crests.football-data.org/67.png" },
+  { id: "AVL", name: "Aston Villa", shortName: "AVL", league: "Premier League", country: "England", logoUrl: "https://crests.football-data.org/58.png" },
+  // La Liga
+  { id: "RMA", name: "Real Madrid", shortName: "RMA", league: "La Liga", country: "Spain", logoUrl: "https://crests.football-data.org/86.png" },
+  { id: "FCB", name: "FC Barcelona", shortName: "FCB", league: "La Liga", country: "Spain", logoUrl: "https://crests.football-data.org/81.png" },
+  { id: "ATM", name: "Atlético Madrid", shortName: "ATM", league: "La Liga", country: "Spain", logoUrl: "https://crests.football-data.org/78.png" },
+  { id: "SEV", name: "Sevilla FC", shortName: "SEV", league: "La Liga", country: "Spain", logoUrl: "https://crests.football-data.org/559.png" },
+  { id: "VIL", name: "Villarreal CF", shortName: "VIL", league: "La Liga", country: "Spain", logoUrl: "https://crests.football-data.org/94.png" },
+  { id: "RSO", name: "Real Sociedad", shortName: "RSO", league: "La Liga", country: "Spain", logoUrl: "https://crests.football-data.org/92.png" },
+  // Serie A
+  { id: "INT", name: "Inter Milan", shortName: "INT", league: "Serie A", country: "Italy", logoUrl: "https://crests.football-data.org/108.png" },
+  { id: "ACM", name: "AC Milan", shortName: "ACM", league: "Serie A", country: "Italy", logoUrl: "https://crests.football-data.org/98.png" },
+  { id: "JUV", name: "Juventus", shortName: "JUV", league: "Serie A", country: "Italy", logoUrl: "https://crests.football-data.org/109.png" },
+  { id: "NAP", name: "Napoli", shortName: "NAP", league: "Serie A", country: "Italy", logoUrl: "https://crests.football-data.org/113.png" },
+  { id: "ROM", name: "AS Roma", shortName: "ROM", league: "Serie A", country: "Italy", logoUrl: "https://crests.football-data.org/100.png" },
+  { id: "LAZ", name: "Lazio", shortName: "LAZ", league: "Serie A", country: "Italy", logoUrl: "https://crests.football-data.org/110.png" },
+  // Bundesliga
+  { id: "FCB_GER", name: "Bayern Munich", shortName: "FCB", league: "Bundesliga", country: "Germany", logoUrl: "https://crests.football-data.org/5.png" },
+  { id: "BVB", name: "Borussia Dortmund", shortName: "BVB", league: "Bundesliga", country: "Germany", logoUrl: "https://crests.football-data.org/4.png" },
+  { id: "RBL", name: "RB Leipzig", shortName: "RBL", league: "Bundesliga", country: "Germany", logoUrl: "https://crests.football-data.org/721.png" },
+  { id: "LEV", name: "Bayer Leverkusen", shortName: "LEV", league: "Bundesliga", country: "Germany", logoUrl: "https://crests.football-data.org/3.png" },
+  // Ligue 1
+  { id: "PSG", name: "Paris Saint-Germain", shortName: "PSG", league: "Ligue 1", country: "France", logoUrl: "https://crests.football-data.org/524.png" },
+  { id: "OL", name: "Olympique Lyon", shortName: "OL", league: "Ligue 1", country: "France", logoUrl: "https://crests.football-data.org/523.png" },
+  { id: "OM", name: "Olympique Marseille", shortName: "OM", league: "Ligue 1", country: "France", logoUrl: "https://crests.football-data.org/516.png" },
+  { id: "ASM", name: "AS Monaco", shortName: "ASM", league: "Ligue 1", country: "France", logoUrl: "https://crests.football-data.org/548.png" },
+];
+
+export default function TeamsScreen() {
+  const { theme } = useTheme();
+  const { t } = useTranslation();
+  const { favoriteTeams, addFavoriteTeam, removeFavoriteTeam } = useAuth();
+  const router = useRouter();
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedLeague, setSelectedLeague] = useState<string | null>(null);
+  const [filteredTeams, setFilteredTeams] = useState<FavoriteTeam[]>(POPULAR_TEAMS);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Search with debounce
+  const performSearch = useCallback((query: string, league: string | null) => {
+    if (!query.trim()) {
+      setFilteredTeams(
+        league
+          ? POPULAR_TEAMS.filter((t) => t.league === LEAGUES.find((l) => l.id === league)?.name)
+          : POPULAR_TEAMS
+      );
+      return;
+    }
+
+    const lowerQuery = query.toLowerCase();
+    let results = POPULAR_TEAMS.filter(
+      (team) =>
+        team.name.toLowerCase().includes(lowerQuery) ||
+        (team.shortName?.toLowerCase().includes(lowerQuery)) ||
+        (team.country?.toLowerCase().includes(lowerQuery)) ||
+        (team.league?.toLowerCase().includes(lowerQuery))
+    );
+
+    if (league) {
+      const leagueName = LEAGUES.find((l) => l.id === league)?.name;
+      results = results.filter((t) => t.league === leagueName);
+    }
+
+    setFilteredTeams(results);
+  }, []);
+
+  useEffect(() => {
+    // Clear previous timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Set new timeout for debounced search
+    searchTimeoutRef.current = setTimeout(() => {
+      performSearch(searchQuery, selectedLeague);
+    }, 300);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery, selectedLeague, performSearch]);
+
+  useEffect(() => {
+    if (selectedLeague) {
+      const leagueName = LEAGUES.find((l) => l.id === selectedLeague)?.name;
+      setFilteredTeams(POPULAR_TEAMS.filter((t) => t.league === leagueName));
+    } else {
+      setFilteredTeams(POPULAR_TEAMS);
+    }
+    setSearchQuery("");
+  }, [selectedLeague]);
+
+  const isTeamFavorite = (teamId: string) => {
+    return favoriteTeams.some((t) => t.id === teamId);
+  };
+
+  const toggleFavorite = (team: FavoriteTeam) => {
+    if (isTeamFavorite(team.id)) {
+      removeFavoriteTeam(team.id);
+    } else {
+      addFavoriteTeam(team);
+    }
+  };
+
+  const renderTeamCard = ({ item: team }: { item: FavoriteTeam }) => {
+    const isFavorite = isTeamFavorite(team.id);
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.teamCard,
+          {
+            backgroundColor: isFavorite
+              ? theme.colors.primary + "15"
+              : theme.colors.surface,
+            borderColor: isFavorite ? theme.colors.primary : theme.colors.border,
+          },
+        ]}
+        onPress={() => toggleFavorite(team)}
+        activeOpacity={0.7}
+      >
+        <View style={[styles.teamLogo, { backgroundColor: theme.colors.surfaceSecondary }]}>
+          {team.logoUrl ? (
+            <Image
+              source={{ uri: team.logoUrl }}
+              style={styles.teamLogoImage}
+              resizeMode="contain"
+            />
+          ) : (
+            <ThemedText size="xl">⚽</ThemedText>
+          )}
+        </View>
+        <View style={styles.teamInfo}>
+          <ThemedText weight="semibold" numberOfLines={1}>
+            {team.name}
+          </ThemedText>
+          <ThemedText variant="muted" size="xs" numberOfLines={1}>
+            {team.league}
+          </ThemedText>
+        </View>
+        <View
+          style={[
+            styles.favoriteIcon,
+            {
+              backgroundColor: isFavorite
+                ? theme.colors.primary
+                : theme.colors.surfaceSecondary,
+            },
+          ]}
+        >
+          <ThemedText style={{ color: isFavorite ? "#fff" : theme.colors.textMuted }}>
+            {isFavorite ? "❤️" : "🤍"}
+          </ThemedText>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  return (
+    <ThemedView variant="background" style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <ThemedText size="xl">←</ThemedText>
+        </TouchableOpacity>
+        <ThemedText size="xl" weight="bold">
+          {t("teams.title")}
+        </ThemedText>
+        <View style={styles.backButton} />
+      </View>
+
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <View
+          style={[
+            styles.searchBox,
+            {
+              backgroundColor: theme.colors.surfaceSecondary,
+              borderColor: theme.colors.border,
+            },
+          ]}
+        >
+          <ThemedText style={styles.searchIcon}>🔍</ThemedText>
+          <TextInput
+            style={[styles.searchInput, { color: theme.colors.text }]}
+            placeholder={t("teams.searchPlaceholder")}
+            placeholderTextColor={theme.colors.textMuted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoCapitalize="none"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery("")}>
+              <ThemedText variant="muted">✕</ThemedText>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* League Filters */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.leaguesScroll}
+        contentContainerStyle={styles.leaguesContainer}
+      >
+        <TouchableOpacity
+          style={[
+            styles.leagueChip,
+            {
+              backgroundColor:
+                selectedLeague === null
+                  ? theme.colors.primary
+                  : theme.colors.surfaceSecondary,
+              borderColor:
+                selectedLeague === null ? theme.colors.primary : theme.colors.border,
+            },
+          ]}
+          onPress={() => setSelectedLeague(null)}
+        >
+          <ThemedText
+            size="sm"
+            weight={selectedLeague === null ? "semibold" : "normal"}
+            style={{ color: selectedLeague === null ? "#fff" : theme.colors.text }}
+          >
+            🌍 {t("teams.allLeagues")}
+          </ThemedText>
+        </TouchableOpacity>
+
+        {LEAGUES.map((league) => (
+          <TouchableOpacity
+            key={league.id}
+            style={[
+              styles.leagueChip,
+              {
+                backgroundColor:
+                  selectedLeague === league.id
+                    ? theme.colors.primary
+                    : theme.colors.surfaceSecondary,
+                borderColor:
+                  selectedLeague === league.id
+                    ? theme.colors.primary
+                    : theme.colors.border,
+              },
+            ]}
+            onPress={() => setSelectedLeague(league.id)}
+          >
+            <ThemedText
+              size="sm"
+              weight={selectedLeague === league.id ? "semibold" : "normal"}
+              style={{
+                color: selectedLeague === league.id ? "#fff" : theme.colors.text,
+              }}
+            >
+              {league.country} {league.name}
+            </ThemedText>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      {/* Favorites Count */}
+      {favoriteTeams.length > 0 && (
+        <View style={[styles.favoritesBar, { backgroundColor: theme.colors.primary + "15" }]}>
+          <ThemedText size="sm">
+            ❤️ {favoriteTeams.length} {t("teams.favoriteCount")}
+          </ThemedText>
+        </View>
+      )}
+
+      {/* Teams List */}
+      <FlatList
+        data={filteredTeams}
+        renderItem={renderTeamCard}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        columnWrapperStyle={styles.teamsRow}
+        contentContainerStyle={styles.teamsList}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <ThemedText size="3xl">🔍</ThemedText>
+            <ThemedText variant="secondary" style={styles.emptyText}>
+              {t("teams.noResults")}
+            </ThemedText>
+          </View>
+        }
+      />
+
+      {/* Done Button */}
+      {favoriteTeams.length > 0 && (
+        <View style={[styles.doneButtonContainer, { backgroundColor: theme.colors.background }]}>
+          <Button
+            title={`✓ ${t("teams.done")} (${favoriteTeams.length})`}
+            variant="primary"
+            size="lg"
+            fullWidth
+            onPress={() => router.back()}
+          />
+        </View>
+      )}
+    </ThemedView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  backButton: {
+    width: 40,
+    alignItems: "center",
+  },
+  searchContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+  },
+  searchBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+  },
+  leaguesScroll: {
+    maxHeight: 50,
+  },
+  leaguesContainer: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  leagueChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  favoritesBar: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginTop: 12,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  teamsList: {
+    padding: 12,
+  },
+  teamsRow: {
+    justifyContent: "space-between",
+  },
+  teamCard: {
+    width: "48%",
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 12,
+    alignItems: "center",
+  },
+  teamLogo: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
+  },
+  teamLogoImage: {
+    width: 40,
+    height: 40,
+  },
+  teamInfo: {
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  favoriteIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 60,
+  },
+  emptyText: {
+    marginTop: 12,
+    textAlign: "center",
+  },
+  doneButtonContainer: {
+    padding: 16,
+    paddingBottom: 32,
+  },
+});

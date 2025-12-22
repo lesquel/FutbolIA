@@ -1,6 +1,6 @@
 /**
  * FutbolIA - Settings Screen
- * App preferences: theme, language, and about
+ * App preferences: theme, language, account, and about
  */
 import { useState } from "react";
 import {
@@ -12,20 +12,41 @@ import {
   Alert,
 } from "react-native";
 import { useTranslation } from "react-i18next";
+import { useRouter } from "expo-router";
 
 import { useTheme } from "@/src/theme";
+import { useAuth } from "@/src/context";
 import { changeLanguage, getCurrentLanguage } from "@/src/i18n/i18n";
 import { ThemedView, ThemedText, Card } from "@/src/components/ui";
 
 export default function SettingsScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
   const { t, i18n } = useTranslation();
+  const { user, isAuthenticated, logout } = useAuth();
+  const router = useRouter();
 
   const [currentLang, setCurrentLang] = useState(getCurrentLanguage());
 
   const handleLanguageChange = (lang: "es" | "en") => {
     changeLanguage(lang);
     setCurrentLang(lang);
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      t("profile.logoutTitle"),
+      t("profile.logoutMessage"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("profile.logout"),
+          style: "destructive",
+          onPress: async () => {
+            await logout();
+          },
+        },
+      ]
+    );
   };
 
   const SettingRow = ({
@@ -64,6 +85,76 @@ export default function SettingsScreen() {
   return (
     <ThemedView variant="background" style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Account Section */}
+        <View style={styles.section}>
+          <ThemedText variant="secondary" size="sm" style={styles.sectionTitle}>
+            CUENTA
+          </ThemedText>
+
+          <Card variant="default" padding="none">
+            {isAuthenticated ? (
+              <>
+                <TouchableOpacity
+                  onPress={() => router.push("/profile")}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.settingRow}>
+                    <View style={[styles.avatar, { backgroundColor: theme.colors.primary }]}>
+                      <ThemedText size="lg" weight="bold" style={{ color: "#fff" }}>
+                        {user?.username?.[0]?.toUpperCase() || "U"}
+                      </ThemedText>
+                    </View>
+                    <View style={styles.settingInfo}>
+                      <ThemedText weight="semibold">{user?.username}</ThemedText>
+                      <ThemedText variant="muted" size="sm">{user?.email}</ThemedText>
+                    </View>
+                    <ThemedText variant="muted">→</ThemedText>
+                  </View>
+                </TouchableOpacity>
+
+                <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+
+                <SettingRow
+                  icon="❤️"
+                  title={t("profile.favoriteTeams")}
+                  subtitle="Gestiona tus equipos favoritos"
+                  onPress={() => router.push("/teams")}
+                  right={<ThemedText variant="muted">→</ThemedText>}
+                />
+
+                <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+
+                <SettingRow
+                  icon="🚪"
+                  title={t("profile.logout")}
+                  onPress={handleLogout}
+                  right={<ThemedText style={{ color: theme.colors.error }}>→</ThemedText>}
+                />
+              </>
+            ) : (
+              <>
+                <SettingRow
+                  icon="👤"
+                  title={t("auth.login")}
+                  subtitle="Inicia sesión para guardar predicciones"
+                  onPress={() => router.push("/login")}
+                  right={<ThemedText variant="muted">→</ThemedText>}
+                />
+
+                <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+
+                <SettingRow
+                  icon="📝"
+                  title={t("auth.register")}
+                  subtitle="Crea una cuenta nueva"
+                  onPress={() => router.push("/register")}
+                  right={<ThemedText variant="muted">→</ThemedText>}
+                />
+              </>
+            )}
+          </Card>
+        </View>
+
         {/* Appearance Section */}
         <View style={styles.section}>
           <ThemedText variant="secondary" size="sm" style={styles.sectionTitle}>
@@ -261,6 +352,13 @@ const styles = StyleSheet.create({
   },
   settingInfo: {
     flex: 1,
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
   },
   divider: {
     height: 1,

@@ -1,6 +1,6 @@
 /**
  * FutbolIA - Root Layout
- * Main app layout with theme and i18n providers
+ * Main app layout with theme, i18n and auth providers
  */
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import {
@@ -20,6 +20,9 @@ import "@/src/i18n/i18n";
 
 // Theme provider
 import { ThemeProvider, useTheme } from "@/src/theme";
+
+// Auth provider
+import { AuthProvider } from "@/src/context";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -51,7 +54,9 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <RootLayoutNav />
+      <AuthProvider>
+        <RootLayoutNav />
+      </AuthProvider>
     </ThemeProvider>
   );
 }
@@ -90,6 +95,37 @@ function RootLayoutNav() {
     >
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="login"
+          options={{
+            title: "Iniciar Sesión",
+            headerShown: false,
+            presentation: "card",
+          }}
+        />
+        <Stack.Screen
+          name="register"
+          options={{
+            title: "Registrarse",
+            headerShown: false,
+            presentation: "card",
+          }}
+        />
+        <Stack.Screen
+          name="profile"
+          options={{
+            title: "Mi Perfil",
+            presentation: "card",
+          }}
+        />
+        <Stack.Screen
+          name="teams"
+          options={{
+            title: "Equipos",
+            headerShown: false,
+            presentation: "card",
+          }}
+        />
         <Stack.Screen
           name="modal"
           options={{
