@@ -1,0 +1,111 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Retry",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "search": "Search",
+    "noResults": "No results"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "username": "Username",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "loginSuccess": "Welcome back!",
+    "registerSuccess": "Account created successfully!",
+    "invalidCredentials": "Invalid credentials"
+  },
+  "navigation": {
+    "home": "Home",
+    "predict": "Predict",
+    "history": "History",
+    "settings": "Settings",
+    "profile": "Profile"
+  },
+  "home": {
+    "welcome": "Welcome to FutbolIA!",
+    "subtitle": "Your AI-powered sports oracle",
+    "upcomingMatches": "Upcoming Matches",
+    "featuredMatch": "Featured Match",
+    "quickPredict": "Quick Predict",
+    "selectTeams": "Select the teams",
+    "viewAll": "View all"
+  },
+  "prediction": {
+    "title": "Dixie's Prediction",
+    "generating": "Dixie is analyzing the match...",
+    "winner": "Predicted Winner",
+    "score": "Predicted Score",
+    "confidence": "Tactical Confidence",
+    "analysis": "Tactical Analysis",
+    "keyFactors": "Key Factors",
+    "starPlayerHome": "Home Star",
+    "starPlayerAway": "Away Star",
+    "savePrediction": "Save Prediction",
+    "sharePrediction": "Share",
+    "newPrediction": "New Prediction",
+    "selectHomeTeam": "Home Team",
+    "selectAwayTeam": "Away Team",
+    "predict": "Predict Result",
+    "vs": "vs",
+    "draw": "Draw"
+  },
+  "history": {
+    "title": "Prediction History",
+    "stats": "Statistics",
+    "totalPredictions": "Total Predictions",
+    "correctPredictions": "Correct",
+    "accuracy": "Accuracy",
+    "noPredictions": "No predictions yet",
+    "startPredicting": "Start predicting!"
+  },
+  "settings": {
+    "title": "Settings",
+    "appearance": "Appearance",
+    "darkMode": "Dark Mode",
+    "lightMode": "Light Mode",
+    "language": "Language",
+    "spanish": "Español",
+    "english": "English",
+    "notifications": "Notifications",
+    "about": "About",
+    "version": "Version",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service"
+  },
+  "teams": {
+    "realMadrid": "Real Madrid",
+    "manchesterCity": "Manchester City",
+    "barcelona": "Barcelona",
+    "bayernMunich": "Bayern Munich",
+    "liverpool": "Liverpool",
+    "arsenal": "Arsenal",
+    "psg": "Paris Saint-Germain",
+    "interMilan": "Inter Milan",
+    "juventus": "Juventus",
+    "atleticoMadrid": "Atletico Madrid"
+  },
+  "dixie": {
+    "greeting": "Hello! I'm Dixie, your elite sports analyst 🏆",
+    "analyzing": "Analyzing the matchup...",
+    "ready": "Ready to predict!",
+    "thinking": "Processing tactical data..."
+  },
+  "errors": {
+    "networkError": "Connection error",
+    "serverError": "Server error",
+    "tryAgain": "Please try again later",
+    "sessionExpired": "Your session has expired",
+    "loginRequired": "Login required"
+  }
+}

@@ -1,0 +1,111 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "retry": "Reintentar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "search": "Buscar",
+    "noResults": "Sin resultados"
+  },
+  "auth": {
+    "login": "Iniciar Sesión",
+    "register": "Registrarse",
+    "logout": "Cerrar Sesión",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "username": "Nombre de usuario",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "noAccount": "¿No tienes cuenta?",
+    "hasAccount": "¿Ya tienes cuenta?",
+    "loginSuccess": "¡Bienvenido de vuelta!",
+    "registerSuccess": "¡Cuenta creada exitosamente!",
+    "invalidCredentials": "Credenciales inválidas"
+  },
+  "navigation": {
+    "home": "Inicio",
+    "predict": "Predecir",
+    "history": "Historial",
+    "settings": "Ajustes",
+    "profile": "Perfil"
+  },
+  "home": {
+    "welcome": "¡Bienvenido a FutbolIA!",
+    "subtitle": "Tu oráculo deportivo con IA",
+    "upcomingMatches": "Próximos Partidos",
+    "featuredMatch": "Partido Destacado",
+    "quickPredict": "Predicción Rápida",
+    "selectTeams": "Selecciona los equipos",
+    "viewAll": "Ver todos"
+  },
+  "prediction": {
+    "title": "Predicción de Dixie",
+    "generating": "Dixie está analizando el partido...",
+    "winner": "Posible Ganador",
+    "score": "Marcador Predicho",
+    "confidence": "Confianza Táctica",
+    "analysis": "Análisis Táctico",
+    "keyFactors": "Factores Clave",
+    "starPlayerHome": "Estrella Local",
+    "starPlayerAway": "Estrella Visitante",
+    "savePrediction": "Guardar Predicción",
+    "sharePrediction": "Compartir",
+    "newPrediction": "Nueva Predicción",
+    "selectHomeTeam": "Equipo Local",
+    "selectAwayTeam": "Equipo Visitante",
+    "predict": "Predecir Resultado",
+    "vs": "vs",
+    "draw": "Empate"
+  },
+  "history": {
+    "title": "Historial de Predicciones",
+    "stats": "Estadísticas",
+    "totalPredictions": "Total de Predicciones",
+    "correctPredictions": "Aciertos",
+    "accuracy": "Precisión",
+    "noPredictions": "Aún no has hecho predicciones",
+    "startPredicting": "¡Comienza a predecir!"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "appearance": "Apariencia",
+    "darkMode": "Modo Oscuro",
+    "lightMode": "Modo Claro",
+    "language": "Idioma",
+    "spanish": "Español",
+    "english": "English",
+    "notifications": "Notificaciones",
+    "about": "Acerca de",
+    "version": "Versión",
+    "privacyPolicy": "Política de Privacidad",
+    "termsOfService": "Términos de Servicio"
+  },
+  "teams": {
+    "realMadrid": "Real Madrid",
+    "manchesterCity": "Manchester City",
+    "barcelona": "Barcelona",
+    "bayernMunich": "Bayern Munich",
+    "liverpool": "Liverpool",
+    "arsenal": "Arsenal",
+    "psg": "Paris Saint-Germain",
+    "interMilan": "Inter Milan",
+    "juventus": "Juventus",
+    "atleticoMadrid": "Atletico Madrid"
+  },
+  "dixie": {
+    "greeting": "¡Hola! Soy Dixie, tu analista deportivo de élite 🏆",
+    "analyzing": "Analizando el enfrentamiento...",
+    "ready": "¡Listo para predecir!",
+    "thinking": "Procesando datos tácticos..."
+  },
+  "errors": {
+    "networkError": "Error de conexión",
+    "serverError": "Error del servidor",
+    "tryAgain": "Intenta de nuevo más tarde",
+    "sessionExpired": "Tu sesión ha expirado",
+    "loginRequired": "Debes iniciar sesión"
+  }
+}
