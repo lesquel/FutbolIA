@@ -33,20 +33,16 @@ export default function SettingsScreen() {
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      t("profile.logoutTitle"),
-      t("profile.logoutMessage"),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("profile.logout"),
-          style: "destructive",
-          onPress: async () => {
-            await logout();
-          },
+    Alert.alert(t("profile.logoutTitle"), t("profile.logoutMessage"), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("profile.logout"),
+        style: "destructive",
+        onPress: async () => {
+          await logout();
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const SettingRow = ({
@@ -99,20 +95,38 @@ export default function SettingsScreen() {
                   activeOpacity={0.7}
                 >
                   <View style={styles.settingRow}>
-                    <View style={[styles.avatar, { backgroundColor: theme.colors.primary }]}>
-                      <ThemedText size="lg" weight="bold" style={{ color: "#fff" }}>
+                    <View
+                      style={[
+                        styles.avatar,
+                        { backgroundColor: theme.colors.primary },
+                      ]}
+                    >
+                      <ThemedText
+                        size="lg"
+                        weight="bold"
+                        style={{ color: "#fff" }}
+                      >
                         {user?.username?.[0]?.toUpperCase() || "U"}
                       </ThemedText>
                     </View>
                     <View style={styles.settingInfo}>
-                      <ThemedText weight="semibold">{user?.username}</ThemedText>
-                      <ThemedText variant="muted" size="sm">{user?.email}</ThemedText>
+                      <ThemedText weight="semibold">
+                        {user?.username}
+                      </ThemedText>
+                      <ThemedText variant="muted" size="sm">
+                        {user?.email}
+                      </ThemedText>
                     </View>
                     <ThemedText variant="muted">→</ThemedText>
                   </View>
                 </TouchableOpacity>
 
-                <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+                <View
+                  style={[
+                    styles.divider,
+                    { backgroundColor: theme.colors.border },
+                  ]}
+                />
 
                 <SettingRow
                   icon="❤️"
@@ -122,13 +136,22 @@ export default function SettingsScreen() {
                   right={<ThemedText variant="muted">→</ThemedText>}
                 />
 
-                <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+                <View
+                  style={[
+                    styles.divider,
+                    { backgroundColor: theme.colors.border },
+                  ]}
+                />
 
                 <SettingRow
                   icon="🚪"
                   title={t("profile.logout")}
                   onPress={handleLogout}
-                  right={<ThemedText style={{ color: theme.colors.error }}>→</ThemedText>}
+                  right={
+                    <ThemedText style={{ color: theme.colors.error }}>
+                      →
+                    </ThemedText>
+                  }
                 />
               </>
             ) : (
@@ -141,7 +164,12 @@ export default function SettingsScreen() {
                   right={<ThemedText variant="muted">→</ThemedText>}
                 />
 
-                <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+                <View
+                  style={[
+                    styles.divider,
+                    { backgroundColor: theme.colors.border },
+                  ]}
+                />
 
                 <SettingRow
                   icon="📝"

@@ -33,38 +33,234 @@ const LEAGUES = [
 // Popular teams data (hardcoded for offline access + quick loading)
 const POPULAR_TEAMS: FavoriteTeam[] = [
   // Premier League
-  { id: "MCI", name: "Manchester City", shortName: "MCI", league: "Premier League", country: "England", logoUrl: "https://crests.football-data.org/65.png" },
-  { id: "ARS", name: "Arsenal", shortName: "ARS", league: "Premier League", country: "England", logoUrl: "https://crests.football-data.org/57.png" },
-  { id: "LIV", name: "Liverpool", shortName: "LIV", league: "Premier League", country: "England", logoUrl: "https://crests.football-data.org/64.png" },
-  { id: "MUN", name: "Manchester United", shortName: "MUN", league: "Premier League", country: "England", logoUrl: "https://crests.football-data.org/66.png" },
-  { id: "CHE", name: "Chelsea", shortName: "CHE", league: "Premier League", country: "England", logoUrl: "https://crests.football-data.org/61.png" },
-  { id: "TOT", name: "Tottenham Hotspur", shortName: "TOT", league: "Premier League", country: "England", logoUrl: "https://crests.football-data.org/73.png" },
-  { id: "NEW", name: "Newcastle United", shortName: "NEW", league: "Premier League", country: "England", logoUrl: "https://crests.football-data.org/67.png" },
-  { id: "AVL", name: "Aston Villa", shortName: "AVL", league: "Premier League", country: "England", logoUrl: "https://crests.football-data.org/58.png" },
+  {
+    id: "MCI",
+    name: "Manchester City",
+    shortName: "MCI",
+    league: "Premier League",
+    country: "England",
+    logoUrl: "https://crests.football-data.org/65.png",
+  },
+  {
+    id: "ARS",
+    name: "Arsenal",
+    shortName: "ARS",
+    league: "Premier League",
+    country: "England",
+    logoUrl: "https://crests.football-data.org/57.png",
+  },
+  {
+    id: "LIV",
+    name: "Liverpool",
+    shortName: "LIV",
+    league: "Premier League",
+    country: "England",
+    logoUrl: "https://crests.football-data.org/64.png",
+  },
+  {
+    id: "MUN",
+    name: "Manchester United",
+    shortName: "MUN",
+    league: "Premier League",
+    country: "England",
+    logoUrl: "https://crests.football-data.org/66.png",
+  },
+  {
+    id: "CHE",
+    name: "Chelsea",
+    shortName: "CHE",
+    league: "Premier League",
+    country: "England",
+    logoUrl: "https://crests.football-data.org/61.png",
+  },
+  {
+    id: "TOT",
+    name: "Tottenham Hotspur",
+    shortName: "TOT",
+    league: "Premier League",
+    country: "England",
+    logoUrl: "https://crests.football-data.org/73.png",
+  },
+  {
+    id: "NEW",
+    name: "Newcastle United",
+    shortName: "NEW",
+    league: "Premier League",
+    country: "England",
+    logoUrl: "https://crests.football-data.org/67.png",
+  },
+  {
+    id: "AVL",
+    name: "Aston Villa",
+    shortName: "AVL",
+    league: "Premier League",
+    country: "England",
+    logoUrl: "https://crests.football-data.org/58.png",
+  },
   // La Liga
-  { id: "RMA", name: "Real Madrid", shortName: "RMA", league: "La Liga", country: "Spain", logoUrl: "https://crests.football-data.org/86.png" },
-  { id: "FCB", name: "FC Barcelona", shortName: "FCB", league: "La Liga", country: "Spain", logoUrl: "https://crests.football-data.org/81.png" },
-  { id: "ATM", name: "Atlético Madrid", shortName: "ATM", league: "La Liga", country: "Spain", logoUrl: "https://crests.football-data.org/78.png" },
-  { id: "SEV", name: "Sevilla FC", shortName: "SEV", league: "La Liga", country: "Spain", logoUrl: "https://crests.football-data.org/559.png" },
-  { id: "VIL", name: "Villarreal CF", shortName: "VIL", league: "La Liga", country: "Spain", logoUrl: "https://crests.football-data.org/94.png" },
-  { id: "RSO", name: "Real Sociedad", shortName: "RSO", league: "La Liga", country: "Spain", logoUrl: "https://crests.football-data.org/92.png" },
+  {
+    id: "RMA",
+    name: "Real Madrid",
+    shortName: "RMA",
+    league: "La Liga",
+    country: "Spain",
+    logoUrl: "https://crests.football-data.org/86.png",
+  },
+  {
+    id: "FCB",
+    name: "FC Barcelona",
+    shortName: "FCB",
+    league: "La Liga",
+    country: "Spain",
+    logoUrl: "https://crests.football-data.org/81.png",
+  },
+  {
+    id: "ATM",
+    name: "Atlético Madrid",
+    shortName: "ATM",
+    league: "La Liga",
+    country: "Spain",
+    logoUrl: "https://crests.football-data.org/78.png",
+  },
+  {
+    id: "SEV",
+    name: "Sevilla FC",
+    shortName: "SEV",
+    league: "La Liga",
+    country: "Spain",
+    logoUrl: "https://crests.football-data.org/559.png",
+  },
+  {
+    id: "VIL",
+    name: "Villarreal CF",
+    shortName: "VIL",
+    league: "La Liga",
+    country: "Spain",
+    logoUrl: "https://crests.football-data.org/94.png",
+  },
+  {
+    id: "RSO",
+    name: "Real Sociedad",
+    shortName: "RSO",
+    league: "La Liga",
+    country: "Spain",
+    logoUrl: "https://crests.football-data.org/92.png",
+  },
   // Serie A
-  { id: "INT", name: "Inter Milan", shortName: "INT", league: "Serie A", country: "Italy", logoUrl: "https://crests.football-data.org/108.png" },
-  { id: "ACM", name: "AC Milan", shortName: "ACM", league: "Serie A", country: "Italy", logoUrl: "https://crests.football-data.org/98.png" },
-  { id: "JUV", name: "Juventus", shortName: "JUV", league: "Serie A", country: "Italy", logoUrl: "https://crests.football-data.org/109.png" },
-  { id: "NAP", name: "Napoli", shortName: "NAP", league: "Serie A", country: "Italy", logoUrl: "https://crests.football-data.org/113.png" },
-  { id: "ROM", name: "AS Roma", shortName: "ROM", league: "Serie A", country: "Italy", logoUrl: "https://crests.football-data.org/100.png" },
-  { id: "LAZ", name: "Lazio", shortName: "LAZ", league: "Serie A", country: "Italy", logoUrl: "https://crests.football-data.org/110.png" },
+  {
+    id: "INT",
+    name: "Inter Milan",
+    shortName: "INT",
+    league: "Serie A",
+    country: "Italy",
+    logoUrl: "https://crests.football-data.org/108.png",
+  },
+  {
+    id: "ACM",
+    name: "AC Milan",
+    shortName: "ACM",
+    league: "Serie A",
+    country: "Italy",
+    logoUrl: "https://crests.football-data.org/98.png",
+  },
+  {
+    id: "JUV",
+    name: "Juventus",
+    shortName: "JUV",
+    league: "Serie A",
+    country: "Italy",
+    logoUrl: "https://crests.football-data.org/109.png",
+  },
+  {
+    id: "NAP",
+    name: "Napoli",
+    shortName: "NAP",
+    league: "Serie A",
+    country: "Italy",
+    logoUrl: "https://crests.football-data.org/113.png",
+  },
+  {
+    id: "ROM",
+    name: "AS Roma",
+    shortName: "ROM",
+    league: "Serie A",
+    country: "Italy",
+    logoUrl: "https://crests.football-data.org/100.png",
+  },
+  {
+    id: "LAZ",
+    name: "Lazio",
+    shortName: "LAZ",
+    league: "Serie A",
+    country: "Italy",
+    logoUrl: "https://crests.football-data.org/110.png",
+  },
   // Bundesliga
-  { id: "FCB_GER", name: "Bayern Munich", shortName: "FCB", league: "Bundesliga", country: "Germany", logoUrl: "https://crests.football-data.org/5.png" },
-  { id: "BVB", name: "Borussia Dortmund", shortName: "BVB", league: "Bundesliga", country: "Germany", logoUrl: "https://crests.football-data.org/4.png" },
-  { id: "RBL", name: "RB Leipzig", shortName: "RBL", league: "Bundesliga", country: "Germany", logoUrl: "https://crests.football-data.org/721.png" },
-  { id: "LEV", name: "Bayer Leverkusen", shortName: "LEV", league: "Bundesliga", country: "Germany", logoUrl: "https://crests.football-data.org/3.png" },
+  {
+    id: "FCB_GER",
+    name: "Bayern Munich",
+    shortName: "FCB",
+    league: "Bundesliga",
+    country: "Germany",
+    logoUrl: "https://crests.football-data.org/5.png",
+  },
+  {
+    id: "BVB",
+    name: "Borussia Dortmund",
+    shortName: "BVB",
+    league: "Bundesliga",
+    country: "Germany",
+    logoUrl: "https://crests.football-data.org/4.png",
+  },
+  {
+    id: "RBL",
+    name: "RB Leipzig",
+    shortName: "RBL",
+    league: "Bundesliga",
+    country: "Germany",
+    logoUrl: "https://crests.football-data.org/721.png",
+  },
+  {
+    id: "LEV",
+    name: "Bayer Leverkusen",
+    shortName: "LEV",
+    league: "Bundesliga",
+    country: "Germany",
+    logoUrl: "https://crests.football-data.org/3.png",
+  },
   // Ligue 1
-  { id: "PSG", name: "Paris Saint-Germain", shortName: "PSG", league: "Ligue 1", country: "France", logoUrl: "https://crests.football-data.org/524.png" },
-  { id: "OL", name: "Olympique Lyon", shortName: "OL", league: "Ligue 1", country: "France", logoUrl: "https://crests.football-data.org/523.png" },
-  { id: "OM", name: "Olympique Marseille", shortName: "OM", league: "Ligue 1", country: "France", logoUrl: "https://crests.football-data.org/516.png" },
-  { id: "ASM", name: "AS Monaco", shortName: "ASM", league: "Ligue 1", country: "France", logoUrl: "https://crests.football-data.org/548.png" },
+  {
+    id: "PSG",
+    name: "Paris Saint-Germain",
+    shortName: "PSG",
+    league: "Ligue 1",
+    country: "France",
+    logoUrl: "https://crests.football-data.org/524.png",
+  },
+  {
+    id: "OL",
+    name: "Olympique Lyon",
+    shortName: "OL",
+    league: "Ligue 1",
+    country: "France",
+    logoUrl: "https://crests.football-data.org/523.png",
+  },
+  {
+    id: "OM",
+    name: "Olympique Marseille",
+    shortName: "OM",
+    league: "Ligue 1",
+    country: "France",
+    logoUrl: "https://crests.football-data.org/516.png",
+  },
+  {
+    id: "ASM",
+    name: "AS Monaco",
+    shortName: "ASM",
+    league: "Ligue 1",
+    country: "France",
+    logoUrl: "https://crests.football-data.org/548.png",
+  },
 ];
 
 export default function TeamsScreen() {
@@ -75,7 +271,8 @@ export default function TeamsScreen() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLeague, setSelectedLeague] = useState<string | null>(null);
-  const [filteredTeams, setFilteredTeams] = useState<FavoriteTeam[]>(POPULAR_TEAMS);
+  const [filteredTeams, setFilteredTeams] =
+    useState<FavoriteTeam[]>(POPULAR_TEAMS);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Search with debounce
@@ -83,7 +280,9 @@ export default function TeamsScreen() {
     if (!query.trim()) {
       setFilteredTeams(
         league
-          ? POPULAR_TEAMS.filter((t) => t.league === LEAGUES.find((l) => l.id === league)?.name)
+          ? POPULAR_TEAMS.filter(
+              (t) => t.league === LEAGUES.find((l) => l.id === league)?.name
+            )
           : POPULAR_TEAMS
       );
       return;
@@ -93,9 +292,9 @@ export default function TeamsScreen() {
     let results = POPULAR_TEAMS.filter(
       (team) =>
         team.name.toLowerCase().includes(lowerQuery) ||
-        (team.shortName?.toLowerCase().includes(lowerQuery)) ||
-        (team.country?.toLowerCase().includes(lowerQuery)) ||
-        (team.league?.toLowerCase().includes(lowerQuery))
+        team.shortName?.toLowerCase().includes(lowerQuery) ||
+        team.country?.toLowerCase().includes(lowerQuery) ||
+        team.league?.toLowerCase().includes(lowerQuery)
     );
 
     if (league) {
@@ -157,13 +356,20 @@ export default function TeamsScreen() {
             backgroundColor: isFavorite
               ? theme.colors.primary + "15"
               : theme.colors.surface,
-            borderColor: isFavorite ? theme.colors.primary : theme.colors.border,
+            borderColor: isFavorite
+              ? theme.colors.primary
+              : theme.colors.border,
           },
         ]}
         onPress={() => toggleFavorite(team)}
         activeOpacity={0.7}
       >
-        <View style={[styles.teamLogo, { backgroundColor: theme.colors.surfaceSecondary }]}>
+        <View
+          style={[
+            styles.teamLogo,
+            { backgroundColor: theme.colors.surfaceSecondary },
+          ]}
+        >
           {team.logoUrl ? (
             <Image
               source={{ uri: team.logoUrl }}
@@ -192,7 +398,9 @@ export default function TeamsScreen() {
             },
           ]}
         >
-          <ThemedText style={{ color: isFavorite ? "#fff" : theme.colors.textMuted }}>
+          <ThemedText
+            style={{ color: isFavorite ? "#fff" : theme.colors.textMuted }}
+          >
             {isFavorite ? "❤️" : "🤍"}
           </ThemedText>
         </View>
@@ -204,7 +412,10 @@ export default function TeamsScreen() {
     <ThemedView variant="background" style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
           <ThemedText size="xl">←</ThemedText>
         </TouchableOpacity>
         <ThemedText size="xl" weight="bold">
@@ -257,7 +468,9 @@ export default function TeamsScreen() {
                   ? theme.colors.primary
                   : theme.colors.surfaceSecondary,
               borderColor:
-                selectedLeague === null ? theme.colors.primary : theme.colors.border,
+                selectedLeague === null
+                  ? theme.colors.primary
+                  : theme.colors.border,
             },
           ]}
           onPress={() => setSelectedLeague(null)}
@@ -265,7 +478,9 @@ export default function TeamsScreen() {
           <ThemedText
             size="sm"
             weight={selectedLeague === null ? "semibold" : "normal"}
-            style={{ color: selectedLeague === null ? "#fff" : theme.colors.text }}
+            style={{
+              color: selectedLeague === null ? "#fff" : theme.colors.text,
+            }}
           >
             🌍 {t("teams.allLeagues")}
           </ThemedText>
@@ -293,7 +508,8 @@ export default function TeamsScreen() {
               size="sm"
               weight={selectedLeague === league.id ? "semibold" : "normal"}
               style={{
-                color: selectedLeague === league.id ? "#fff" : theme.colors.text,
+                color:
+                  selectedLeague === league.id ? "#fff" : theme.colors.text,
               }}
             >
               {league.country} {league.name}
@@ -304,7 +520,12 @@ export default function TeamsScreen() {
 
       {/* Favorites Count */}
       {favoriteTeams.length > 0 && (
-        <View style={[styles.favoritesBar, { backgroundColor: theme.colors.primary + "15" }]}>
+        <View
+          style={[
+            styles.favoritesBar,
+            { backgroundColor: theme.colors.primary + "15" },
+          ]}
+        >
           <ThemedText size="sm">
             ❤️ {favoriteTeams.length} {t("teams.favoriteCount")}
           </ThemedText>
@@ -332,7 +553,12 @@ export default function TeamsScreen() {
 
       {/* Done Button */}
       {favoriteTeams.length > 0 && (
-        <View style={[styles.doneButtonContainer, { backgroundColor: theme.colors.background }]}>
+        <View
+          style={[
+            styles.doneButtonContainer,
+            { backgroundColor: theme.colors.background },
+          ]}
+        >
           <Button
             title={`✓ ${t("teams.done")} (${favoriteTeams.length})`}
             variant="primary"

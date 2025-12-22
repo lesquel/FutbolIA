@@ -72,7 +72,7 @@ export default function RegisterScreen() {
     setError(null);
 
     const result = await register(email.trim(), username.trim(), password);
-    
+
     setLoading(false);
 
     if (result.success) {
@@ -109,7 +109,12 @@ export default function RegisterScreen() {
           <Card variant="elevated" padding="lg" style={styles.formCard}>
             {/* Error Message */}
             {error && (
-              <View style={[styles.errorBox, { backgroundColor: theme.colors.error + "20" }]}>
+              <View
+                style={[
+                  styles.errorBox,
+                  { backgroundColor: theme.colors.error + "20" },
+                ]}
+              >
                 <ThemedText style={{ color: theme.colors.error }}>
                   {error}
                 </ThemedText>
@@ -245,12 +250,11 @@ export default function RegisterScreen() {
 
           {/* Login Link */}
           <View style={styles.loginSection}>
-            <ThemedText variant="secondary">
-              {t("auth.haveAccount")}
-            </ThemedText>
+            <ThemedText variant="secondary">{t("auth.haveAccount")}</ThemedText>
             <TouchableOpacity onPress={() => router.back()}>
               <ThemedText variant="primary" weight="semibold">
-                {" "}{t("auth.loginNow")}
+                {" "}
+                {t("auth.loginNow")}
               </ThemedText>
             </TouchableOpacity>
           </View>

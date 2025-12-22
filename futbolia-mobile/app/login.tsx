@@ -47,7 +47,7 @@ export default function LoginScreen() {
     setError(null);
 
     const result = await login(email.trim(), password);
-    
+
     setLoading(false);
 
     if (result.success) {
@@ -93,7 +93,12 @@ export default function LoginScreen() {
 
             {/* Error Message */}
             {error && (
-              <View style={[styles.errorBox, { backgroundColor: theme.colors.error + "20" }]}>
+              <View
+                style={[
+                  styles.errorBox,
+                  { backgroundColor: theme.colors.error + "20" },
+                ]}
+              >
                 <ThemedText style={{ color: theme.colors.error }}>
                   {error}
                 </ThemedText>
@@ -183,12 +188,11 @@ export default function LoginScreen() {
 
           {/* Register Link */}
           <View style={styles.registerSection}>
-            <ThemedText variant="secondary">
-              {t("auth.noAccount")}
-            </ThemedText>
+            <ThemedText variant="secondary">{t("auth.noAccount")}</ThemedText>
             <TouchableOpacity onPress={() => router.push("/register")}>
               <ThemedText variant="primary" weight="semibold">
-                {" "}{t("auth.registerNow")}
+                {" "}
+                {t("auth.registerNow")}
               </ThemedText>
             </TouchableOpacity>
           </View>
@@ -201,7 +205,12 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           {/* Dixie Message */}
-          <View style={[styles.dixieBox, { backgroundColor: theme.colors.primary + "15" }]}>
+          <View
+            style={[
+              styles.dixieBox,
+              { backgroundColor: theme.colors.primary + "15" },
+            ]}
+          >
             <ThemedText size="xl">🤖</ThemedText>
             <ThemedText variant="secondary" size="sm" style={styles.dixieText}>
               {t("auth.dixieWelcome")}

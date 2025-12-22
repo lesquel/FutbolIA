@@ -40,12 +40,14 @@ export function TeamBadge({
   // Get initials if no logo - ensure it's always a valid string
   const getInitials = (): string => {
     if (!name || typeof name !== "string") return "?";
-    return name
-      .split(" ")
-      .filter(Boolean)
-      .map((w) => w[0]?.toUpperCase() || "")
-      .join("")
-      .slice(0, 3) || "?";
+    return (
+      name
+        .split(" ")
+        .filter(Boolean)
+        .map((w) => w[0]?.toUpperCase() || "")
+        .join("")
+        .slice(0, 3) || "?"
+    );
   };
 
   // Form indicator colors
