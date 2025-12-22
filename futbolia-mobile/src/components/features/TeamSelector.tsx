@@ -1,30 +1,30 @@
 /**
  * TeamSelector - Dropdown/Modal for selecting teams
  */
-import { useState } from 'react';
-import { 
-  View, 
-  Modal, 
-  TouchableOpacity, 
-  FlatList, 
+import { useState } from "react";
+import {
+  View,
+  Modal,
+  TouchableOpacity,
+  FlatList,
   StyleSheet,
   Pressable,
-} from 'react-native';
-import { useTheme } from '@/src/theme';
-import { ThemedText, Card, Input } from '@/src/components/ui';
+} from "react-native";
+import { useTheme } from "@/src/theme";
+import { ThemedText, Card, Input } from "@/src/components/ui";
 
 // Available teams (same as backend seed data)
 const AVAILABLE_TEAMS = [
-  { name: 'Real Madrid', league: 'La Liga' },
-  { name: 'Manchester City', league: 'Premier League' },
-  { name: 'Barcelona', league: 'La Liga' },
-  { name: 'Bayern Munich', league: 'Bundesliga' },
-  { name: 'Liverpool', league: 'Premier League' },
-  { name: 'Arsenal', league: 'Premier League' },
-  { name: 'Paris Saint-Germain', league: 'Ligue 1' },
-  { name: 'Inter Milan', league: 'Serie A' },
-  { name: 'Juventus', league: 'Serie A' },
-  { name: 'Atletico Madrid', league: 'La Liga' },
+  { name: "Real Madrid", league: "La Liga" },
+  { name: "Manchester City", league: "Premier League" },
+  { name: "Barcelona", league: "La Liga" },
+  { name: "Bayern Munich", league: "Bundesliga" },
+  { name: "Liverpool", league: "Premier League" },
+  { name: "Arsenal", league: "Premier League" },
+  { name: "Paris Saint-Germain", league: "Ligue 1" },
+  { name: "Inter Milan", league: "Serie A" },
+  { name: "Juventus", league: "Serie A" },
+  { name: "Atletico Madrid", league: "La Liga" },
 ];
 
 interface TeamSelectorProps {
@@ -42,31 +42,37 @@ export function TeamSelector({
 }: TeamSelectorProps) {
   const { theme } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  
-  const filteredTeams = AVAILABLE_TEAMS.filter(team => {
-    const matchesSearch = team.name.toLowerCase().includes(searchQuery.toLowerCase());
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredTeams = AVAILABLE_TEAMS.filter((team) => {
+    const matchesSearch = team.name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
     const notExcluded = team.name !== excludeTeam;
     return matchesSearch && notExcluded;
   });
-  
+
   const handleSelectTeam = (teamName: string) => {
     onSelectTeam(teamName);
     setModalVisible(false);
-    setSearchQuery('');
+    setSearchQuery("");
   };
-  
+
   // Get team initials for display
   const getInitials = (name: string) => {
-    return name.split(' ').map(w => w[0]).join('').slice(0, 3);
+    return name
+      .split(" ")
+      .map((w) => w[0])
+      .join("")
+      .slice(0, 3);
   };
-  
+
   return (
     <View style={styles.container}>
       <ThemedText variant="secondary" size="sm" style={styles.label}>
         {label}
       </ThemedText>
-      
+
       <TouchableOpacity
         onPress={() => setModalVisible(true)}
         activeOpacity={0.7}
@@ -76,16 +82,18 @@ export function TeamSelector({
             styles.selector,
             {
               backgroundColor: theme.colors.surface,
-              borderColor: selectedTeam ? theme.colors.primary : theme.colors.border,
+              borderColor: selectedTeam
+                ? theme.colors.primary
+                : theme.colors.border,
             },
           ]}
         >
           {selectedTeam ? (
             <View style={styles.selectedTeam}>
-              <View 
+              <View
                 style={[
                   styles.teamBadge,
-                  { backgroundColor: theme.colors.primary + '20' },
+                  { backgroundColor: theme.colors.primary + "20" },
                 ]}
               >
                 <ThemedText variant="primary" weight="bold">
@@ -100,7 +108,7 @@ export function TeamSelector({
           <ThemedText variant="muted">▼</ThemedText>
         </View>
       </TouchableOpacity>
-      
+
       {/* Team Selection Modal */}
       <Modal
         visible={modalVisible}
@@ -108,11 +116,11 @@ export function TeamSelector({
         animationType="slide"
         onRequestClose={() => setModalVisible(false)}
       >
-        <Pressable 
+        <Pressable
           style={styles.modalOverlay}
           onPress={() => setModalVisible(false)}
         >
-          <Pressable 
+          <Pressable
             style={[
               styles.modalContent,
               { backgroundColor: theme.colors.background },
@@ -128,14 +136,14 @@ export function TeamSelector({
                 <ThemedText size="2xl">✕</ThemedText>
               </TouchableOpacity>
             </View>
-            
+
             {/* Search Input */}
             <Input
               placeholder="Buscar equipo..."
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
-            
+
             {/* Team List */}
             <FlatList
               data={filteredTeams}
@@ -146,15 +154,16 @@ export function TeamSelector({
                   style={[
                     styles.teamItem,
                     {
-                      backgroundColor: selectedTeam === item.name 
-                        ? theme.colors.primary + '20'
-                        : 'transparent',
+                      backgroundColor:
+                        selectedTeam === item.name
+                          ? theme.colors.primary + "20"
+                          : "transparent",
                       borderBottomColor: theme.colors.border,
                     },
                   ]}
                 >
                   <View style={styles.teamItemContent}>
-                    <View 
+                    <View
                       style={[
                         styles.teamItemBadge,
                         { backgroundColor: theme.colors.surfaceSecondary },
@@ -193,62 +202,62 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   selector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
   },
   selectedTeam: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   teamBadge: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
   },
   modalContent: {
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
-    maxHeight: '80%',
+    maxHeight: "80%",
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 20,
   },
   teamList: {
     maxHeight: 400,
   },
   teamItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: 12,
     borderBottomWidth: 1,
   },
   teamItemContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   teamItemBadge: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
