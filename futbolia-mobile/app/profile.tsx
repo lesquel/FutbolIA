@@ -21,7 +21,8 @@ import { ThemedView, ThemedText, Card, Button } from "@/src/components/ui";
 export default function ProfileScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const { user, isAuthenticated, favoriteTeams, removeFavoriteTeam, logout } = useAuth();
+  const { user, isAuthenticated, favoriteTeams, removeFavoriteTeam, logout } =
+    useAuth();
   const router = useRouter();
 
   const [stats] = useState({
@@ -31,27 +32,24 @@ export default function ProfileScreen() {
     favoriteLeague: "La Liga",
   });
 
-  const accuracy = stats.totalPredictions > 0 
-    ? Math.round((stats.correctPredictions / stats.totalPredictions) * 100) 
-    : 0;
+  const accuracy =
+    stats.totalPredictions > 0
+      ? Math.round((stats.correctPredictions / stats.totalPredictions) * 100)
+      : 0;
 
   const handleLogout = () => {
-    Alert.alert(
-      t("profile.logoutTitle"),
-      t("profile.logoutMessage"),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("profile.logout"),
-          style: "destructive",
-          onPress: () => {
-            void logout().then(() => {
-              router.replace("/login");
-            });
-          },
+    Alert.alert(t("profile.logoutTitle"), t("profile.logoutMessage"), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("profile.logout"),
+        style: "destructive",
+        onPress: () => {
+          void logout().then(() => {
+            router.replace("/login");
+          });
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleRemoveTeam = (team: FavoriteTeam) => {
@@ -108,7 +106,9 @@ export default function ProfileScreen() {
         {/* Profile Header */}
         <Card variant="elevated" padding="lg" style={styles.profileCard}>
           <View style={styles.avatarContainer}>
-            <View style={[styles.avatar, { backgroundColor: theme.colors.primary }]}>
+            <View
+              style={[styles.avatar, { backgroundColor: theme.colors.primary }]}
+            >
               <ThemedText size="3xl" weight="bold" style={{ color: "#fff" }}>
                 {user?.username?.[0]?.toUpperCase() || "U"}
               </ThemedText>
@@ -137,7 +137,11 @@ export default function ProfileScreen() {
 
           <View style={styles.statsGrid}>
             <Card variant="outlined" padding="md" style={styles.statCard}>
-              <ThemedText size="2xl" weight="bold" style={{ color: theme.colors.primary }}>
+              <ThemedText
+                size="2xl"
+                weight="bold"
+                style={{ color: theme.colors.primary }}
+              >
                 {stats.totalPredictions}
               </ThemedText>
               <ThemedText variant="secondary" size="sm">
@@ -146,7 +150,11 @@ export default function ProfileScreen() {
             </Card>
 
             <Card variant="outlined" padding="md" style={styles.statCard}>
-              <ThemedText size="2xl" weight="bold" style={{ color: theme.colors.success }}>
+              <ThemedText
+                size="2xl"
+                weight="bold"
+                style={{ color: theme.colors.success }}
+              >
                 {accuracy}%
               </ThemedText>
               <ThemedText variant="secondary" size="sm">
@@ -155,7 +163,11 @@ export default function ProfileScreen() {
             </Card>
 
             <Card variant="outlined" padding="md" style={styles.statCard}>
-              <ThemedText size="2xl" weight="bold" style={{ color: theme.colors.warning }}>
+              <ThemedText
+                size="2xl"
+                weight="bold"
+                style={{ color: theme.colors.warning }}
+              >
                 🔥 {stats.streak}
               </ThemedText>
               <ThemedText variant="secondary" size="sm">
@@ -190,9 +202,19 @@ export default function ProfileScreen() {
           {favoriteTeams.length > 0 ? (
             <View style={styles.teamsList}>
               {favoriteTeams.map((team) => (
-                <Card key={team.id} variant="default" padding="sm" style={styles.teamCard}>
+                <Card
+                  key={team.id}
+                  variant="default"
+                  padding="sm"
+                  style={styles.teamCard}
+                >
                   <View style={styles.teamRow}>
-                    <View style={[styles.teamLogo, { backgroundColor: theme.colors.surfaceSecondary }]}>
+                    <View
+                      style={[
+                        styles.teamLogo,
+                        { backgroundColor: theme.colors.surfaceSecondary },
+                      ]}
+                    >
                       {team.logoUrl ? (
                         <Image
                           source={{ uri: team.logoUrl }}
@@ -215,7 +237,9 @@ export default function ProfileScreen() {
                       onPress={() => handleRemoveTeam(team)}
                       style={styles.removeButton}
                     >
-                      <ThemedText style={{ color: theme.colors.error }}>✕</ThemedText>
+                      <ThemedText style={{ color: theme.colors.error }}>
+                        ✕
+                      </ThemedText>
                     </TouchableOpacity>
                   </View>
                 </Card>
@@ -248,32 +272,41 @@ export default function ProfileScreen() {
           <Card variant="default" padding="none">
             <TouchableOpacity
               style={styles.actionRow}
-              onPress={() => {/* Edit profile */}}
+              onPress={() => {
+                /* Edit profile */
+              }}
             >
               <ThemedText>✏️</ThemedText>
-              <ThemedText style={styles.actionText}>{t("profile.editProfile")}</ThemedText>
+              <ThemedText style={styles.actionText}>
+                {t("profile.editProfile")}
+              </ThemedText>
               <ThemedText variant="muted">→</ThemedText>
             </TouchableOpacity>
 
-            <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+            <View
+              style={[styles.divider, { backgroundColor: theme.colors.border }]}
+            />
 
             <TouchableOpacity
               style={styles.actionRow}
               onPress={() => router.push("/settings")}
             >
               <ThemedText>⚙️</ThemedText>
-              <ThemedText style={styles.actionText}>{t("profile.settings")}</ThemedText>
+              <ThemedText style={styles.actionText}>
+                {t("profile.settings")}
+              </ThemedText>
               <ThemedText variant="muted">→</ThemedText>
             </TouchableOpacity>
 
-            <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+            <View
+              style={[styles.divider, { backgroundColor: theme.colors.border }]}
+            />
 
-            <TouchableOpacity
-              style={styles.actionRow}
-              onPress={handleLogout}
-            >
+            <TouchableOpacity style={styles.actionRow} onPress={handleLogout}>
               <ThemedText>🚪</ThemedText>
-              <ThemedText style={[styles.actionText, { color: theme.colors.error }]}>
+              <ThemedText
+                style={[styles.actionText, { color: theme.colors.error }]}
+              >
                 {t("profile.logout")}
               </ThemedText>
               <ThemedText style={{ color: theme.colors.error }}>→</ThemedText>

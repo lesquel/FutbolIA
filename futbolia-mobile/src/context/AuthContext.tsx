@@ -33,14 +33,19 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   favoriteTeams: FavoriteTeam[];
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  login: (
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; error?: string }>;
   register: (
     email: string,
     username: string,
     password: string
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
-  updateProfile: (data: Partial<User>) => Promise<{ success: boolean; error?: string }>;
+  updateProfile: (
+    data: Partial<User>
+  ) => Promise<{ success: boolean; error?: string }>;
   addFavoriteTeam: (team: FavoriteTeam) => Promise<void>;
   removeFavoriteTeam: (teamId: string) => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -71,7 +76,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const response = await authApi.getProfile();
         if (response.success && response.data?.user) {
           setUser(response.data.user);
-          await AsyncStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
+          await AsyncStorage.setItem(
+            USER_KEY,
+            JSON.stringify(response.data.user)
+          );
         } else {
           // Token invalid, clear it
           await removeToken();
@@ -102,7 +110,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const response = await authApi.login(email, password);
       if (response.success && response.data?.user) {
         setUser(response.data.user);
-        await AsyncStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
+        await AsyncStorage.setItem(
+          USER_KEY,
+          JSON.stringify(response.data.user)
+        );
         return { success: true };
       }
       return { success: false, error: response.error || "Login failed" };
@@ -112,20 +123,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, []);
 
-  const register = useCallback(async (email: string, username: string, password: string) => {
-    try {
-      const response = await authApi.register(email, username, password);
-      if (response.success && response.data?.user) {
-        setUser(response.data.user);
-        await AsyncStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
-        return { success: true };
+  const register = useCallback(
+    async (email: string, username: string, password: string) => {
+      try {
+        const response = await authApi.register(email, username, password);
+        if (response.success && response.data?.user) {
+          setUser(response.data.user);
+          await AsyncStorage.setItem(
+            USER_KEY,
+            JSON.stringify(response.data.user)
+          );
+          return { success: true };
+        }
+        return {
+          success: false,
+          error: response.error || "Registration failed",
+        };
+      } catch (err) {
+        console.error("Register error:", err);
+        return { success: false, error: "Network error" };
       }
-      return { success: false, error: response.error || "Registration failed" };
-    } catch (err) {
-      console.error("Register error:", err);
-      return { success: false, error: "Network error" };
-    }
-  }, []);
+    },
+    []
+  );
 
   const logout = useCallback(async () => {
     await authApi.logout();
@@ -135,10 +155,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const updateProfile = useCallback(async (data: Partial<User>) => {
     try {
-      const response = await authApi.updatePreferences(data.language, data.theme);
+      const response = await authApi.updatePreferences(
+        data.language,
+        data.theme
+      );
       if (response.success && response.data?.user) {
         setUser(response.data.user);
-        await AsyncStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
+        await AsyncStorage.setItem(
+          USER_KEY,
+          JSON.stringify(response.data.user)
+        );
         return { success: true };
       }
       return { success: false, error: response.error || "Update failed" };
@@ -171,7 +197,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const response = await authApi.getProfile();
       if (response.success && response.data?.user) {
         setUser(response.data.user);
-        await AsyncStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
+        await AsyncStorage.setItem(
+          USER_KEY,
+          JSON.stringify(response.data.user)
+        );
       }
     } catch (err) {
       console.error("Refresh user error:", err);
@@ -192,14 +221,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
       removeFavoriteTeam,
       refreshUser,
     }),
-    [user, isLoading, favoriteTeams, login, register, logout, updateProfile, addFavoriteTeam, removeFavoriteTeam, refreshUser]
+    [
+      user,
+      isLoading,
+      favoriteTeams,
+      login,
+      register,
+      logout,
+      updateProfile,
+      addFavoriteTeam,
+      removeFavoriteTeam,
+      refreshUser,
+    ]
   );
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
