@@ -2,14 +2,14 @@
  * FutbolIA API Service
  * Handles all communication with the backend
  */
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // API Configuration
-const API_BASE_URL = __DEV__ 
-  ? 'http://localhost:8000/api/v1'
-  : 'https://api.futbolia.com/api/v1';
+const API_BASE_URL = __DEV__
+  ? "http://localhost:8000/api/v1"
+  : "https://api.futbolia.com/api/v1";
 
-const TOKEN_KEY = '@futbolia_token';
+const TOKEN_KEY = "@futbolia_token";
 
 // Types
 interface ApiResponse<T> {
@@ -102,36 +102,41 @@ const apiRequest = async <T>(
 ): Promise<ApiResponse<T>> => {
   try {
     const token = await getToken();
-    
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-      ...options.headers,
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
     };
-    
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+
+    // Merge with existing headers
+    if (options.headers) {
+      const existingHeaders = options.headers as Record<string, string>;
+      Object.assign(headers, existingHeaders);
     }
-    
+
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers,
     });
-    
+
     const data = await response.json();
-    
+
     if (!response.ok) {
       return {
         success: false,
-        error: data.detail || data.error || 'Request failed',
+        error: data.detail || data.error || "Request failed",
       };
     }
-    
+
     return data;
   } catch (error) {
-    console.error('API Error:', error);
+    console.error("API Error:", error);
     return {
       success: false,
-      error: 'Network error. Please check your connection.',
+      error: "Network error. Please check your connection.",
     };
   }
 };
@@ -139,44 +144,49 @@ const apiRequest = async <T>(
 // ==================== AUTH API ====================
 
 export const authApi = {
-  register: async (email: string, username: string, password: string, language: string = 'es') => {
-    const response = await apiRequest<AuthResponse>('/auth/register', {
-      method: 'POST',
+  register: async (
+    email: string,
+    username: string,
+    password: string,
+    language: string = "es"
+  ) => {
+    const response = await apiRequest<AuthResponse>("/auth/register", {
+      method: "POST",
       body: JSON.stringify({ email, username, password, language }),
     });
-    
+
     if (response.success && response.data?.access_token) {
       await setToken(response.data.access_token);
     }
-    
+
     return response;
   },
-  
-  login: async (email: string, password: string, language: string = 'es') => {
-    const response = await apiRequest<AuthResponse>('/auth/login', {
-      method: 'POST',
+
+  login: async (email: string, password: string, language: string = "es") => {
+    const response = await apiRequest<AuthResponse>("/auth/login", {
+      method: "POST",
       body: JSON.stringify({ email, password, language }),
     });
-    
+
     if (response.success && response.data?.access_token) {
       await setToken(response.data.access_token);
     }
-    
+
     return response;
   },
-  
+
   logout: async () => {
     await removeToken();
     return { success: true };
   },
-  
+
   getProfile: async () => {
-    return apiRequest<{ user: User }>('/auth/me');
+    return apiRequest<{ user: User }>("/auth/me");
   },
-  
+
   updatePreferences: async (language?: string, theme?: string) => {
-    return apiRequest<{ user: User }>('/auth/preferences', {
-      method: 'PUT',
+    return apiRequest<{ user: User }>("/auth/preferences", {
+      method: "PUT",
       body: JSON.stringify({ language, theme }),
     });
   },
@@ -185,50 +195,57 @@ export const authApi = {
 // ==================== PREDICTIONS API ====================
 
 export const predictionsApi = {
-  predict: async (homeTeam: string, awayTeam: string, language: string = 'es') => {
-    return apiRequest<{ prediction: Prediction; context: any }>('/predictions/predict', {
-      method: 'POST',
-      body: JSON.stringify({ 
-        home_team: homeTeam, 
-        away_team: awayTeam,
-        language,
-      }),
-    });
+  predict: async (
+    homeTeam: string,
+    awayTeam: string,
+    language: string = "es"
+  ) => {
+    return apiRequest<{ prediction: Prediction; context: any }>(
+      "/predictions/predict",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          home_team: homeTeam,
+          away_team: awayTeam,
+          language,
+        }),
+      }
+    );
   },
-  
+
   getHistory: async (limit: number = 20) => {
     return apiRequest<{ predictions: Prediction[]; stats: PredictionStats }>(
       `/predictions/history?limit=${limit}`
     );
   },
-  
+
   getUpcomingMatches: async (leagueId: number = 39) => {
     return apiRequest<{ matches: Match[] }>(
       `/predictions/matches?league_id=${leagueId}`
     );
   },
-  
+
   compareTeams: async (teamA: string, teamB: string) => {
-    return apiRequest<any>('/predictions/compare', {
-      method: 'POST',
+    return apiRequest<any>("/predictions/compare", {
+      method: "POST",
       body: JSON.stringify({ team_a: teamA, team_b: teamB }),
     });
   },
-  
+
   getAvailableTeams: async () => {
     return apiRequest<{ teams: { name: string; player_count: number }[] }>(
-      '/predictions/teams'
+      "/predictions/teams"
     );
   },
 };
 
 // Export types
-export type { 
-  User, 
-  AuthResponse, 
-  PredictionResult, 
-  Team, 
-  Match, 
+export type {
+  User,
+  AuthResponse,
+  PredictionResult,
+  Team,
+  Match,
   Prediction,
   PredictionStats,
   ApiResponse,

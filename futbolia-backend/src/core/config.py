@@ -3,8 +3,12 @@ FutbolIA Configuration Module
 Manages all environment variables and application settings
 """
 import os
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import List
+from dotenv import load_dotenv
+
+# Load .env file
+load_dotenv()
 
 
 @dataclass
@@ -14,45 +18,72 @@ class Settings:
     # Application
     APP_NAME: str = "FutbolIA - Dixie"
     APP_VERSION: str = "1.0.0"
-    DEBUG: bool = True
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
+    DEBUG: bool = os.getenv("ENVIRONMENT", "development") == "development"
     
     # Server
-    HOST: str = "0.0.0.0"
-    PORT: int = 8000
+    HOST: str = os.getenv("HOST", "0.0.0.0")
+    PORT: int = int(os.getenv("PORT", "8000"))
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
     
     # MongoDB
-    MONGODB_URL: str = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
-    MONGODB_DB_NAME: str = os.getenv("MONGODB_DB_NAME", "futbolia")
+    MONGODB_URL: str = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
+    MONGODB_DB_NAME: str = os.getenv("MONGODB_DATABASE", "futbolia")
     
     # ChromaDB
-    CHROMA_PERSIST_DIR: str = os.getenv("CHROMA_PERSIST_DIR", "./data/chromadb")
-    CHROMA_COLLECTION_NAME: str = "player_attributes"
+    CHROMA_PERSIST_DIR: str = os.getenv("CHROMADB_PATH", "./data/chromadb")
+    CHROMA_COLLECTION_NAME: str = os.getenv("CHROMADB_COLLECTION", "player_attributes")
     
     # DeepSeek (Dixie)
     DEEPSEEK_API_KEY: str = os.getenv("DEEPSEEK_API_KEY", "")
     DEEPSEEK_BASE_URL: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
     DEEPSEEK_MODEL: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
+    DEEPSEEK_TEMPERATURE: float = float(os.getenv("DEEPSEEK_TEMPERATURE", "0.7"))
+    DEEPSEEK_MAX_TOKENS: int = int(os.getenv("DEEPSEEK_MAX_TOKENS", "2000"))
     
-    # API-Football (RapidAPI)
-    RAPIDAPI_KEY: str = os.getenv("RAPIDAPI_KEY", "")
-    RAPIDAPI_HOST: str = "api-football-v1.p.rapidapi.com"
+    # Football-Data.org API (GRATUITA)
+    # Obtener en: https://www.football-data.org/client/register
+    FOOTBALL_DATA_API_KEY: str = os.getenv("FOOTBALL_DATA_API_KEY", "")
     
     # JWT Authentication
     JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "futbolia-super-secret-key-change-in-production")
-    JWT_ALGORITHM: str = "HS256"
-    JWT_EXPIRE_HOURS: int = 24
+    JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
+    JWT_EXPIRE_MINUTES: int = int(os.getenv("JWT_EXPIRATION_MINUTES", "10080"))  # 7 days default
     
     # CORS
-    CORS_ORIGINS: list = None
+    CORS_ORIGINS: List[str] = field(default_factory=list)
+    
+    # Rate Limiting
+    RATE_LIMIT_PER_MINUTE: int = int(os.getenv("RATE_LIMIT_PER_MINUTE", "60"))
     
     def __post_init__(self):
-        if self.CORS_ORIGINS is None:
+        # Parse CORS origins from environment
+        cors_env = os.getenv("CORS_ORIGINS", "")
+        if cors_env:
+            self.CORS_ORIGINS = [origin.strip() for origin in cors_env.split(",")]
+        else:
             self.CORS_ORIGINS = [
                 "http://localhost:3000",
                 "http://localhost:8081",
                 "http://localhost:19006",
                 "exp://localhost:8081",
             ]
+    
+    def is_production(self) -> bool:
+        """Check if running in production mode"""
+        return self.ENVIRONMENT == "production"
+    
+    def validate(self) -> List[str]:
+        """Validate critical settings and return list of warnings"""
+        warnings = []
+        
+        if self.is_production():
+            if "change-in-production" in self.JWT_SECRET_KEY:
+                warnings.append("⚠️ JWT_SECRET_KEY debe cambiarse en producción!")
+            if not self.DEEPSEEK_API_KEY:
+                warnings.append("⚠️ DEEPSEEK_API_KEY no configurada - Dixie usará respuestas mock")
+        
+        return warnings
 
 
 # Global settings instance

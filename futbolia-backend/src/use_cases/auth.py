@@ -17,7 +17,7 @@ class AuthUseCase:
     @staticmethod
     def create_access_token(user_id: str) -> str:
         """Create a JWT access token"""
-        expire = datetime.utcnow() + timedelta(hours=settings.JWT_EXPIRE_HOURS)
+        expire = datetime.utcnow() + timedelta(minutes=settings.JWT_EXPIRE_MINUTES)
         payload = {
             "sub": user_id,
             "exp": expire,

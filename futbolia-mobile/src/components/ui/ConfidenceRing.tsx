@@ -1,10 +1,10 @@
 /**
  * ConfidenceRing - Circular progress indicator for prediction confidence
  */
-import { View, StyleSheet } from 'react-native';
-import Svg, { Circle, G } from 'react-native-svg';
-import { useTheme } from '@/src/theme';
-import { ThemedText } from './ThemedText';
+import { View, StyleSheet } from "react-native";
+import Svg, { Circle, G } from "react-native-svg";
+import { useTheme } from "@/src/theme";
+import { ThemedText } from "./ThemedText";
 
 interface ConfidenceRingProps {
   percentage: number;
@@ -20,18 +20,18 @@ export function ConfidenceRing({
   label,
 }: ConfidenceRingProps) {
   const { theme, isDark } = useTheme();
-  
+
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
-  
+
   // Color based on confidence level
   const getColor = () => {
     if (percentage >= 70) return theme.colors.success;
     if (percentage >= 50) return theme.colors.warning;
     return theme.colors.error;
   };
-  
+
   return (
     <View style={styles.container}>
       <Svg width={size} height={size}>
@@ -59,7 +59,7 @@ export function ConfidenceRing({
           />
         </G>
       </Svg>
-      
+
       {/* Center content */}
       <View style={[styles.center, { width: size, height: size }]}>
         <ThemedText size="2xl" weight="bold" style={{ color: getColor() }}>
@@ -77,13 +77,13 @@ export function ConfidenceRing({
 
 const styles = StyleSheet.create({
   container: {
-    position: 'relative',
-    alignItems: 'center',
-    justifyContent: 'center',
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
   },
   center: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
+    position: "absolute",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

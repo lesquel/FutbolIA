@@ -2,38 +2,38 @@
  * FutbolIA - Home Screen
  * Main dashboard with upcoming matches and quick prediction
  */
-import { useState, useEffect } from 'react';
-import { 
-  ScrollView, 
-  View, 
-  StyleSheet, 
+import { useState, useEffect } from "react";
+import {
+  ScrollView,
+  View,
+  StyleSheet,
   RefreshControl,
   Dimensions,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { useTranslation } from 'react-i18next';
+} from "react-native";
+import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 
-import { useTheme } from '@/src/theme';
-import { ThemedView, ThemedText, Card, Button } from '@/src/components/ui';
-import { MatchCard, DixieChat } from '@/src/components/features';
-import { predictionsApi, Match } from '@/src/services/api';
+import { useTheme } from "@/src/theme";
+import { ThemedView, ThemedText, Card, Button } from "@/src/components/ui";
+import { MatchCard, DixieChat } from "@/src/components/features";
+import { predictionsApi, Match } from "@/src/services/api";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 const isTablet = width >= 768;
 
 export default function HomeScreen() {
   const { theme, isDark } = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
-  
+
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  
+
   useEffect(() => {
     loadMatches();
   }, []);
-  
+
   const loadMatches = async () => {
     try {
       const response = await predictionsApi.getUpcomingMatches();
@@ -41,32 +41,32 @@ export default function HomeScreen() {
         setMatches(response.data.matches);
       }
     } catch (error) {
-      console.log('Error loading matches:', error);
+      console.log("Error loading matches:", error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
-  
+
   const onRefresh = () => {
     setRefreshing(true);
     loadMatches();
   };
-  
+
   const handleMatchPress = (match: Match) => {
     // Navigate to prediction screen with pre-selected teams
     router.push({
-      pathname: '/predict',
+      pathname: "/predict",
       params: {
         homeTeam: match.home_team.name,
         awayTeam: match.away_team.name,
       },
     });
   };
-  
+
   const featuredMatch = matches[0];
   const otherMatches = matches.slice(1, 4);
-  
+
   return (
     <ThemedView variant="background" style={styles.container}>
       <ScrollView
@@ -81,28 +81,32 @@ export default function HomeScreen() {
       >
         {/* Responsive Layout Container */}
         <View style={[styles.content, isTablet && styles.contentTablet]}>
-          
           {/* Left Column (or full width on mobile) */}
-          <View style={[styles.mainColumn, isTablet && styles.mainColumnTablet]}>
-            
+          <View
+            style={[styles.mainColumn, isTablet && styles.mainColumnTablet]}
+          >
             {/* Welcome Header */}
             <View style={styles.header}>
               <ThemedText size="3xl" weight="bold">
-                {t('home.welcome')} 🏆
+                {t("home.welcome")} 🏆
               </ThemedText>
               <ThemedText variant="secondary" size="lg">
-                {t('home.subtitle')}
+                {t("home.subtitle")}
               </ThemedText>
             </View>
-            
+
             {/* Dixie Greeting */}
             <DixieChat showGreeting={true} />
-            
+
             {/* Featured Match */}
             {featuredMatch && (
               <View style={styles.section}>
-                <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
-                  ⚽ {t('home.featuredMatch')}
+                <ThemedText
+                  size="lg"
+                  weight="semibold"
+                  style={styles.sectionTitle}
+                >
+                  ⚽ {t("home.featuredMatch")}
                 </ThemedText>
                 <MatchCard
                   match={featuredMatch}
@@ -111,28 +115,32 @@ export default function HomeScreen() {
                 />
               </View>
             )}
-            
+
             {/* Quick Predict Button */}
             <View style={styles.quickPredictContainer}>
               <Button
-                title={`🔮 ${t('home.quickPredict')}`}
+                title={`🔮 ${t("home.quickPredict")}`}
                 variant="primary"
                 size="lg"
                 fullWidth
-                onPress={() => router.push('/predict')}
+                onPress={() => router.push("/predict")}
               />
             </View>
           </View>
-          
+
           {/* Right Column (only on tablet) */}
           {isTablet && (
             <View style={styles.sideColumn}>
               {/* Upcoming Matches */}
               <View style={styles.section}>
-                <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
-                  📅 {t('home.upcomingMatches')}
+                <ThemedText
+                  size="lg"
+                  weight="semibold"
+                  style={styles.sectionTitle}
+                >
+                  📅 {t("home.upcomingMatches")}
                 </ThemedText>
-                
+
                 {otherMatches.map((match) => (
                   <MatchCard
                     key={match.id}
@@ -140,11 +148,11 @@ export default function HomeScreen() {
                     onPress={() => handleMatchPress(match)}
                   />
                 ))}
-                
+
                 {otherMatches.length === 0 && (
                   <Card padding="md">
-                    <ThemedText variant="muted" style={{ textAlign: 'center' }}>
-                      {t('common.noResults')}
+                    <ThemedText variant="muted" style={{ textAlign: "center" }}>
+                      {t("common.noResults")}
                     </ThemedText>
                   </Card>
                 )}
@@ -152,23 +160,25 @@ export default function HomeScreen() {
             </View>
           )}
         </View>
-        
+
         {/* Upcoming Matches (Mobile only) */}
         {!isTablet && otherMatches.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <ThemedText size="lg" weight="semibold">
-                📅 {t('home.upcomingMatches')}
+                📅 {t("home.upcomingMatches")}
               </ThemedText>
-              <ThemedText 
-                variant="primary" 
+              <ThemedText
+                variant="primary"
                 size="sm"
-                onPress={() => {/* Navigate to all matches */}}
+                onPress={() => {
+                  /* Navigate to all matches */
+                }}
               >
-                {t('home.viewAll')} →
+                {t("home.viewAll")} →
               </ThemedText>
             </View>
-            
+
             {otherMatches.map((match) => (
               <MatchCard
                 key={match.id}
@@ -178,14 +188,14 @@ export default function HomeScreen() {
             ))}
           </View>
         )}
-        
+
         {/* Stats Card */}
         <Card variant="outlined" padding="md" style={styles.statsCard}>
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <ThemedText 
-                size="2xl" 
-                weight="bold" 
+              <ThemedText
+                size="2xl"
+                weight="bold"
                 style={{ color: theme.colors.primary }}
               >
                 {matches.length}
@@ -194,11 +204,16 @@ export default function HomeScreen() {
                 Partidos Disponibles
               </ThemedText>
             </View>
-            <View style={[styles.statDivider, { backgroundColor: theme.colors.border }]} />
+            <View
+              style={[
+                styles.statDivider,
+                { backgroundColor: theme.colors.border },
+              ]}
+            />
             <View style={styles.statItem}>
-              <ThemedText 
-                size="2xl" 
-                weight="bold" 
+              <ThemedText
+                size="2xl"
+                weight="bold"
                 style={{ color: theme.colors.accentGold }}
               >
                 10
@@ -207,11 +222,16 @@ export default function HomeScreen() {
                 Equipos con Datos
               </ThemedText>
             </View>
-            <View style={[styles.statDivider, { backgroundColor: theme.colors.border }]} />
+            <View
+              style={[
+                styles.statDivider,
+                { backgroundColor: theme.colors.border },
+              ]}
+            />
             <View style={styles.statItem}>
-              <ThemedText 
-                size="2xl" 
-                weight="bold" 
+              <ThemedText
+                size="2xl"
+                weight="bold"
                 style={{ color: theme.colors.secondary }}
               >
                 45+
@@ -222,7 +242,6 @@ export default function HomeScreen() {
             </View>
           </View>
         </Card>
-        
       </ScrollView>
     </ThemedView>
   );
@@ -240,7 +259,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentTablet: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 24,
   },
   mainColumn: {
@@ -262,9 +281,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   quickPredictContainer: {
@@ -274,12 +293,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
   },
   statItem: {
-    alignItems: 'center',
+    alignItems: "center",
     flex: 1,
   },
   statDivider: {

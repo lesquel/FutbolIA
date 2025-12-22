@@ -2,34 +2,36 @@
  * FutbolIA - Root Layout
  * Main app layout with theme and i18n providers
  */
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
-import '../global.css';
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider as NavigationThemeProvider,
+} from "@react-navigation/native";
+import { useFonts } from "expo-font";
+import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect } from "react";
+import "react-native-reanimated";
+import "../global.css";
 
 // i18n initialization
-import '@/src/i18n/i18n';
+import "@/src/i18n/i18n";
 
 // Theme provider
-import { ThemeProvider, useTheme } from '@/src/theme';
+import { ThemeProvider, useTheme } from "@/src/theme";
 
-export {
-  ErrorBoundary,
-} from 'expo-router';
+export { ErrorBoundary } from "expo-router";
 
 export const unstable_settings = {
-  initialRouteName: '(tabs)',
+  initialRouteName: "(tabs)",
 };
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     ...FontAwesome.font,
   });
 
@@ -83,23 +85,17 @@ function RootLayoutNav() {
   };
 
   return (
-    <NavigationThemeProvider value={isDark ? customDarkTheme : customLightTheme}>
+    <NavigationThemeProvider
+      value={isDark ? customDarkTheme : customLightTheme}
+    >
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen 
-          name="modal" 
-          options={{ 
-            presentation: 'modal',
-            title: 'Información',
-          }} 
-        />
-        <Stack.Screen 
-          name="predict" 
-          options={{ 
-            presentation: 'modal',
-            title: 'Nueva Predicción',
-            headerShown: false,
-          }} 
+        <Stack.Screen
+          name="modal"
+          options={{
+            presentation: "modal",
+            title: "Información",
+          }}
         />
       </Stack>
     </NavigationThemeProvider>

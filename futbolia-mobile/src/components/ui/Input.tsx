@@ -1,40 +1,35 @@
 /**
  * Input - Themed text input component
  */
-import { 
-  TextInput, 
-  TextInputProps, 
-  View, 
-  StyleSheet 
-} from 'react-native';
-import { useTheme } from '@/src/theme';
-import { ThemedText } from './ThemedText';
-import { useState } from 'react';
+import { TextInput, TextInputProps, View, StyleSheet } from "react-native";
+import { useTheme } from "@/src/theme";
+import { ThemedText } from "./ThemedText";
+import { useState } from "react";
 
 interface InputProps extends TextInputProps {
   label?: string;
   error?: string;
   icon?: React.ReactNode;
-  iconPosition?: 'left' | 'right';
+  iconPosition?: "left" | "right";
 }
 
 export function Input({
   label,
   error,
   icon,
-  iconPosition = 'left',
+  iconPosition = "left",
   style,
   ...props
 }: InputProps) {
   const { theme, isDark } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
-  
-  const borderColor = error 
-    ? theme.colors.error 
-    : isFocused 
-      ? theme.colors.primary 
-      : theme.colors.border;
-  
+
+  const borderColor = error
+    ? theme.colors.error
+    : isFocused
+    ? theme.colors.primary
+    : theme.colors.border;
+
   return (
     <View style={styles.container}>
       {label && (
@@ -42,7 +37,7 @@ export function Input({
           {label}
         </ThemedText>
       )}
-      
+
       <View
         style={[
           styles.inputContainer,
@@ -53,10 +48,10 @@ export function Input({
           },
         ]}
       >
-        {icon && iconPosition === 'left' && (
+        {icon && iconPosition === "left" && (
           <View style={styles.icon}>{icon}</View>
         )}
-        
+
         <TextInput
           style={[
             styles.input,
@@ -71,12 +66,12 @@ export function Input({
           onBlur={() => setIsFocused(false)}
           {...props}
         />
-        
-        {icon && iconPosition === 'right' && (
+
+        {icon && iconPosition === "right" && (
           <View style={styles.icon}>{icon}</View>
         )}
       </View>
-      
+
       {error && (
         <ThemedText variant="error" size="sm" style={styles.error}>
           {error}
@@ -94,8 +89,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderRadius: 12,
     paddingHorizontal: 16,
   },
