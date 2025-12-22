@@ -1,0 +1,1 @@
+# FutbolIA Backend - Clean Architecture
