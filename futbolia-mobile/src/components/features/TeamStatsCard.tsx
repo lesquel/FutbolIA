@@ -197,7 +197,11 @@ export function TeamStatsCard({ teamName, emoji = "⚽" }: TeamStatsCardProps) {
                     { backgroundColor: getPositionColor(player.position) },
                   ]}
                 />
-                <ThemedText size="xs" numberOfLines={1} style={styles.playerName}>
+                <ThemedText
+                  size="xs"
+                  numberOfLines={1}
+                  style={styles.playerName}
+                >
                   {player.name.split(" ").pop()}
                 </ThemedText>
                 <ThemedText
