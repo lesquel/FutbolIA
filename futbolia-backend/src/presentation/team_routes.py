@@ -368,20 +368,65 @@ async def bulk_add_teams(
 @router.get("/{team_name}/players")
 async def get_team_players(team_name: str):
     """
-    👥 Get all players for a team
+    👥 Get all players for a team - generates with AI if not found
     """
+    # First check ChromaDB
     players = PlayerVectorStore.search_by_team(team_name, limit=30)
     
+    # If no players found, generate with AI
     if not players:
-        # Try partial match
-        players = PlayerVectorStore.search_by_name(team_name, limit=10)
+        from src.infrastructure.llm.dixie import DixieAI
+        
+        print(f"🔄 No players in ChromaDB for '{team_name}', generating with AI...")
+        real_players = await DixieAI.generate_team_players(team_name, count=11)
+        
+        if real_players and len(real_players) > 0:
+            from src.domain.entities import PlayerAttributes
+            players = []
+            for i, p_data in enumerate(real_players):
+                if isinstance(p_data, dict):
+                    player = PlayerAttributes(
+                        player_id=f"ai_{team_name.lower().replace(' ', '_')}_{i}",
+                        name=p_data.get("name", "Unknown"),
+                        team=team_name,
+                        position=p_data.get("position", "CM"),
+                        overall_rating=p_data.get("overall_rating", p_data.get("overall", 75)),
+                        pace=p_data.get("pace", 70),
+                        shooting=p_data.get("shooting", 65),
+                        passing=p_data.get("passing", 70),
+                        dribbling=p_data.get("dribbling", 68),
+                        defending=p_data.get("defending", 50),
+                        physical=p_data.get("physical", 70),
+                    )
+                    players.append(player)
+    
+    # Calculate team stats
+    if players:
+        avg_overall = sum(p.overall_rating for p in players) / len(players)
+        avg_pace = sum(p.pace for p in players) / len(players)
+        avg_shooting = sum(p.shooting for p in players) / len(players)
+        avg_passing = sum(p.passing for p in players) / len(players)
+        avg_defending = sum(p.defending for p in players) / len(players)
+        avg_physical = sum(p.physical for p in players) / len(players)
+        
+        team_stats = {
+            "overall": round(avg_overall, 1),
+            "pace": round(avg_pace, 1),
+            "shooting": round(avg_shooting, 1),
+            "passing": round(avg_passing, 1),
+            "defending": round(avg_defending, 1),
+            "physical": round(avg_physical, 1),
+        }
+    else:
+        team_stats = None
     
     return {
         "success": True,
         "data": {
             "team": team_name,
             "players": [p.to_dict() for p in players],
-            "count": len(players)
+            "count": len(players),
+            "stats": team_stats,
         }
     }
 

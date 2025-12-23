@@ -57,9 +57,48 @@ class PredictionUseCase:
         home_players = PlayerVectorStore.search_by_team(home_team.name, limit=15)
         away_players = PlayerVectorStore.search_by_team(away_team.name, limit=15)
         
-        # If no players found, we don't fallback to semantic search by name 
-        # because it might return players from other teams (e.g. Real Madrid players for Emelec)
-        # Instead, we let Dixie handle it or the user should have triggered generation.
+        # If no players in ChromaDB, generate with AI
+        home_players_raw = []
+        away_players_raw = []
+        
+        if not home_players:
+            print(f"🔄 Generating players for {home_team.name} with AI...")
+            home_players_raw = await DixieAI.generate_team_players(home_team.name)
+            # Convert raw dicts to PlayerAttributes
+            from src.domain.entities import PlayerAttributes
+            home_players = [
+                PlayerAttributes(
+                    name=p.get("name", "Unknown"),
+                    position=p.get("position", "CM"),
+                    overall_rating=p.get("overall_rating", p.get("overall", 75)),
+                    pace=p.get("pace", 70),
+                    shooting=p.get("shooting", 65),
+                    passing=p.get("passing", 70),
+                    dribbling=p.get("dribbling", 68),
+                    defending=p.get("defending", 50),
+                    physical=p.get("physical", 70),
+                )
+                for p in home_players_raw if isinstance(p, dict)
+            ]
+        
+        if not away_players:
+            print(f"🔄 Generating players for {away_team.name} with AI...")
+            away_players_raw = await DixieAI.generate_team_players(away_team.name)
+            from src.domain.entities import PlayerAttributes
+            away_players = [
+                PlayerAttributes(
+                    name=p.get("name", "Unknown"),
+                    position=p.get("position", "CM"),
+                    overall_rating=p.get("overall_rating", p.get("overall", 75)),
+                    pace=p.get("pace", 70),
+                    shooting=p.get("shooting", 65),
+                    passing=p.get("passing", 70),
+                    dribbling=p.get("dribbling", 68),
+                    defending=p.get("defending", 50),
+                    physical=p.get("physical", 70),
+                )
+                for p in away_players_raw if isinstance(p, dict)
+            ]
         
         # Step 3: Generate prediction with Dixie AI
         prediction_result = await DixieAI.predict_match(

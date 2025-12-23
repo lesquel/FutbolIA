@@ -86,17 +86,31 @@ class PlayerVectorStore:
     
     @classmethod
     def search_by_team(cls, team_name: str, limit: int = 11) -> List[PlayerAttributes]:
-        """Search for players by team name"""
+        """Search for players by team name - EXACT MATCH ONLY"""
         if cls._collection is None:
             cls.initialize()
         
-        results = cls._collection.query(
-            query_texts=[f"Team: {team_name}"],
-            n_results=limit,
-            where={"team": {"$eq": team_name}}
-        )
+        # First try exact match with where filter
+        try:
+            results = cls._collection.query(
+                query_texts=[f"Team: {team_name}"],
+                n_results=limit,
+                where={"team": {"$eq": team_name}}
+            )
+            
+            players = cls._results_to_players(results)
+            
+            # Only return if we found players for THIS team
+            if players and all(p.team.lower() == team_name.lower() for p in players):
+                print(f"✅ Found {len(players)} players for {team_name} in ChromaDB")
+                return players
+            
+        except Exception as e:
+            print(f"⚠️ ChromaDB query error: {e}")
         
-        return cls._results_to_players(results)
+        # No exact match found - return empty to trigger AI generation
+        print(f"⚠️ No players found in ChromaDB for '{team_name}' - will use AI generation")
+        return []
     
     @classmethod
     def search_by_name(cls, player_name: str, limit: int = 5) -> List[PlayerAttributes]:

@@ -22,6 +22,7 @@ import { useAuth } from "@/src/context";
 import { ThemedView, ThemedText, Card, Button } from "@/src/components/ui";
 import {
   TeamSelector,
+  TeamStatsCard,
   PredictionCard,
   DixieChat,
 } from "@/src/components/features";
@@ -69,7 +70,12 @@ export default function PredictScreen() {
       const response = await predictionsApi.predict(homeTeam, awayTeam, "es");
 
       if (response.success && response.data?.prediction) {
-        setPrediction(response.data.prediction);
+        // Include player context in the prediction object
+        const predictionWithContext = {
+          ...response.data.prediction,
+          context: response.data.context,
+        };
+        setPrediction(predictionWithContext);
       } else {
         setError(response.error || "Error generando predicción");
       }
@@ -179,6 +185,9 @@ export default function PredictScreen() {
                     onSelectTeam={setHomeTeam}
                     excludeTeam={awayTeam}
                   />
+                  
+                  {/* Home Team Stats */}
+                  <TeamStatsCard teamName={homeTeam} emoji="🏠" />
 
                   {/* VS Indicator */}
                   <View style={styles.vsIndicator}>
@@ -211,6 +220,9 @@ export default function PredictScreen() {
                     onSelectTeam={setAwayTeam}
                     excludeTeam={homeTeam}
                   />
+                  
+                  {/* Away Team Stats */}
+                  <TeamStatsCard teamName={awayTeam} emoji="🚌" />
 
                   {/* Error Message */}
                   {error && (

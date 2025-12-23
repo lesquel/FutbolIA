@@ -247,9 +247,21 @@ class DixieAI:
             
             # Parse JSON response
             content = response.choices[0].message.content
+            print(f"🔮 Dixie raw response: {content[:300]}...")
             
             # Try to extract JSON from response
             result_data = cls._parse_json_response(content)
+            print(f"🔮 Parsed result type: {type(result_data)}")
+            
+            # Ensure we have a dict (not a list)
+            if isinstance(result_data, list):
+                # If it's a list, try to get first dict element or create empty dict
+                result_data = result_data[0] if result_data and isinstance(result_data[0], dict) else {}
+            
+            if not isinstance(result_data, dict):
+                result_data = {}
+            
+            print(f"🔮 Final result_data keys: {result_data.keys() if result_data else 'empty'}")
             
             return PredictionResult(
                 winner=result_data.get("winner", team_a.name),
@@ -268,26 +280,42 @@ class DixieAI:
             return cls._generate_mock_prediction(team_a, team_b, players_a, players_b, language)
     
     @staticmethod
-    def _parse_json_response(content: str) -> dict:
-        """Extract and parse JSON from LLM response"""
+    def _parse_json_response(content: str):
+        """Extract and parse JSON from LLM response (dict or list)"""
+        # Clean markdown code blocks first
+        content = content.strip()
+        if content.startswith("```json"):
+            content = content[7:]
+        elif content.startswith("```"):
+            content = content[3:]
+        if content.endswith("```"):
+            content = content[:-3]
+        content = content.strip()
+        
         try:
             # Try direct parse
             return json.loads(content)
         except json.JSONDecodeError:
-            # Try to find JSON in response
-            start = content.find("{")
-            if start == -1:
-                start = content.find("[")
-            
-            end = content.rfind("}") + 1
-            if end == 0:
-                end = content.rfind("]") + 1
-                
-            if start != -1 and end > start:
-                try:
-                    return json.loads(content[start:end])
-                except json.JSONDecodeError:
-                    pass
+            pass
+        
+        # Try to find JSON object first (for prediction responses)
+        obj_start = content.find("{")
+        obj_end = content.rfind("}") + 1
+        if obj_start != -1 and obj_end > obj_start:
+            try:
+                return json.loads(content[obj_start:obj_end])
+            except json.JSONDecodeError:
+                pass
+        
+        # Try to find JSON array (for player lists)
+        array_start = content.find("[")
+        array_end = content.rfind("]") + 1
+        if array_start != -1 and array_end > array_start:
+            try:
+                return json.loads(content[array_start:array_end])
+            except json.JSONDecodeError:
+                pass
+        
         return {}
 
     @classmethod
@@ -296,7 +324,12 @@ class DixieAI:
         🤖 Use AI to get REAL players for a team when API data is missing.
         Returns a list of player dictionaries with realistic attributes.
         """
+        # Auto-initialize if not already done
         if cls._client is None:
+            cls.initialize()
+        
+        if cls._client is None:
+            print(f"⚠️ No API key available for generating players")
             return []
 
         prompt = f"""
@@ -327,10 +360,18 @@ class DixieAI:
             )
             
             content = response.choices[0].message.content
+            print(f"🔍 AI response for {team_name}: {content[:200]}...")
+            
             players_data = cls._parse_json_response(content)
             
-            if isinstance(players_data, list):
+            if isinstance(players_data, list) and len(players_data) > 0:
+                print(f"✅ Parsed {len(players_data)} real players for {team_name}")
                 return players_data
+            elif isinstance(players_data, dict) and "players" in players_data:
+                print(f"✅ Parsed {len(players_data['players'])} real players for {team_name}")
+                return players_data["players"]
+            
+            print(f"⚠️ Could not parse players for {team_name}, raw: {type(players_data)}")
             return []
         except Exception as e:
             print(f"❌ Error generating real players for {team_name}: {e}")

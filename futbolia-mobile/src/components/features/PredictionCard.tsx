@@ -1,5 +1,5 @@
 /**
- * PredictionCard - Display Dixie's prediction with analysis
+ * PredictionCard - Display Dixie's prediction with analysis and player details
  */
 import { View, StyleSheet, ScrollView } from "react-native";
 import { useTheme } from "@/src/theme";
@@ -11,7 +11,7 @@ import {
   TeamBadge,
   Button,
 } from "@/src/components/ui";
-import { Prediction } from "@/src/services/api";
+import { Prediction, Player } from "@/src/services/api";
 
 interface PredictionCardProps {
   prediction: Prediction;
@@ -19,6 +19,94 @@ interface PredictionCardProps {
   onShare?: () => void;
   onNewPrediction?: () => void;
 }
+
+// Helper to get position color
+const getPositionColor = (position: string, theme: any) => {
+  if (position === "GK") return "#FFA500"; // Orange
+  if (["CB", "LB", "RB", "LWB", "RWB"].includes(position)) return "#3498db"; // Blue
+  if (["CDM", "CM", "CAM"].includes(position)) return "#27ae60"; // Green
+  return "#e74c3c"; // Red for attackers
+};
+
+// Player Row Component
+const PlayerRow = ({ player, theme }: { player: Player; theme: any }) => (
+  <View style={styles.playerRow}>
+    <View
+      style={[
+        styles.positionBadge,
+        { backgroundColor: getPositionColor(player.position, theme) },
+      ]}
+    >
+      <ThemedText size="xs" style={{ color: "#fff", fontWeight: "bold" }}>
+        {player.position}
+      </ThemedText>
+    </View>
+    <ThemedText size="sm" weight="medium" style={styles.playerName}>
+      {player.name}
+    </ThemedText>
+    <View
+      style={[
+        styles.ovrBadge,
+        { backgroundColor: theme.colors.primary + "20" },
+      ]}
+    >
+      <ThemedText
+        size="xs"
+        weight="bold"
+        style={{ color: theme.colors.primary }}
+      >
+        {player.overall_rating}
+      </ThemedText>
+    </View>
+  </View>
+);
+
+// Team Squad Section
+const TeamSquadSection = ({
+  teamName,
+  players,
+  theme,
+  emoji,
+}: {
+  teamName: string;
+  players: Player[];
+  theme: any;
+  emoji: string;
+}) => (
+  <View style={styles.squadSection}>
+    <ThemedText size="md" weight="semibold" style={styles.squadTitle}>
+      {emoji} {teamName}
+    </ThemedText>
+    <View
+      style={[
+        styles.squadBox,
+        { backgroundColor: theme.colors.surfaceSecondary },
+      ]}
+    >
+      {players.length > 0 ? (
+        players
+          .slice(0, 11)
+          .map((player, index) => (
+            <PlayerRow key={index} player={player} theme={theme} />
+          ))
+      ) : (
+        <ThemedText variant="muted" size="sm">
+          Sin datos de jugadores
+        </ThemedText>
+      )}
+    </View>
+    {players.length > 0 && (
+      <View style={styles.statsRow}>
+        <ThemedText variant="muted" size="xs">
+          📊 Promedio OVR:{" "}
+          {Math.round(
+            players.reduce((a, p) => a + p.overall_rating, 0) / players.length
+          )}
+        </ThemedText>
+      </View>
+    )}
+  </View>
+);
 
 export function PredictionCard({
   prediction,
@@ -172,6 +260,49 @@ export function PredictionCard({
         </View>
       </View>
 
+      {/* Team Squads - Detailed Player Analytics */}
+      {prediction.context && (
+        <View style={styles.squadsContainer}>
+          <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
+            👥 Plantillas Analizadas
+          </ThemedText>
+
+          <View style={styles.squadsGrid}>
+            <TeamSquadSection
+              teamName={match.home_team.name}
+              players={prediction.context.home_players || []}
+              theme={theme}
+              emoji="🏠"
+            />
+            <TeamSquadSection
+              teamName={match.away_team.name}
+              players={prediction.context.away_players || []}
+              theme={theme}
+              emoji="🚌"
+            />
+          </View>
+        </View>
+      )}
+
+      {/* Tactical Insight */}
+      {result.tactical_insight && (
+        <View style={styles.insightSection}>
+          <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
+            🧠 Insight Táctico
+          </ThemedText>
+          <View
+            style={[
+              styles.analysisBox,
+              { backgroundColor: theme.colors.primary + "10" },
+            ]}
+          >
+            <ThemedText variant="secondary" size="sm">
+              {result.tactical_insight}
+            </ThemedText>
+          </View>
+        </View>
+      )}
+
       {/* Action Buttons */}
       <View style={styles.actions}>
         {onSave && (
@@ -266,6 +397,56 @@ const styles = StyleSheet.create({
     width: 1,
     height: "100%",
     marginHorizontal: 8,
+  },
+  // Squad styles
+  squadsContainer: {
+    marginTop: 24,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0,0,0,0.1)",
+  },
+  squadsGrid: {
+    gap: 16,
+  },
+  squadSection: {
+    marginBottom: 12,
+  },
+  squadTitle: {
+    marginBottom: 8,
+  },
+  squadBox: {
+    padding: 12,
+    borderRadius: 12,
+  },
+  playerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0,0,0,0.05)",
+  },
+  positionBadge: {
+    width: 32,
+    height: 20,
+    borderRadius: 4,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 8,
+  },
+  playerName: {
+    flex: 1,
+  },
+  ovrBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  statsRow: {
+    marginTop: 8,
+    alignItems: "flex-end",
+  },
+  insightSection: {
+    marginTop: 20,
   },
   actions: {
     flexDirection: "row",
