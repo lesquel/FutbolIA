@@ -42,6 +42,27 @@ interface PredictionResult {
   key_factors: string[];
   star_player_home: string;
   star_player_away: string;
+  match_preview?: string;
+  tactical_insight?: string;
+}
+
+// Player data for detailed analytics
+interface Player {
+  name: string;
+  position: string;
+  overall_rating: number;
+  pace: number;
+  shooting: number;
+  passing: number;
+  dribbling: number;
+  defending: number;
+  physical: number;
+}
+
+// Analytics context returned with prediction
+interface PredictionContext {
+  home_players: Player[];
+  away_players: Player[];
 }
 
 interface Team {
@@ -70,6 +91,7 @@ interface Prediction {
   created_at: string;
   is_correct: boolean | null;
   language: string;
+  context?: PredictionContext;
 }
 
 interface PredictionStats {
@@ -326,11 +348,21 @@ export const teamsApi = {
     );
   },
 
-  // Get players for a team
+  // Get players for a team (with stats)
   getTeamPlayers: async (teamName: string) => {
-    return apiRequest<{ team: string; players: any[]; count: number }>(
-      `/teams/${encodeURIComponent(teamName)}/players`
-    );
+    return apiRequest<{
+      team: string;
+      players: Player[];
+      count: number;
+      stats: {
+        overall: number;
+        pace: number;
+        shooting: number;
+        passing: number;
+        defending: number;
+        physical: number;
+      } | null;
+    }>(`/teams/${encodeURIComponent(teamName)}/players`);
   },
 
   // Auto-generate players for a team
@@ -368,4 +400,6 @@ export type {
   TeamSearchResult,
   PlayerCreate,
   TeamCreate,
+  Player,
+  PredictionContext,
 };
