@@ -20,16 +20,56 @@ import { teamsApi, TeamSearchResult } from "@/src/services/api";
 
 // Fallback teams if API is offline or for quick selection
 const POPULAR_TEAMS = [
-  { name: "Real Madrid", league: "La Liga", logo_url: "https://crests.football-data.org/86.png" },
-  { name: "Manchester City", league: "Premier League", logo_url: "https://crests.football-data.org/65.png" },
-  { name: "Barcelona", league: "La Liga", logo_url: "https://crests.football-data.org/81.png" },
-  { name: "Bayern Munich", league: "Bundesliga", logo_url: "https://crests.football-data.org/5.png" },
-  { name: "Liverpool", league: "Premier League", logo_url: "https://crests.football-data.org/64.png" },
-  { name: "Arsenal", league: "Premier League", logo_url: "https://crests.football-data.org/57.png" },
-  { name: "Paris Saint-Germain", league: "Ligue 1", logo_url: "https://crests.football-data.org/524.png" },
-  { name: "Inter Milan", league: "Serie A", logo_url: "https://crests.football-data.org/108.png" },
-  { name: "Juventus", league: "Serie A", logo_url: "https://crests.football-data.org/109.png" },
-  { name: "Atletico Madrid", league: "La Liga", logo_url: "https://crests.football-data.org/78.png" },
+  {
+    name: "Real Madrid",
+    league: "La Liga",
+    logo_url: "https://crests.football-data.org/86.png",
+  },
+  {
+    name: "Manchester City",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/65.png",
+  },
+  {
+    name: "Barcelona",
+    league: "La Liga",
+    logo_url: "https://crests.football-data.org/81.png",
+  },
+  {
+    name: "Bayern Munich",
+    league: "Bundesliga",
+    logo_url: "https://crests.football-data.org/5.png",
+  },
+  {
+    name: "Liverpool",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/64.png",
+  },
+  {
+    name: "Arsenal",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/57.png",
+  },
+  {
+    name: "Paris Saint-Germain",
+    league: "Ligue 1",
+    logo_url: "https://crests.football-data.org/524.png",
+  },
+  {
+    name: "Inter Milan",
+    league: "Serie A",
+    logo_url: "https://crests.football-data.org/108.png",
+  },
+  {
+    name: "Juventus",
+    league: "Serie A",
+    logo_url: "https://crests.football-data.org/109.png",
+  },
+  {
+    name: "Atletico Madrid",
+    league: "La Liga",
+    logo_url: "https://crests.football-data.org/78.png",
+  },
 ];
 
 interface TeamSelectorProps {
@@ -58,18 +98,24 @@ export function TeamSelector({
     const loadInitialTeams = async () => {
       try {
         const response = await teamsApi.getTeamsWithPlayers();
-        if (response.success && response.data?.teams && response.data.teams.length > 0) {
+        if (
+          response.success &&
+          response.data?.teams &&
+          response.data.teams.length > 0
+        ) {
           setTeams(response.data.teams);
         } else {
           // Fallback to popular teams formatted as TeamSearchResult
-          setTeams(POPULAR_TEAMS.map(t => ({
-            id: t.name.toLowerCase().replace(/\s+/g, "_"),
-            name: t.name,
-            league: t.league,
-            logo_url: t.logo_url,
-            has_players: true,
-            player_count: 11
-          })));
+          setTeams(
+            POPULAR_TEAMS.map((t) => ({
+              id: t.name.toLowerCase().replace(/\s+/g, "_"),
+              name: t.name,
+              league: t.league,
+              logo_url: t.logo_url,
+              has_players: true,
+              player_count: 11,
+            }))
+          );
         }
       } catch (error) {
         console.log("Error loading initial teams:", error);
@@ -88,17 +134,23 @@ export function TeamSelector({
       const loadInitialTeams = async () => {
         try {
           const response = await teamsApi.getTeamsWithPlayers();
-          if (response.success && response.data?.teams && response.data.teams.length > 0) {
+          if (
+            response.success &&
+            response.data?.teams &&
+            response.data.teams.length > 0
+          ) {
             setTeams(response.data.teams);
           } else {
-            setTeams(POPULAR_TEAMS.map(t => ({
-              id: t.name.toLowerCase().replace(/\s+/g, "_"),
-              name: t.name,
-              league: t.league,
-              logo_url: t.logo_url,
-              has_players: true,
-              player_count: 11
-            })));
+            setTeams(
+              POPULAR_TEAMS.map((t) => ({
+                id: t.name.toLowerCase().replace(/\s+/g, "_"),
+                name: t.name,
+                league: t.league,
+                logo_url: t.logo_url,
+                has_players: true,
+                player_count: 11,
+              }))
+            );
           }
         } catch (error) {
           console.log("Error resetting teams:", error);
@@ -147,14 +199,17 @@ export function TeamSelector({
       if (addResponse.success) {
         // 2. Generate players automatically so Dixie has data to work with
         await teamsApi.generatePlayers(searchQuery, 15, 75);
-        
+
         Alert.alert(
           "✅ Equipo Agregado",
           `${searchQuery} ha sido agregado con éxito. Dixie ya conoce a sus jugadores.`,
           [{ text: "¡Genial!", onPress: () => handleSelectTeam(searchQuery) }]
         );
       } else {
-        Alert.alert("Error", addResponse.error || "No se pudo agregar el equipo");
+        Alert.alert(
+          "Error",
+          addResponse.error || "No se pudo agregar el equipo"
+        );
       }
     } catch (error) {
       Alert.alert("Error", "Error de conexión al agregar equipo");
@@ -197,26 +252,33 @@ export function TeamSelector({
             ]}
           >
             {item.logo_url ? (
-              <Image 
-                source={{ uri: item.logo_url }} 
-                style={styles.teamLogo} 
+              <Image
+                source={{ uri: item.logo_url }}
+                style={styles.teamLogo}
                 resizeMode="contain"
               />
             ) : (
-              <ThemedText weight="bold">
-                {getInitials(item.name)}
-              </ThemedText>
+              <ThemedText weight="bold">{getInitials(item.name)}</ThemedText>
             )}
           </View>
           <View style={{ flex: 1 }}>
-            <ThemedText weight="semibold" numberOfLines={1}>{item.name}</ThemedText>
+            <ThemedText weight="semibold" numberOfLines={1}>
+              {item.name}
+            </ThemedText>
             <ThemedText variant="muted" size="xs">
               {item.league || item.country || "Liga desconocida"}
             </ThemedText>
           </View>
           {item.has_players && (
-            <View style={[styles.dataBadge, { backgroundColor: theme.colors.success + "20" }]}>
-              <ThemedText size="xs" style={{ color: theme.colors.success }}>✓ Datos</ThemedText>
+            <View
+              style={[
+                styles.dataBadge,
+                { backgroundColor: theme.colors.success + "20" },
+              ]}
+            >
+              <ThemedText size="xs" style={{ color: theme.colors.success }}>
+                ✓ Datos
+              </ThemedText>
             </View>
           )}
         </View>
@@ -306,9 +368,9 @@ export function TeamSelector({
                 autoFocus
               />
               {loading && (
-                <ActivityIndicator 
-                  style={styles.searchLoader} 
-                  color={theme.colors.primary} 
+                <ActivityIndicator
+                  style={styles.searchLoader}
+                  color={theme.colors.primary}
                 />
               )}
             </View>
@@ -323,21 +385,30 @@ export function TeamSelector({
                 !loading ? (
                   <View style={styles.emptyContainer}>
                     <ThemedText variant="muted" style={styles.emptyText}>
-                      {searchQuery.length > 0 
-                        ? "No se encontraron equipos." 
+                      {searchQuery.length > 0
+                        ? "No se encontraron equipos."
                         : "Escribe para buscar en la base de datos mundial."}
                     </ThemedText>
-                    
+
                     {searchQuery.length >= 3 && (
                       <Card variant="outlined" style={styles.addCard}>
                         <ThemedText weight="bold" style={{ marginBottom: 8 }}>
                           ¿No encuentras a {searchQuery}?
                         </ThemedText>
-                        <ThemedText size="sm" variant="secondary" style={{ marginBottom: 16 }}>
-                          Puedes agregarlo ahora mismo y Dixie generará sus jugadores automáticamente.
+                        <ThemedText
+                          size="sm"
+                          variant="secondary"
+                          style={{ marginBottom: 16 }}
+                        >
+                          Puedes agregarlo ahora mismo y Dixie generará sus
+                          jugadores automáticamente.
                         </ThemedText>
                         <Button
-                          title={isAdding ? "Agregando..." : `➕ Agregar ${searchQuery}`}
+                          title={
+                            isAdding
+                              ? "Agregando..."
+                              : `➕ Agregar ${searchQuery}`
+                          }
                           onPress={handleAddNewTeam}
                           disabled={isAdding}
                           loading={isAdding}
