@@ -185,7 +185,7 @@ export default function PredictScreen() {
                     onSelectTeam={setHomeTeam}
                     excludeTeam={awayTeam}
                   />
-                  
+
                   {/* Home Team Stats */}
                   <TeamStatsCard teamName={homeTeam} emoji="🏠" />
 
@@ -220,7 +220,7 @@ export default function PredictScreen() {
                     onSelectTeam={setAwayTeam}
                     excludeTeam={homeTeam}
                   />
-                  
+
                   {/* Away Team Stats */}
                   <TeamStatsCard teamName={awayTeam} emoji="🚌" />
 
