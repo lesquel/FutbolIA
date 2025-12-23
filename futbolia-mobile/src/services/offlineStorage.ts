@@ -1,7 +1,7 @@
 /**
  * FutbolIA Offline Storage Service
  * Handles local caching and offline mode functionality
- * 
+ *
  * Features:
  * - Cache favorite teams
  * - Store recent predictions offline
@@ -73,22 +73,29 @@ export const getFavoriteTeams = async (): Promise<CachedTeam[]> => {
 /**
  * Add a team to favorites
  */
-export const addFavoriteTeam = async (team: Omit<CachedTeam, "cachedAt">): Promise<void> => {
+export const addFavoriteTeam = async (
+  team: Omit<CachedTeam, "cachedAt">
+): Promise<void> => {
   try {
     const favorites = await getFavoriteTeams();
-    
+
     // Check if already exists
-    if (favorites.some(t => t.name.toLowerCase() === team.name.toLowerCase())) {
+    if (
+      favorites.some((t) => t.name.toLowerCase() === team.name.toLowerCase())
+    ) {
       return;
     }
-    
+
     const newFavorite: CachedTeam = {
       ...team,
       cachedAt: Date.now(),
     };
-    
+
     favorites.push(newFavorite);
-    await AsyncStorage.setItem(STORAGE_KEYS.FAVORITE_TEAMS, JSON.stringify(favorites));
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.FAVORITE_TEAMS,
+      JSON.stringify(favorites)
+    );
   } catch (error) {
     console.error("Error adding favorite team:", error);
     throw error;
@@ -101,8 +108,13 @@ export const addFavoriteTeam = async (team: Omit<CachedTeam, "cachedAt">): Promi
 export const removeFavoriteTeam = async (teamName: string): Promise<void> => {
   try {
     const favorites = await getFavoriteTeams();
-    const updated = favorites.filter(t => t.name.toLowerCase() !== teamName.toLowerCase());
-    await AsyncStorage.setItem(STORAGE_KEYS.FAVORITE_TEAMS, JSON.stringify(updated));
+    const updated = favorites.filter(
+      (t) => t.name.toLowerCase() !== teamName.toLowerCase()
+    );
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.FAVORITE_TEAMS,
+      JSON.stringify(updated)
+    );
   } catch (error) {
     console.error("Error removing favorite team:", error);
     throw error;
@@ -114,7 +126,7 @@ export const removeFavoriteTeam = async (teamName: string): Promise<void> => {
  */
 export const isTeamFavorite = async (teamName: string): Promise<boolean> => {
   const favorites = await getFavoriteTeams();
-  return favorites.some(t => t.name.toLowerCase() === teamName.toLowerCase());
+  return favorites.some((t) => t.name.toLowerCase() === teamName.toLowerCase());
 };
 
 // ==================== Recent Predictions Cache ====================
@@ -122,17 +134,19 @@ export const isTeamFavorite = async (teamName: string): Promise<boolean> => {
 /**
  * Get cached predictions
  */
-export const getCachedPredictions = async (limit: number = 20): Promise<CachedPrediction[]> => {
+export const getCachedPredictions = async (
+  limit: number = 20
+): Promise<CachedPrediction[]> => {
   try {
     const data = await AsyncStorage.getItem(STORAGE_KEYS.RECENT_PREDICTIONS);
     if (!data) return [];
-    
+
     const predictions: CachedPrediction[] = JSON.parse(data);
-    
+
     // Filter out expired predictions
     const now = Date.now();
-    const valid = predictions.filter(p => now - p.cachedAt < CACHE_DURATION);
-    
+    const valid = predictions.filter((p) => now - p.cachedAt < CACHE_DURATION);
+
     return valid.slice(0, limit);
   } catch (error) {
     console.error("Error reading cached predictions:", error);
@@ -143,33 +157,42 @@ export const getCachedPredictions = async (limit: number = 20): Promise<CachedPr
 /**
  * Cache a new prediction
  */
-export const cachePrediction = async (prediction: Omit<CachedPrediction, "cachedAt">): Promise<void> => {
+export const cachePrediction = async (
+  prediction: Omit<CachedPrediction, "cachedAt">
+): Promise<void> => {
   try {
     const cached = await getCachedPredictions(50);
-    
+
     // Check if prediction already exists
     const exists = cached.some(
-      p => p.homeTeam === prediction.homeTeam && p.awayTeam === prediction.awayTeam
+      (p) =>
+        p.homeTeam === prediction.homeTeam && p.awayTeam === prediction.awayTeam
     );
-    
+
     if (exists) {
       // Update existing prediction
-      const updated = cached.map(p => 
+      const updated = cached.map((p) =>
         p.homeTeam === prediction.homeTeam && p.awayTeam === prediction.awayTeam
           ? { ...prediction, cachedAt: Date.now() }
           : p
       );
-      await AsyncStorage.setItem(STORAGE_KEYS.RECENT_PREDICTIONS, JSON.stringify(updated));
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.RECENT_PREDICTIONS,
+        JSON.stringify(updated)
+      );
     } else {
       // Add new prediction
       const newPrediction: CachedPrediction = {
         ...prediction,
         cachedAt: Date.now(),
       };
-      
+
       // Keep only last 50 predictions
       const updated = [newPrediction, ...cached].slice(0, 50);
-      await AsyncStorage.setItem(STORAGE_KEYS.RECENT_PREDICTIONS, JSON.stringify(updated));
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.RECENT_PREDICTIONS,
+        JSON.stringify(updated)
+      );
     }
   } catch (error) {
     console.error("Error caching prediction:", error);
@@ -184,10 +207,13 @@ export const getCachedPredictionForMatch = async (
   awayTeam: string
 ): Promise<CachedPrediction | null> => {
   const cached = await getCachedPredictions();
-  return cached.find(
-    p => p.homeTeam.toLowerCase() === homeTeam.toLowerCase() &&
-         p.awayTeam.toLowerCase() === awayTeam.toLowerCase()
-  ) || null;
+  return (
+    cached.find(
+      (p) =>
+        p.homeTeam.toLowerCase() === homeTeam.toLowerCase() &&
+        p.awayTeam.toLowerCase() === awayTeam.toLowerCase()
+    ) || null
+  );
 };
 
 // ==================== Pending Predictions Queue ====================
@@ -215,10 +241,12 @@ export const queuePrediction = async (
 ): Promise<string> => {
   try {
     const pending = await getPendingPredictions();
-    
+
     // Generate a temporary ID
-    const id = `pending_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+    const id = `pending_${Date.now()}_${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
+
     const newRequest: PendingPrediction = {
       id,
       homeTeam,
@@ -226,10 +254,13 @@ export const queuePrediction = async (
       requestedAt: Date.now(),
       language,
     };
-    
+
     pending.push(newRequest);
-    await AsyncStorage.setItem(STORAGE_KEYS.PENDING_PREDICTIONS, JSON.stringify(pending));
-    
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.PENDING_PREDICTIONS,
+      JSON.stringify(pending)
+    );
+
     return id;
   } catch (error) {
     console.error("Error queuing prediction:", error);
@@ -243,8 +274,11 @@ export const queuePrediction = async (
 export const removePendingPrediction = async (id: string): Promise<void> => {
   try {
     const pending = await getPendingPredictions();
-    const updated = pending.filter(p => p.id !== id);
-    await AsyncStorage.setItem(STORAGE_KEYS.PENDING_PREDICTIONS, JSON.stringify(updated));
+    const updated = pending.filter((p) => p.id !== id);
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.PENDING_PREDICTIONS,
+      JSON.stringify(updated)
+    );
   } catch (error) {
     console.error("Error removing pending prediction:", error);
   }
@@ -262,23 +296,27 @@ export const clearPendingPredictions = async (): Promise<void> => {
 /**
  * Cache team search results
  */
-export const cacheTeamSearch = async (query: string, teams: CachedTeam[]): Promise<void> => {
+export const cacheTeamSearch = async (
+  query: string,
+  teams: CachedTeam[]
+): Promise<void> => {
   try {
     const data = await AsyncStorage.getItem(STORAGE_KEYS.TEAM_CACHE);
-    const cache: Record<string, { teams: CachedTeam[]; cachedAt: number }> = data ? JSON.parse(data) : {};
-    
+    const cache: Record<string, { teams: CachedTeam[]; cachedAt: number }> =
+      data ? JSON.parse(data) : {};
+
     cache[query.toLowerCase()] = {
       teams,
       cachedAt: Date.now(),
     };
-    
+
     // Keep only last 100 searches
     const keys = Object.keys(cache);
     if (keys.length > 100) {
       const sorted = keys.sort((a, b) => cache[a].cachedAt - cache[b].cachedAt);
-      sorted.slice(0, keys.length - 100).forEach(key => delete cache[key]);
+      sorted.slice(0, keys.length - 100).forEach((key) => delete cache[key]);
     }
-    
+
     await AsyncStorage.setItem(STORAGE_KEYS.TEAM_CACHE, JSON.stringify(cache));
   } catch (error) {
     console.error("Error caching team search:", error);
@@ -288,21 +326,24 @@ export const cacheTeamSearch = async (query: string, teams: CachedTeam[]): Promi
 /**
  * Get cached team search results
  */
-export const getCachedTeamSearch = async (query: string): Promise<CachedTeam[] | null> => {
+export const getCachedTeamSearch = async (
+  query: string
+): Promise<CachedTeam[] | null> => {
   try {
     const data = await AsyncStorage.getItem(STORAGE_KEYS.TEAM_CACHE);
     if (!data) return null;
-    
-    const cache: Record<string, { teams: CachedTeam[]; cachedAt: number }> = JSON.parse(data);
+
+    const cache: Record<string, { teams: CachedTeam[]; cachedAt: number }> =
+      JSON.parse(data);
     const entry = cache[query.toLowerCase()];
-    
+
     if (!entry) return null;
-    
+
     // Check if cache is still valid
     if (Date.now() - entry.cachedAt > CACHE_DURATION) {
       return null;
     }
-    
+
     return entry.teams;
   } catch (error) {
     console.error("Error reading team cache:", error);
@@ -367,7 +408,7 @@ export const getOfflineStats = async (): Promise<{
     getPendingPredictions(),
     getLastSync(),
   ]);
-  
+
   return {
     favoriteTeams: favorites.length,
     cachedPredictions: predictions.length,
@@ -397,15 +438,19 @@ export const exportOfflineData = async (): Promise<string> => {
     getFavoriteTeams(),
     getCachedPredictions(),
   ]);
-  
-  return JSON.stringify({
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    data: {
-      favoriteTeams: favorites,
-      predictions: predictions,
+
+  return JSON.stringify(
+    {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      data: {
+        favoriteTeams: favorites,
+        predictions: predictions,
+      },
     },
-  }, null, 2);
+    null,
+    2
+  );
 };
 
 /**
@@ -414,25 +459,25 @@ export const exportOfflineData = async (): Promise<string> => {
 export const importOfflineData = async (jsonData: string): Promise<boolean> => {
   try {
     const data = JSON.parse(jsonData);
-    
+
     if (data.version !== 1) {
       throw new Error("Unsupported backup version");
     }
-    
+
     if (data.data.favoriteTeams) {
       await AsyncStorage.setItem(
         STORAGE_KEYS.FAVORITE_TEAMS,
         JSON.stringify(data.data.favoriteTeams)
       );
     }
-    
+
     if (data.data.predictions) {
       await AsyncStorage.setItem(
         STORAGE_KEYS.RECENT_PREDICTIONS,
         JSON.stringify(data.data.predictions)
       );
     }
-    
+
     return true;
   } catch (error) {
     console.error("Error importing offline data:", error);
