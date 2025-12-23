@@ -160,35 +160,94 @@ async def search_teams(
 async def get_teams_with_players():
     """
     🏆 Get all teams that have player data in the system
+    Combines teams from MongoDB and ChromaDB
     """
-    # Get teams from ChromaDB
+    teams = []
+    seen_names = set()
+    
+    # 1. Get teams from MongoDB that have players
+    mongo_teams = await TeamRepository.get_teams_with_players()
+    for team in mongo_teams:
+        if team.name.lower() not in seen_names:
+            seen_names.add(team.name.lower())
+            # Get actual player count from ChromaDB
+            player_count = len(PlayerVectorStore.search_by_team(team.name, limit=30))
+            teams.append({
+                "id": team.id,
+                "name": team.name,
+                "short_name": team.short_name,
+                "logo_url": team.logo_url,
+                "country": team.country,
+                "league": team.league,
+                "has_players": True,
+                "player_count": player_count,
+                "source": "mongodb"
+            })
+    
+    # 2. Also check major European teams in ChromaDB (seed data)
     major_teams = [
         "Real Madrid", "Manchester City", "Barcelona", "Bayern Munich",
         "Liverpool", "Arsenal", "Paris Saint-Germain", "Inter Milan",
         "Juventus", "Atletico Madrid"
     ]
     
-    teams = []
     for team_name in major_teams:
-        players = PlayerVectorStore.search_by_team(team_name, limit=1)
-        if players:
-            player_count = len(PlayerVectorStore.search_by_team(team_name, limit=20))
-            teams.append({
-                "id": f"chroma_{team_name.lower().replace(' ', '_')}",
-                "name": team_name,
-                "short_name": team_name[:3].upper(),
-                "logo_url": "",
-                "country": "",
-                "league": "",
-                "has_players": True,
-                "player_count": player_count
-            })
+        if team_name.lower() not in seen_names:
+            players = PlayerVectorStore.search_by_team(team_name, limit=1)
+            if players:
+                player_count = len(PlayerVectorStore.search_by_team(team_name, limit=20))
+                seen_names.add(team_name.lower())
+                teams.append({
+                    "id": f"chroma_{team_name.lower().replace(' ', '_')}",
+                    "name": team_name,
+                    "short_name": team_name[:3].upper(),
+                    "logo_url": "",
+                    "country": "",
+                    "league": "",
+                    "has_players": True,
+                    "player_count": player_count,
+                    "source": "chromadb"
+                })
+    
+    # Sort by name
+    teams.sort(key=lambda t: t["name"])
     
     return {
         "success": True,
         "data": {
             "teams": teams,
             "total": len(teams)
+        }
+    }
+
+
+@router.get("/all")
+async def get_all_teams():
+    """
+    📋 Get ALL teams stored in MongoDB
+    """
+    all_teams = await TeamRepository.get_all(limit=500)
+    
+    teams_list = []
+    for team in all_teams:
+        # Get player count from ChromaDB
+        player_count = len(PlayerVectorStore.search_by_team(team.name, limit=30))
+        teams_list.append({
+            "id": team.id,
+            "name": team.name,
+            "short_name": team.short_name,
+            "logo_url": team.logo_url,
+            "country": team.country,
+            "league": team.league,
+            "has_players": player_count > 0,
+            "player_count": player_count
+        })
+    
+    return {
+        "success": True,
+        "data": {
+            "teams": teams_list,
+            "total": len(teams_list)
         }
     }
 
@@ -368,14 +427,21 @@ async def bulk_add_teams(
 @router.get("/{team_name}/players")
 async def get_team_players(team_name: str):
     """
-    👥 Get all players for a team - generates with AI if not found
+    👥 Get all players for a team - generates with AI if not found and SAVES to DB
+    
+    Flow:
+    1. Check ChromaDB first (fast, local)
+    2. If not found, generate with AI (DeepSeek)
+    3. SAVE generated players to ChromaDB for future queries
+    4. SAVE team to MongoDB for persistence
     """
     # First check ChromaDB
     players = PlayerVectorStore.search_by_team(team_name, limit=30)
     
-    # If no players found, generate with AI
+    # If no players found, generate with AI and SAVE
     if not players:
         from src.infrastructure.llm.dixie import DixieAI
+        from src.domain.entities import Team
         
         print(f"🔄 No players in ChromaDB for '{team_name}', generating with AI...")
         real_players = await DixieAI.generate_team_players(team_name, count=11)
@@ -399,6 +465,24 @@ async def get_team_players(team_name: str):
                         physical=p_data.get("physical", 70),
                     )
                     players.append(player)
+            
+            # 🔥 SAVE to ChromaDB for future queries (no more AI calls needed)
+            if players:
+                PlayerVectorStore.add_players_batch(players)
+                print(f"✅ Saved {len(players)} players for '{team_name}' to ChromaDB")
+                
+                # 🔥 SAVE team to MongoDB for persistence
+                team = Team(
+                    id=f"ai_{team_name.lower().replace(' ', '_')}",
+                    name=team_name,
+                    short_name=team_name[:3].upper(),
+                    logo_url="",
+                    country="",
+                    league="",
+                )
+                await TeamRepository.create(team, added_by="ai_generated")
+                await TeamRepository.update_player_status(team_name, len(players))
+                print(f"✅ Saved team '{team_name}' to MongoDB")
     
     # Calculate team stats
     if players:
