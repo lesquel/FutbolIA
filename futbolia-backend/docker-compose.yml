@@ -1,0 +1,97 @@
+# ===========================================
+# FutbolIA - Docker Compose Configuration
+# ===========================================
+
+services:
+  # Backend API
+  futbolia-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: futbolia-api
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8000}:8000"
+    environment:
+      # Server
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - HOST=0.0.0.0
+      - PORT=8000
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      
+      # MongoDB
+      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017}
+      - MONGODB_DATABASE=${MONGODB_DATABASE:-futbolia}
+      
+      # ChromaDB
+      - CHROMADB_PATH=/app/data/chromadb
+      - CHROMADB_COLLECTION=${CHROMADB_COLLECTION:-player_attributes}
+      
+      # DeepSeek (Dixie AI)
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - DEEPSEEK_BASE_URL=${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      - DEEPSEEK_MODEL=${DEEPSEEK_MODEL:-deepseek-chat}
+      
+      # JWT
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
+      - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+      - JWT_EXPIRATION_MINUTES=${JWT_EXPIRATION_MINUTES:-10080}
+      
+      # Rate Limiting
+      - RATE_LIMIT_PER_MINUTE=${RATE_LIMIT_PER_MINUTE:-60}
+      
+      # CORS
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://localhost:8081,http://localhost:19006}
+    
+    volumes:
+      # Persistent ChromaDB data
+      - chromadb-data:/app/data/chromadb
+      # Logs
+      - ./logs:/app/logs
+    
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    
+    networks:
+      - futbolia-network
+
+  # MongoDB Database
+  mongodb:
+    image: mongo:7
+    container_name: futbolia-mongodb
+    restart: unless-stopped
+    ports:
+      - "${MONGODB_PORT:-27017}:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=${MONGODB_DATABASE:-futbolia}
+    volumes:
+      - mongodb-data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - futbolia-network
+
+# Volumes for data persistence
+volumes:
+  mongodb-data:
+    name: futbolia-mongodb-data
+  chromadb-data:
+    name: futbolia-chromadb-data
+
+# Custom network
+networks:
+  futbolia-network:
+    name: futbolia-network
+    driver: bridge

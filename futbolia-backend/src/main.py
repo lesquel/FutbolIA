@@ -7,6 +7,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.core.config import settings
+from src.core.logger import log_info, log_error, get_logger
+from src.core.rate_limit import RateLimitMiddleware
 from src.infrastructure.db.mongodb import MongoDB
 from src.infrastructure.chromadb.player_store import PlayerVectorStore
 from src.infrastructure.chromadb.seed_data import seed_players
@@ -14,34 +16,44 @@ from src.infrastructure.llm.dixie import DixieAI
 from src.presentation.auth_routes import router as auth_router
 from src.presentation.prediction_routes import router as prediction_router
 from src.presentation.team_routes import router as team_router
+from src.presentation.stats_routes import router as stats_router
+
+# Initialize logger
+logger = get_logger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup and shutdown events"""
     # Startup
-    print("🚀 Starting FutbolIA Backend...")
-    print(f"   App: {settings.APP_NAME} v{settings.APP_VERSION}")
+    log_info("Starting FutbolIA Backend...", 
+             app=settings.APP_NAME, 
+             version=settings.APP_VERSION,
+             environment=settings.ENVIRONMENT)
     
     # Connect to MongoDB
     await MongoDB.connect()
+    log_info("MongoDB connected", database=settings.MONGODB_DB_NAME)
     
     # Initialize ChromaDB and seed data
     PlayerVectorStore.initialize()
     seed_players()
+    log_info("ChromaDB initialized", players=PlayerVectorStore.count())
     
     # Initialize Dixie AI
     DixieAI.initialize()
+    log_info("Dixie AI initialized")
     
-    print("✅ All systems ready!")
-    print(f"📡 API running at http://{settings.HOST}:{settings.PORT}")
+    log_info("All systems ready!", 
+             host=settings.HOST, 
+             port=settings.PORT)
     
     yield
     
     # Shutdown
-    print("🛑 Shutting down FutbolIA Backend...")
+    log_info("Shutting down FutbolIA Backend...")
     await MongoDB.disconnect()
-    print("👋 Goodbye!")
+    log_info("Goodbye!")
 
 
 # Create FastAPI app
@@ -61,10 +73,20 @@ app = FastAPI(
     - Predicciones de partidos con análisis táctico
     - Historial de predicciones por usuario
     - Comparación de equipos y jugadores
+    - Estadísticas de precisión de Dixie
+    - Búsqueda inteligente de equipos (fuzzy search)
+    - Rate limiting para protección de API
     - Soporte multiidioma (ES/EN)
     """,
     version=settings.APP_VERSION,
     lifespan=lifespan,
+)
+
+# Rate Limiting Middleware (add before CORS)
+app.add_middleware(
+    RateLimitMiddleware,
+    default_limit=settings.RATE_LIMIT_PER_MINUTE,
+    window_seconds=60
 )
 
 # CORS Middleware
@@ -77,9 +99,11 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(auth_router, prefix="/api/v1")
-app.include_router(prediction_router, prefix="/api/v1")
-app.include_router(team_router, prefix="/api/v1")
+API_PREFIX = "/api/v1"
+app.include_router(auth_router, prefix=API_PREFIX)
+app.include_router(prediction_router, prefix=API_PREFIX)
+app.include_router(team_router, prefix=API_PREFIX)
+app.include_router(stats_router, prefix=API_PREFIX)
 
 
 # Root endpoint
@@ -96,6 +120,7 @@ async def root():
             "auth": "/api/v1/auth",
             "predictions": "/api/v1/predictions",
             "teams": "/api/v1/teams",
+            "stats": "/api/v1/stats",
         }
     }
 

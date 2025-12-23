@@ -1,8 +1,8 @@
 /**
  * TeamSelector - Dropdown/Modal for selecting teams
- * Now with dynamic API search and ability to add new teams!
+ * Now with button-based search to reduce server load!
  */
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   Modal,
@@ -91,7 +91,7 @@ export function TeamSelector({
   const [teams, setTeams] = useState<TeamSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
 
   // Initial load of popular teams or teams with players
   useEffect(() => {
@@ -108,7 +108,7 @@ export function TeamSelector({
           // Fallback to popular teams formatted as TeamSearchResult
           setTeams(
             POPULAR_TEAMS.map((t) => ({
-              id: t.name.toLowerCase().replace(/\s+/g, "_"),
+              id: t.name.toLowerCase().replaceAll(/\s+/g, "_"),
               name: t.name,
               league: t.league,
               logo_url: t.logo_url,
@@ -125,64 +125,42 @@ export function TeamSelector({
     loadInitialTeams();
   }, []);
 
-  // Debounced search
-  useEffect(() => {
-    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-
+  // Manual search function (called by button)
+  const handleSearch = async () => {
     if (!searchQuery.trim()) {
-      // Reset to initial state if search is empty
-      const loadInitialTeams = async () => {
-        try {
-          const response = await teamsApi.getTeamsWithPlayers();
-          if (
-            response.success &&
-            response.data?.teams &&
-            response.data.teams.length > 0
-          ) {
-            setTeams(response.data.teams);
-          } else {
-            setTeams(
-              POPULAR_TEAMS.map((t) => ({
-                id: t.name.toLowerCase().replace(/\s+/g, "_"),
-                name: t.name,
-                league: t.league,
-                logo_url: t.logo_url,
-                has_players: true,
-                player_count: 11,
-              }))
-            );
-          }
-        } catch (error) {
-          console.log("Error resetting teams:", error);
-        }
-      };
-      loadInitialTeams();
+      // Reset to initial teams if search is empty
+      setHasSearched(false);
+      const response = await teamsApi.getTeamsWithPlayers();
+      if (response.success && response.data?.teams) {
+        setTeams(response.data.teams);
+      }
       return;
     }
 
-    searchTimeoutRef.current = setTimeout(async () => {
-      setLoading(true);
-      try {
-        const response = await teamsApi.search(searchQuery, true);
-        if (response.success && response.data?.teams) {
-          setTeams(response.data.teams);
-        }
-      } catch (error) {
-        console.log("Search error:", error);
-      } finally {
-        setLoading(false);
+    setLoading(true);
+    setHasSearched(true);
+    try {
+      const response = await teamsApi.search(searchQuery, true);
+      if (response.success && response.data?.teams) {
+        setTeams(response.data.teams);
       }
-    }, 500);
+    } catch (error) {
+      console.log("Search error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return () => {
-      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-    };
-  }, [searchQuery]);
+  // Reset search when modal closes
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    setSearchQuery("");
+    setHasSearched(false);
+  };
 
   const handleSelectTeam = (teamName: string) => {
     onSelectTeam(teamName);
-    setModalVisible(false);
-    setSearchQuery("");
+    handleCloseModal();
   };
 
   const handleAddNewTeam = async () => {
@@ -359,14 +337,27 @@ export function TeamSelector({
               </TouchableOpacity>
             </View>
 
-            {/* Search Input */}
+            {/* Search Input with Button */}
             <View style={styles.searchContainer}>
-              <Input
-                placeholder="Buscar equipo (ej: Emelec, Boca...)"
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                autoFocus
-              />
+              <View style={styles.searchInputRow}>
+                <View style={styles.searchInputWrapper}>
+                  <Input
+                    placeholder="Buscar equipo (ej: Emelec, Boca...)"
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    onSubmitEditing={handleSearch}
+                    returnKeyType="search"
+                  />
+                </View>
+                <Button
+                  title="🔍"
+                  variant="primary"
+                  size="md"
+                  onPress={handleSearch}
+                  loading={loading}
+                  style={styles.searchButton}
+                />
+              </View>
               {loading && (
                 <ActivityIndicator
                   style={styles.searchLoader}
@@ -381,38 +372,49 @@ export function TeamSelector({
               keyExtractor={(item, index) => item.id || `team-${index}`}
               renderItem={renderTeamItem}
               style={styles.teamList}
+              ListHeaderComponent={
+                hasSearched && teams.length > 0 ? (
+                  <View style={styles.searchResultsHeader}>
+                    <ThemedText variant="muted" size="sm">
+                      ✅ {teams.length} equipo(s) encontrado(s)
+                    </ThemedText>
+                  </View>
+                ) : null
+              }
               ListEmptyComponent={
                 !loading ? (
                   <View style={styles.emptyContainer}>
                     <ThemedText variant="muted" style={styles.emptyText}>
-                      {searchQuery.length > 0
-                        ? "No se encontraron equipos."
-                        : "Escribe para buscar en la base de datos mundial."}
+                      {hasSearched && searchQuery.length > 0
+                        ? `No se encontró "${searchQuery}" en la base de datos.`
+                        : "Escribe el nombre del equipo y presiona 🔍 para buscar."}
                     </ThemedText>
 
-                    {searchQuery.length >= 3 && (
+                    {hasSearched && searchQuery.length >= 2 && (
                       <Card variant="outlined" style={styles.addCard}>
                         <ThemedText weight="bold" style={{ marginBottom: 8 }}>
-                          ¿No encuentras a {searchQuery}?
+                          🤖 ¿Agregar {searchQuery} con IA?
                         </ThemedText>
                         <ThemedText
                           size="sm"
                           variant="secondary"
                           style={{ marginBottom: 16 }}
                         >
-                          Puedes agregarlo ahora mismo y Dixie generará sus
-                          jugadores automáticamente.
+                          Dixie buscará los jugadores reales de este equipo y
+                          los guardará en la base de datos para futuras
+                          consultas.
                         </ThemedText>
                         <Button
                           title={
                             isAdding
-                              ? "Agregando..."
-                              : `➕ Agregar ${searchQuery}`
+                              ? "🔄 Generando jugadores..."
+                              : `✨ Agregar ${searchQuery} con IA`
                           }
                           onPress={handleAddNewTeam}
                           disabled={isAdding}
                           loading={isAdding}
                           size="sm"
+                          variant="primary"
                         />
                       </Card>
                     )}
@@ -473,13 +475,30 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   searchContainer: {
-    position: "relative",
     marginBottom: 10,
   },
+  searchInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  searchInputWrapper: {
+    flex: 1,
+  },
+  searchButton: {
+    minWidth: 50,
+    paddingHorizontal: 12,
+  },
   searchLoader: {
-    position: "absolute",
-    right: 15,
-    top: 15,
+    marginTop: 8,
+    alignSelf: "center",
+  },
+  searchResultsHeader: {
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0,0,0,0.1)",
+    marginBottom: 8,
   },
   teamList: {
     flex: 1,

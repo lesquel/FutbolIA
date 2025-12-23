@@ -1,0 +1,21 @@
+# Git
+.git
+.gitignore
+
+# Python / UV
+__pycache__
+.venv
+.env
+.env.*
+*.pyc
+*.pyo
+*.pyd
+
+# Datos locales (no queremos meter la DB local en la imagen)
+chroma_db/
+models/*.joblib
+!models/.keep
+
+# IDEs
+.vscode
+.idea
