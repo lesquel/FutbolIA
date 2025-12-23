@@ -1,7 +1,8 @@
 /**
  * TeamSelector - Dropdown/Modal for selecting teams
+ * Now with dynamic API search and ability to add new teams!
  */
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
   Modal,
@@ -9,22 +10,26 @@ import {
   FlatList,
   StyleSheet,
   Pressable,
+  ActivityIndicator,
+  Alert,
+  Image,
 } from "react-native";
 import { useTheme } from "@/src/theme";
-import { ThemedText, Card, Input } from "@/src/components/ui";
+import { ThemedText, Card, Input, Button } from "@/src/components/ui";
+import { teamsApi, TeamSearchResult } from "@/src/services/api";
 
-// Available teams (same as backend seed data)
-const AVAILABLE_TEAMS = [
-  { name: "Real Madrid", league: "La Liga" },
-  { name: "Manchester City", league: "Premier League" },
-  { name: "Barcelona", league: "La Liga" },
-  { name: "Bayern Munich", league: "Bundesliga" },
-  { name: "Liverpool", league: "Premier League" },
-  { name: "Arsenal", league: "Premier League" },
-  { name: "Paris Saint-Germain", league: "Ligue 1" },
-  { name: "Inter Milan", league: "Serie A" },
-  { name: "Juventus", league: "Serie A" },
-  { name: "Atletico Madrid", league: "La Liga" },
+// Fallback teams if API is offline or for quick selection
+const POPULAR_TEAMS = [
+  { name: "Real Madrid", league: "La Liga", logo_url: "https://crests.football-data.org/86.png" },
+  { name: "Manchester City", league: "Premier League", logo_url: "https://crests.football-data.org/65.png" },
+  { name: "Barcelona", league: "La Liga", logo_url: "https://crests.football-data.org/81.png" },
+  { name: "Bayern Munich", league: "Bundesliga", logo_url: "https://crests.football-data.org/5.png" },
+  { name: "Liverpool", league: "Premier League", logo_url: "https://crests.football-data.org/64.png" },
+  { name: "Arsenal", league: "Premier League", logo_url: "https://crests.football-data.org/57.png" },
+  { name: "Paris Saint-Germain", league: "Ligue 1", logo_url: "https://crests.football-data.org/524.png" },
+  { name: "Inter Milan", league: "Serie A", logo_url: "https://crests.football-data.org/108.png" },
+  { name: "Juventus", league: "Serie A", logo_url: "https://crests.football-data.org/109.png" },
+  { name: "Atletico Madrid", league: "La Liga", logo_url: "https://crests.football-data.org/78.png" },
 ];
 
 interface TeamSelectorProps {
@@ -43,19 +48,119 @@ export function TeamSelector({
   const { theme } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [teams, setTeams] = useState<TeamSearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const filteredTeams = AVAILABLE_TEAMS.filter((team) => {
-    const matchesSearch = team.name
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    const notExcluded = team.name !== excludeTeam;
-    return matchesSearch && notExcluded;
-  });
+  // Initial load of popular teams or teams with players
+  useEffect(() => {
+    const loadInitialTeams = async () => {
+      try {
+        const response = await teamsApi.getTeamsWithPlayers();
+        if (response.success && response.data?.teams && response.data.teams.length > 0) {
+          setTeams(response.data.teams);
+        } else {
+          // Fallback to popular teams formatted as TeamSearchResult
+          setTeams(POPULAR_TEAMS.map(t => ({
+            id: t.name.toLowerCase().replace(/\s+/g, "_"),
+            name: t.name,
+            league: t.league,
+            logo_url: t.logo_url,
+            has_players: true,
+            player_count: 11
+          })));
+        }
+      } catch (error) {
+        console.log("Error loading initial teams:", error);
+      }
+    };
+
+    loadInitialTeams();
+  }, []);
+
+  // Debounced search
+  useEffect(() => {
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+
+    if (!searchQuery.trim()) {
+      // Reset to initial state if search is empty
+      const loadInitialTeams = async () => {
+        try {
+          const response = await teamsApi.getTeamsWithPlayers();
+          if (response.success && response.data?.teams && response.data.teams.length > 0) {
+            setTeams(response.data.teams);
+          } else {
+            setTeams(POPULAR_TEAMS.map(t => ({
+              id: t.name.toLowerCase().replace(/\s+/g, "_"),
+              name: t.name,
+              league: t.league,
+              logo_url: t.logo_url,
+              has_players: true,
+              player_count: 11
+            })));
+          }
+        } catch (error) {
+          console.log("Error resetting teams:", error);
+        }
+      };
+      loadInitialTeams();
+      return;
+    }
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const response = await teamsApi.search(searchQuery, true);
+        if (response.success && response.data?.teams) {
+          setTeams(response.data.teams);
+        }
+      } catch (error) {
+        console.log("Search error:", error);
+      } finally {
+        setLoading(false);
+      }
+    }, 500);
+
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    };
+  }, [searchQuery]);
 
   const handleSelectTeam = (teamName: string) => {
     onSelectTeam(teamName);
     setModalVisible(false);
     setSearchQuery("");
+  };
+
+  const handleAddNewTeam = async () => {
+    if (!searchQuery.trim()) return;
+
+    setIsAdding(true);
+    try {
+      // 1. Add the team
+      const addResponse = await teamsApi.addTeam({
+        name: searchQuery,
+        short_name: searchQuery.substring(0, 3).toUpperCase(),
+      });
+
+      if (addResponse.success) {
+        // 2. Generate players automatically so Dixie has data to work with
+        await teamsApi.generatePlayers(searchQuery, 15, 75);
+        
+        Alert.alert(
+          "✅ Equipo Agregado",
+          `${searchQuery} ha sido agregado con éxito. Dixie ya conoce a sus jugadores.`,
+          [{ text: "¡Genial!", onPress: () => handleSelectTeam(searchQuery) }]
+        );
+      } else {
+        Alert.alert("Error", addResponse.error || "No se pudo agregar el equipo");
+      }
+    } catch (error) {
+      Alert.alert("Error", "Error de conexión al agregar equipo");
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   // Get team initials for display
@@ -65,6 +170,61 @@ export function TeamSelector({
       .map((w) => w[0])
       .join("")
       .slice(0, 3);
+  };
+
+  const renderTeamItem = ({ item }: { item: TeamSearchResult }) => {
+    if (item.name === excludeTeam) return null;
+
+    return (
+      <TouchableOpacity
+        onPress={() => handleSelectTeam(item.name)}
+        style={[
+          styles.teamItem,
+          {
+            backgroundColor:
+              selectedTeam === item.name
+                ? theme.colors.primary + "20"
+                : "transparent",
+            borderBottomColor: theme.colors.border,
+          },
+        ]}
+      >
+        <View style={styles.teamItemContent}>
+          <View
+            style={[
+              styles.teamItemBadge,
+              { backgroundColor: theme.colors.surfaceSecondary },
+            ]}
+          >
+            {item.logo_url ? (
+              <Image 
+                source={{ uri: item.logo_url }} 
+                style={styles.teamLogo} 
+                resizeMode="contain"
+              />
+            ) : (
+              <ThemedText weight="bold">
+                {getInitials(item.name)}
+              </ThemedText>
+            )}
+          </View>
+          <View style={{ flex: 1 }}>
+            <ThemedText weight="semibold" numberOfLines={1}>{item.name}</ThemedText>
+            <ThemedText variant="muted" size="xs">
+              {item.league || item.country || "Liga desconocida"}
+            </ThemedText>
+          </View>
+          {item.has_players && (
+            <View style={[styles.dataBadge, { backgroundColor: theme.colors.success + "20" }]}>
+              <ThemedText size="xs" style={{ color: theme.colors.success }}>✓ Datos</ThemedText>
+            </View>
+          )}
+        </View>
+        {selectedTeam === item.name && (
+          <ThemedText variant="primary">✓</ThemedText>
+        )}
+      </TouchableOpacity>
+    );
   };
 
   return (
@@ -138,54 +298,56 @@ export function TeamSelector({
             </View>
 
             {/* Search Input */}
-            <Input
-              placeholder="Buscar equipo..."
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
+            <View style={styles.searchContainer}>
+              <Input
+                placeholder="Buscar equipo (ej: Emelec, Boca...)"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                autoFocus
+              />
+              {loading && (
+                <ActivityIndicator 
+                  style={styles.searchLoader} 
+                  color={theme.colors.primary} 
+                />
+              )}
+            </View>
 
             {/* Team List */}
             <FlatList
-              data={filteredTeams}
-              keyExtractor={(item) => item.name}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  onPress={() => handleSelectTeam(item.name)}
-                  style={[
-                    styles.teamItem,
-                    {
-                      backgroundColor:
-                        selectedTeam === item.name
-                          ? theme.colors.primary + "20"
-                          : "transparent",
-                      borderBottomColor: theme.colors.border,
-                    },
-                  ]}
-                >
-                  <View style={styles.teamItemContent}>
-                    <View
-                      style={[
-                        styles.teamItemBadge,
-                        { backgroundColor: theme.colors.surfaceSecondary },
-                      ]}
-                    >
-                      <ThemedText weight="bold">
-                        {getInitials(item.name)}
-                      </ThemedText>
-                    </View>
-                    <View>
-                      <ThemedText weight="semibold">{item.name}</ThemedText>
-                      <ThemedText variant="muted" size="xs">
-                        {item.league}
-                      </ThemedText>
-                    </View>
-                  </View>
-                  {selectedTeam === item.name && (
-                    <ThemedText variant="primary">✓</ThemedText>
-                  )}
-                </TouchableOpacity>
-              )}
+              data={teams}
+              keyExtractor={(item, index) => item.id || `team-${index}`}
+              renderItem={renderTeamItem}
               style={styles.teamList}
+              ListEmptyComponent={
+                !loading ? (
+                  <View style={styles.emptyContainer}>
+                    <ThemedText variant="muted" style={styles.emptyText}>
+                      {searchQuery.length > 0 
+                        ? "No se encontraron equipos." 
+                        : "Escribe para buscar en la base de datos mundial."}
+                    </ThemedText>
+                    
+                    {searchQuery.length >= 3 && (
+                      <Card variant="outlined" style={styles.addCard}>
+                        <ThemedText weight="bold" style={{ marginBottom: 8 }}>
+                          ¿No encuentras a {searchQuery}?
+                        </ThemedText>
+                        <ThemedText size="sm" variant="secondary" style={{ marginBottom: 16 }}>
+                          Puedes agregarlo ahora mismo y Dixie generará sus jugadores automáticamente.
+                        </ThemedText>
+                        <Button
+                          title={isAdding ? "Agregando..." : `➕ Agregar ${searchQuery}`}
+                          onPress={handleAddNewTeam}
+                          disabled={isAdding}
+                          loading={isAdding}
+                          size="sm"
+                        />
+                      </Card>
+                    )}
+                  </View>
+                ) : null
+              }
             />
           </Pressable>
         </Pressable>
@@ -230,7 +392,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
-    maxHeight: "80%",
+    maxHeight: "90%",
+    minHeight: "60%",
   },
   modalHeader: {
     flexDirection: "row",
@@ -238,8 +401,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
+  searchContainer: {
+    position: "relative",
+    marginBottom: 10,
+  },
+  searchLoader: {
+    position: "absolute",
+    right: 15,
+    top: 15,
+  },
   teamList: {
-    maxHeight: 400,
+    flex: 1,
   },
   teamItem: {
     flexDirection: "row",
@@ -249,6 +421,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   teamItemContent: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
@@ -259,5 +432,29 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
+  },
+  teamLogo: {
+    width: "100%",
+    height: "100%",
+  },
+  dataBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginRight: 8,
+  },
+  emptyContainer: {
+    padding: 20,
+    alignItems: "center",
+  },
+  emptyText: {
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  addCard: {
+    width: "100%",
+    alignItems: "center",
+    padding: 16,
   },
 });

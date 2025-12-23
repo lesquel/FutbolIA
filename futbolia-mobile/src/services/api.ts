@@ -239,6 +239,122 @@ export const predictionsApi = {
   },
 };
 
+// ==================== TEAMS API ====================
+
+interface TeamSearchResult {
+  id: string;
+  name: string;
+  short_name: string;
+  logo_url: string;
+  country: string;
+  league: string;
+  has_players: boolean;
+  player_count: number;
+  source?: string;
+}
+
+interface PlayerCreate {
+  name: string;
+  position?: string;
+  overall_rating?: number;
+  pace?: number;
+  shooting?: number;
+  passing?: number;
+  dribbling?: number;
+  defending?: number;
+  physical?: number;
+}
+
+interface TeamCreate {
+  name: string;
+  short_name?: string;
+  logo_url?: string;
+  country?: string;
+  league?: string;
+  players?: PlayerCreate[];
+}
+
+export const teamsApi = {
+  // Search teams (local DB + API)
+  search: async (
+    query: string,
+    searchApi: boolean = true,
+    limit: number = 20
+  ) => {
+    return apiRequest<{ teams: TeamSearchResult[]; total: number }>(
+      `/teams/search?q=${encodeURIComponent(
+        query
+      )}&search_api=${searchApi}&limit=${limit}`
+    );
+  },
+
+  // Get teams that have player data
+  getTeamsWithPlayers: async () => {
+    return apiRequest<{ teams: TeamSearchResult[]; total: number }>(
+      "/teams/with-players"
+    );
+  },
+
+  // Add a new team
+  addTeam: async (team: TeamCreate) => {
+    return apiRequest<{ team: any; players_added: number }>("/teams/add", {
+      method: "POST",
+      body: JSON.stringify(team),
+    });
+  },
+
+  // Add players to a team
+  addPlayersToTeam: async (teamName: string, players: PlayerCreate[]) => {
+    return apiRequest<{
+      team: string;
+      players_added: number;
+      total_players: number;
+    }>(`/teams/add-players/${encodeURIComponent(teamName)}`, {
+      method: "POST",
+      body: JSON.stringify(players),
+    });
+  },
+
+  // Bulk add teams
+  bulkAddTeams: async (teams: TeamCreate[]) => {
+    return apiRequest<{ teams_created: number; players_added: number }>(
+      "/teams/bulk-add",
+      {
+        method: "POST",
+        body: JSON.stringify({ teams }),
+      }
+    );
+  },
+
+  // Get players for a team
+  getTeamPlayers: async (teamName: string) => {
+    return apiRequest<{ team: string; players: any[]; count: number }>(
+      `/teams/${encodeURIComponent(teamName)}/players`
+    );
+  },
+
+  // Auto-generate players for a team
+  generatePlayers: async (
+    teamName: string,
+    count: number = 11,
+    avgRating: number = 75
+  ) => {
+    return apiRequest<{
+      team: string;
+      players_generated: number;
+      avg_rating: number;
+      players: any[];
+    }>(
+      `/teams/generate-players/${encodeURIComponent(
+        teamName
+      )}?count=${count}&avg_rating=${avgRating}`,
+      {
+        method: "POST",
+      }
+    );
+  },
+};
+
 // Export types
 export type {
   User,
@@ -249,4 +365,7 @@ export type {
   Prediction,
   PredictionStats,
   ApiResponse,
+  TeamSearchResult,
+  PlayerCreate,
+  TeamCreate,
 };

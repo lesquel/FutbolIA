@@ -52,6 +52,20 @@ async def get_current_user(authorization: str = Header(None)):
     return user
 
 
+# Optional dependency - returns None if no valid token instead of raising error
+async def get_optional_user(authorization: str = Header(None)):
+    """Extract and verify JWT token, returns None if no token or invalid"""
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+    
+    try:
+        token = authorization.split(" ")[1]
+        user = await AuthUseCase.get_current_user(token)
+        return user
+    except Exception:
+        return None
+
+
 # Routes
 @router.post("/register")
 async def register(request: RegisterRequest):

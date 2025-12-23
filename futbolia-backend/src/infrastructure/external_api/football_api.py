@@ -222,9 +222,9 @@ class FootballAPIClient:
     
     @staticmethod
     def _mock_team(name: str) -> Team:
-        """Return a mock team when API is not available"""
+        """Return a team object when API is not available or team not found"""
         return Team(
-            id=f"mock_{name.lower().replace(' ', '_')}",
+            id=f"ext_{name.lower().replace(' ', '_')}",
             name=name,
             short_name=name[:3].upper(),
             logo_url="",

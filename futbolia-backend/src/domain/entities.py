@@ -164,6 +164,8 @@ class PredictionResult:
     key_factors: List[str] = field(default_factory=list)
     star_player_home: str = ""
     star_player_away: str = ""
+    match_preview: str = ""  # Exciting opening line about the match
+    tactical_insight: str = ""  # Specific tactical insight
 
 
 @dataclass
@@ -190,6 +192,8 @@ class Prediction:
                 "key_factors": self.result.key_factors,
                 "star_player_home": self.result.star_player_home,
                 "star_player_away": self.result.star_player_away,
+                "match_preview": getattr(self.result, 'match_preview', ''),
+                "tactical_insight": getattr(self.result, 'tactical_insight', ''),
             } if self.result else None,
             "created_at": self.created_at.isoformat(),
             "is_correct": self.is_correct,

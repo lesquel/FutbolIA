@@ -54,7 +54,9 @@
     "benefits": "Account Benefits",
     "benefit1": "Save your prediction history",
     "benefit2": "Personalized favorite teams",
-    "benefit3": "Accuracy statistics"
+    "benefit3": "Accuracy statistics",
+    "loginRequired": "Sign in to continue",
+    "loginToPredict": "You need an account to make predictions and save your history. It's free!"
   },
   "navigation": {
     "home": "Home",

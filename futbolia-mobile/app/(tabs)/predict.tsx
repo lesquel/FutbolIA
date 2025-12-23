@@ -11,11 +11,14 @@ import {
   Dimensions,
   KeyboardAvoidingView,
   Platform,
+  TouchableOpacity,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { FontAwesome } from "@expo/vector-icons";
 
 import { useTheme } from "@/src/theme";
+import { useAuth } from "@/src/context";
 import { ThemedView, ThemedText, Card, Button } from "@/src/components/ui";
 import {
   TeamSelector,
@@ -30,6 +33,8 @@ const isTablet = width >= 768;
 export default function PredictScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const router = useRouter();
   const params = useLocalSearchParams();
 
   // State
@@ -42,15 +47,23 @@ export default function PredictScreen() {
   const [prediction, setPrediction] = useState<Prediction | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
   const canPredict = homeTeam && awayTeam && homeTeam !== awayTeam;
 
   const handlePredict = async () => {
     if (!homeTeam || !awayTeam) return;
 
+    // Check if user is authenticated
+    if (!user) {
+      setShowAuthPrompt(true);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setPrediction(null);
+    setShowAuthPrompt(false);
 
     try {
       const response = await predictionsApi.predict(homeTeam, awayTeam, "es");
@@ -73,7 +86,53 @@ export default function PredictScreen() {
     setHomeTeam(null);
     setAwayTeam(null);
     setError(null);
+    setShowAuthPrompt(false);
   };
+
+  // Auth Prompt Component
+  const AuthPrompt = () => (
+    <Card variant="outlined" padding="lg" style={styles.authCard}>
+      <View
+        style={[
+          styles.authIconContainer,
+          { backgroundColor: theme.colors.primary + "20" },
+        ]}
+      >
+        <FontAwesome name="lock" size={32} color={theme.colors.primary} />
+      </View>
+      <ThemedText size="xl" weight="bold" style={styles.authTitle}>
+        {t("auth.loginRequired")}
+      </ThemedText>
+      <ThemedText variant="secondary" style={styles.authDescription}>
+        {t("auth.loginToPredict")}
+      </ThemedText>
+      <View style={styles.authButtons}>
+        <Button
+          title={t("auth.login")}
+          variant="primary"
+          size="lg"
+          fullWidth
+          onPress={() => router.push("/login")}
+          style={styles.authButton}
+        />
+        <Button
+          title={t("auth.createAccount")}
+          variant="outline"
+          size="md"
+          fullWidth
+          onPress={() => router.push("/register")}
+        />
+      </View>
+      <TouchableOpacity
+        onPress={() => setShowAuthPrompt(false)}
+        style={styles.dismissButton}
+      >
+        <ThemedText variant="muted" size="sm">
+          {t("common.cancel")}
+        </ThemedText>
+      </TouchableOpacity>
+    </Card>
+  );
 
   return (
     <ThemedView variant="background" style={styles.container}>
@@ -106,8 +165,8 @@ export default function PredictScreen() {
                 showGreeting={!prediction && !loading}
               />
 
-              {/* Team Selection (only show if no prediction yet) */}
-              {!prediction && (
+              {/* Team Selection (only show if no prediction yet and no auth prompt) */}
+              {!prediction && !showAuthPrompt && (
                 <Card
                   variant="default"
                   padding="lg"
@@ -188,6 +247,9 @@ export default function PredictScreen() {
 
             {/* Right Column - Prediction Result (or second column on tablet) */}
             <View style={[styles.column, isTablet && styles.columnTablet]}>
+              {/* Auth Prompt */}
+              {showAuthPrompt && <AuthPrompt />}
+
               {/* Loading State */}
               {loading && (
                 <Card
@@ -305,5 +367,37 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     textAlign: "center",
+  },
+  authCard: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 16,
+  },
+  authIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+  },
+  authTitle: {
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  authDescription: {
+    textAlign: "center",
+    marginBottom: 24,
+  },
+  authButtons: {
+    width: "100%",
+    gap: 12,
+  },
+  authButton: {
+    marginBottom: 0,
+  },
+  dismissButton: {
+    marginTop: 16,
+    padding: 8,
   },
 });
