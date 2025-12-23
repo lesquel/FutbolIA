@@ -54,7 +54,9 @@
     "benefits": "Beneficios de la cuenta",
     "benefit1": "Guarda tu historial de predicciones",
     "benefit2": "Equipos favoritos personalizados",
-    "benefit3": "Estadísticas de precisión"
+    "benefit3": "Estadísticas de precisión",
+    "loginRequired": "Inicia sesión para continuar",
+    "loginToPredict": "Necesitas una cuenta para hacer predicciones y guardar tu historial. ¡Es gratis!"
   },
   "navigation": {
     "home": "Inicio",

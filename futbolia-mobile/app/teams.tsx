@@ -1,6 +1,7 @@
 /**
  * FutbolIA - Teams Search Screen
  * Search and add favorite teams from multiple leagues
+ * Now with API search for ANY league worldwide!
  */
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
@@ -12,6 +13,8 @@ import {
   ActivityIndicator,
   Image,
   FlatList,
+  Alert,
+  Modal,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -19,6 +22,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "@/src/theme";
 import { useAuth, FavoriteTeam } from "@/src/context";
 import { ThemedView, ThemedText, Button } from "@/src/components/ui";
+import { teamsApi, TeamSearchResult } from "@/src/services/api";
 
 // Available leagues with their teams (free tier Football-Data.org)
 const LEAGUES = [
@@ -273,37 +277,129 @@ export default function TeamsScreen() {
   const [selectedLeague, setSelectedLeague] = useState<string | null>(null);
   const [filteredTeams, setFilteredTeams] =
     useState<FavoriteTeam[]>(POPULAR_TEAMS);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [teamToAdd, setTeamToAdd] = useState<FavoriteTeam | null>(null);
+  const [isAddingTeam, setIsAddingTeam] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Search with debounce
-  const performSearch = useCallback((query: string, league: string | null) => {
-    if (!query.trim()) {
-      setFilteredTeams(
-        league
-          ? POPULAR_TEAMS.filter(
-              (t) => t.league === LEAGUES.find((l) => l.id === league)?.name
-            )
-          : POPULAR_TEAMS
+  // Convert API team to FavoriteTeam format
+  const apiTeamToFavorite = (apiTeam: TeamSearchResult): FavoriteTeam => ({
+    id: apiTeam.id || apiTeam.name.replaceAll(/\s+/g, "_").toUpperCase(),
+    name: apiTeam.name,
+    shortName: apiTeam.short_name || apiTeam.name.substring(0, 3).toUpperCase(),
+    league: apiTeam.league || "Unknown League",
+    country: apiTeam.country || "Unknown",
+    logoUrl: apiTeam.logo_url,
+  });
+
+  // Search with debounce - now searches API too!
+  const performSearch = useCallback(
+    async (query: string, league: string | null) => {
+      if (!query.trim()) {
+        setFilteredTeams(
+          league
+            ? POPULAR_TEAMS.filter(
+                (t) => t.league === LEAGUES.find((l) => l.id === league)?.name
+              )
+            : POPULAR_TEAMS
+        );
+        return;
+      }
+
+      // First filter local teams
+      const lowerQuery = query.toLowerCase();
+      let localResults = POPULAR_TEAMS.filter(
+        (team) =>
+          team.name.toLowerCase().includes(lowerQuery) ||
+          team.shortName?.toLowerCase().includes(lowerQuery) ||
+          team.country?.toLowerCase().includes(lowerQuery) ||
+          team.league?.toLowerCase().includes(lowerQuery)
       );
-      return;
+
+      if (league) {
+        const leagueName = LEAGUES.find((l) => l.id === league)?.name;
+        localResults = localResults.filter((t) => t.league === leagueName);
+      }
+
+      setFilteredTeams(localResults);
+
+      // Then search API if query is long enough
+      if (query.length >= 2) {
+        setIsSearching(true);
+        try {
+          const response = await teamsApi.search(query, true, 30);
+
+          if (response.success && response.data?.teams) {
+            const apiResults = response.data.teams;
+
+            // Merge API results with local results (avoid duplicates)
+            const localNames = new Set(
+              localResults.map((t) => t.name.toLowerCase())
+            );
+            const newApiTeams = apiResults
+              .filter(
+                (t: TeamSearchResult) => !localNames.has(t.name.toLowerCase())
+              )
+              .map(apiTeamToFavorite);
+
+            setFilteredTeams([...localResults, ...newApiTeams]);
+          }
+        } catch (error) {
+          console.log("API search failed, using local only:", error);
+          // Keep local results on API error
+        } finally {
+          setIsSearching(false);
+        }
+      }
+    },
+    []
+  );
+
+  // Handle adding a new team to the database
+  const handleAddNewTeam = async (team: FavoriteTeam) => {
+    setTeamToAdd(team);
+    setShowAddModal(true);
+  };
+
+  const confirmAddTeam = async () => {
+    if (!teamToAdd) return;
+
+    setIsAddingTeam(true);
+    try {
+      await teamsApi.addTeam({
+        name: teamToAdd.name,
+        short_name: teamToAdd.shortName,
+        league: teamToAdd.league,
+        country: teamToAdd.country,
+        logo_url: teamToAdd.logoUrl,
+      });
+
+      // Add to favorites
+      addFavoriteTeam(teamToAdd);
+
+      Alert.alert(
+        "✅ Equipo Agregado",
+        `${teamToAdd.name} ha sido agregado a la base de datos y a tus favoritos.`,
+        [{ text: "OK" }]
+      );
+    } catch (error: any) {
+      // If team already exists, just add to favorites
+      if (error.message?.includes("already exists")) {
+        addFavoriteTeam(teamToAdd);
+        Alert.alert(
+          "⚽ Equipo Encontrado",
+          `${teamToAdd.name} ya existía, se agregó a tus favoritos.`
+        );
+      } else {
+        Alert.alert("Error", "No se pudo agregar el equipo. Intenta de nuevo.");
+      }
+    } finally {
+      setIsAddingTeam(false);
+      setShowAddModal(false);
+      setTeamToAdd(null);
     }
-
-    const lowerQuery = query.toLowerCase();
-    let results = POPULAR_TEAMS.filter(
-      (team) =>
-        team.name.toLowerCase().includes(lowerQuery) ||
-        team.shortName?.toLowerCase().includes(lowerQuery) ||
-        team.country?.toLowerCase().includes(lowerQuery) ||
-        team.league?.toLowerCase().includes(lowerQuery)
-    );
-
-    if (league) {
-      const leagueName = LEAGUES.find((l) => l.id === league)?.name;
-      results = results.filter((t) => t.league === leagueName);
-    }
-
-    setFilteredTeams(results);
-  }, []);
+  };
 
   useEffect(() => {
     // Clear previous timeout
@@ -337,16 +433,42 @@ export default function TeamsScreen() {
     return favoriteTeams.some((t) => t.id === teamId);
   };
 
+  // Check if team is from API (not in POPULAR_TEAMS)
+  const isFromApi = (team: FavoriteTeam) => {
+    return !POPULAR_TEAMS.some((t) => t.id === team.id);
+  };
+
   const toggleFavorite = (team: FavoriteTeam) => {
     if (isTeamFavorite(team.id)) {
       removeFavoriteTeam(team.id);
+    } else if (isFromApi(team)) {
+      // If team is from API and not in favorites, offer to add to database
+      handleAddNewTeam(team);
     } else {
       addFavoriteTeam(team);
     }
   };
 
+  // Helper to get border color for team card
+  const getTeamCardBorderColor = (
+    isFavorite: boolean,
+    fromApi: boolean
+  ): string => {
+    if (isFavorite) return theme.colors.primary;
+    if (fromApi) return theme.colors.accent + "50";
+    return theme.colors.border;
+  };
+
+  // Helper to get favorite icon
+  const getFavoriteIcon = (isFavorite: boolean, fromApi: boolean): string => {
+    if (isFavorite) return "❤️";
+    if (fromApi) return "➕";
+    return "🤍";
+  };
+
   const renderTeamCard = ({ item: team }: { item: FavoriteTeam }) => {
     const isFavorite = isTeamFavorite(team.id);
+    const fromApi = isFromApi(team);
 
     return (
       <TouchableOpacity
@@ -356,14 +478,23 @@ export default function TeamsScreen() {
             backgroundColor: isFavorite
               ? theme.colors.primary + "15"
               : theme.colors.surface,
-            borderColor: isFavorite
-              ? theme.colors.primary
-              : theme.colors.border,
+            borderColor: getTeamCardBorderColor(isFavorite, fromApi),
           },
         ]}
         onPress={() => toggleFavorite(team)}
         activeOpacity={0.7}
       >
+        {/* API Badge */}
+        {fromApi && (
+          <View
+            style={[styles.apiBadge, { backgroundColor: theme.colors.accent }]}
+          >
+            <ThemedText size="xs" style={{ color: "#fff" }}>
+              🌐 API
+            </ThemedText>
+          </View>
+        )}
+
         <View
           style={[
             styles.teamLogo,
@@ -385,7 +516,7 @@ export default function TeamsScreen() {
             {team.name}
           </ThemedText>
           <ThemedText variant="muted" size="xs" numberOfLines={1}>
-            {team.league}
+            {team.league || team.country}
           </ThemedText>
         </View>
         <View
@@ -401,7 +532,7 @@ export default function TeamsScreen() {
           <ThemedText
             style={{ color: isFavorite ? "#fff" : theme.colors.textMuted }}
           >
-            {isFavorite ? "❤️" : "🤍"}
+            {getFavoriteIcon(isFavorite, fromApi)}
           </ThemedText>
         </View>
       </TouchableOpacity>
@@ -541,12 +672,34 @@ export default function TeamsScreen() {
         columnWrapperStyle={styles.teamsRow}
         contentContainerStyle={styles.teamsList}
         showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          isSearching ? (
+            <View style={styles.searchingIndicator}>
+              <ActivityIndicator size="small" color={theme.colors.primary} />
+              <ThemedText variant="muted" size="sm" style={{ marginLeft: 8 }}>
+                Buscando en la API...
+              </ThemedText>
+            </View>
+          ) : null
+        }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <ThemedText size="3xl">🔍</ThemedText>
             <ThemedText variant="secondary" style={styles.emptyText}>
-              {t("teams.noResults")}
+              {searchQuery.length > 0
+                ? "No se encontraron equipos. ¡Prueba con otro nombre!"
+                : t("teams.noResults")}
             </ThemedText>
+            {searchQuery.length > 0 && (
+              <ThemedText
+                variant="muted"
+                size="sm"
+                style={{ marginTop: 8, textAlign: "center" }}
+              >
+                Tip: Escribe al menos 2 letras para buscar en todas las ligas
+                del mundo
+              </ThemedText>
+            )}
           </View>
         }
       />
@@ -568,6 +721,99 @@ export default function TeamsScreen() {
           />
         </View>
       )}
+
+      {/* Add Team Confirmation Modal */}
+      <Modal
+        visible={showAddModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowAddModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View
+            style={[
+              styles.modalContent,
+              { backgroundColor: theme.colors.surface },
+            ]}
+          >
+            <ThemedText size="xl" weight="bold" style={{ marginBottom: 12 }}>
+              ➕ Agregar Equipo
+            </ThemedText>
+
+            {teamToAdd && (
+              <>
+                <View
+                  style={[
+                    styles.modalTeamPreview,
+                    { backgroundColor: theme.colors.surfaceSecondary },
+                  ]}
+                >
+                  {teamToAdd.logoUrl ? (
+                    <Image
+                      source={{ uri: teamToAdd.logoUrl }}
+                      style={{ width: 60, height: 60 }}
+                      resizeMode="contain"
+                    />
+                  ) : (
+                    <ThemedText size="3xl">⚽</ThemedText>
+                  )}
+                  <View style={{ marginLeft: 16, flex: 1 }}>
+                    <ThemedText weight="bold" size="lg">
+                      {teamToAdd.name}
+                    </ThemedText>
+                    <ThemedText variant="muted">{teamToAdd.league}</ThemedText>
+                    <ThemedText variant="muted" size="sm">
+                      {teamToAdd.country}
+                    </ThemedText>
+                  </View>
+                </View>
+
+                <ThemedText
+                  variant="secondary"
+                  size="sm"
+                  style={{ marginTop: 16, textAlign: "center" }}
+                >
+                  Este equipo se agregará a la base de datos de FutbolIA para
+                  futuras predicciones.
+                </ThemedText>
+              </>
+            )}
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[
+                  styles.modalButton,
+                  { backgroundColor: theme.colors.surfaceSecondary },
+                ]}
+                onPress={() => {
+                  setShowAddModal(false);
+                  setTeamToAdd(null);
+                }}
+                disabled={isAddingTeam}
+              >
+                <ThemedText>Cancelar</ThemedText>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.modalButton,
+                  { backgroundColor: theme.colors.primary },
+                ]}
+                onPress={confirmAddTeam}
+                disabled={isAddingTeam}
+              >
+                {isAddingTeam ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <ThemedText style={{ color: "#fff" }} weight="semibold">
+                    Agregar ⚽
+                  </ThemedText>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ThemedView>
   );
 }
@@ -679,5 +925,56 @@ const styles = StyleSheet.create({
   doneButtonContainer: {
     padding: 16,
     paddingBottom: 32,
+  },
+  // New styles for API search
+  searchingIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 8,
+    marginBottom: 8,
+  },
+  apiBadge: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    zIndex: 1,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContent: {
+    width: "100%",
+    maxWidth: 400,
+    borderRadius: 16,
+    padding: 24,
+    alignItems: "center",
+  },
+  modalTeamPreview: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderRadius: 12,
+    width: "100%",
+  },
+  modalButtons: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 24,
+    width: "100%",
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

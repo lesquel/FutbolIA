@@ -3,16 +3,12 @@ User Repository
 Handles user CRUD operations with MongoDB
 """
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from bson import ObjectId
-from passlib.context import CryptContext
+import bcrypt
 
 from src.domain.entities import User
 from src.infrastructure.db.mongodb import MongoDB, COLLECTIONS
-
-
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class UserRepository:
@@ -24,13 +20,22 @@ class UserRepository:
     
     @staticmethod
     def hash_password(password: str) -> str:
-        """Hash a password"""
-        return pwd_context.hash(password)
+        """Hash a password using bcrypt directly"""
+        # Truncate password to 72 bytes (bcrypt limit)
+        password_bytes = password.encode('utf-8')[:72]
+        salt = bcrypt.gensalt()
+        hashed = bcrypt.hashpw(password_bytes, salt)
+        return hashed.decode('utf-8')
     
     @staticmethod
     def verify_password(plain_password: str, hashed_password: str) -> bool:
         """Verify a password against its hash"""
-        return pwd_context.verify(plain_password, hashed_password)
+        try:
+            password_bytes = plain_password.encode('utf-8')[:72]
+            hashed_bytes = hashed_password.encode('utf-8')
+            return bcrypt.checkpw(password_bytes, hashed_bytes)
+        except Exception:
+            return False
     
     @classmethod
     async def create(cls, user: User, password: str) -> User:
@@ -42,7 +47,7 @@ class UserRepository:
             "username": user.username,
             "hashed_password": cls.hash_password(password),
             "is_active": user.is_active,
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.now(timezone.utc),
             "language": user.language,
             "theme": user.theme,
         }
@@ -64,7 +69,7 @@ class UserRepository:
                 username=doc["username"],
                 hashed_password=doc["hashed_password"],
                 is_active=doc.get("is_active", True),
-                created_at=doc.get("created_at", datetime.utcnow()),
+                created_at=doc.get("created_at", datetime.now(timezone.utc)),
                 language=doc.get("language", "es"),
                 theme=doc.get("theme", "dark"),
             )
@@ -83,7 +88,7 @@ class UserRepository:
                 username=doc["username"],
                 hashed_password=doc["hashed_password"],
                 is_active=doc.get("is_active", True),
-                created_at=doc.get("created_at", datetime.utcnow()),
+                created_at=doc.get("created_at", datetime.now(timezone.utc)),
                 language=doc.get("language", "es"),
                 theme=doc.get("theme", "dark"),
             )

@@ -13,6 +13,7 @@ from src.infrastructure.chromadb.seed_data import seed_players
 from src.infrastructure.llm.dixie import DixieAI
 from src.presentation.auth_routes import router as auth_router
 from src.presentation.prediction_routes import router as prediction_router
+from src.presentation.team_routes import router as team_router
 
 
 @asynccontextmanager
@@ -78,6 +79,7 @@ app.add_middleware(
 # Include routers
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(prediction_router, prefix="/api/v1")
+app.include_router(team_router, prefix="/api/v1")
 
 
 # Root endpoint
@@ -93,6 +95,7 @@ async def root():
         "endpoints": {
             "auth": "/api/v1/auth",
             "predictions": "/api/v1/predictions",
+            "teams": "/api/v1/teams",
         }
     }
 

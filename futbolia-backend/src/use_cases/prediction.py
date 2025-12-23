@@ -31,8 +31,17 @@ class PredictionUseCase:
         """
         
         # Step 1: Get team information
-        home_team = await FootballAPIClient.get_team_by_name(home_team_name)
-        away_team = await FootballAPIClient.get_team_by_name(away_team_name)
+        # Try local DB first (for user-added teams like Emelec, Boca)
+        from src.infrastructure.db.team_repository import TeamRepository
+        
+        home_team = await TeamRepository.find_by_name(home_team_name)
+        away_team = await TeamRepository.find_by_name(away_team_name)
+        
+        # If not in local DB, try external API
+        if not home_team:
+            home_team = await FootballAPIClient.get_team_by_name(home_team_name)
+        if not away_team:
+            away_team = await FootballAPIClient.get_team_by_name(away_team_name)
         
         if not home_team or not away_team:
             return {
@@ -45,14 +54,12 @@ class PredictionUseCase:
         away_team.form = await FootballAPIClient.get_team_form(away_team.id)
         
         # Step 2: Get player attributes from ChromaDB (RAG context)
-        home_players = PlayerVectorStore.get_star_players(home_team.name, top_n=5)
-        away_players = PlayerVectorStore.get_star_players(away_team.name, top_n=5)
+        home_players = PlayerVectorStore.search_by_team(home_team.name, limit=15)
+        away_players = PlayerVectorStore.search_by_team(away_team.name, limit=15)
         
-        # If no players found, try with partial name match
-        if not home_players:
-            home_players = PlayerVectorStore.search_by_name(home_team.name.split()[0], limit=5)
-        if not away_players:
-            away_players = PlayerVectorStore.search_by_name(away_team.name.split()[0], limit=5)
+        # If no players found, we don't fallback to semantic search by name 
+        # because it might return players from other teams (e.g. Real Madrid players for Emelec)
+        # Instead, we let Dixie handle it or the user should have triggered generation.
         
         # Step 3: Generate prediction with Dixie AI
         prediction_result = await DixieAI.predict_match(
