@@ -99,6 +99,21 @@ async def get_history(
     return result
 
 
+@router.get("/{prediction_id}")
+async def get_prediction_detail(
+    prediction_id: str,
+    current_user = Depends(get_current_user)
+):
+    """🔍 Get detailed information for a specific prediction"""
+    result = await PredictionUseCase.get_prediction_by_id(
+        prediction_id=prediction_id,
+        user_id=current_user.id
+    )
+    if not result["success"]:
+        raise HTTPException(status_code=404, detail=result["error"])
+    return result
+
+
 @router.get("/matches")
 async def get_upcoming_matches(
     league_id: int = Query(default=39, description="League ID (39=Premier League, 140=La Liga)")

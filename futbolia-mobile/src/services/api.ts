@@ -241,6 +241,10 @@ export const predictionsApi = {
     );
   },
 
+  getPredictionDetail: async (id: string) => {
+    return apiRequest<Prediction>(`/predictions/${id}`);
+  },
+
   getUpcomingMatches: async (leagueId: number = 39) => {
     return apiRequest<{ matches: Match[] }>(
       `/predictions/matches?league_id=${leagueId}`

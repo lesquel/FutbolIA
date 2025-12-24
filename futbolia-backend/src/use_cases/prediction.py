@@ -154,6 +154,22 @@ class PredictionUseCase:
         }
     
     @classmethod
+    async def get_prediction_by_id(cls, prediction_id: str, user_id: str) -> dict:
+        """Get a single prediction by ID"""
+        prediction = await PredictionRepository.find_by_id(prediction_id)
+        
+        if not prediction:
+            return {"success": False, "error": "Predicción no encontrada"}
+            
+        if prediction.user_id != user_id:
+            return {"success": False, "error": "No tienes permiso para ver esta predicción"}
+            
+        return {
+            "success": True,
+            "data": prediction.to_dict()
+        }
+    
+    @classmethod
     async def get_available_matches(cls, league_id: int = 39) -> dict:
         """Get upcoming matches available for prediction"""
         matches = await FootballAPIClient.get_upcoming_fixtures(league_id, limit=10)
