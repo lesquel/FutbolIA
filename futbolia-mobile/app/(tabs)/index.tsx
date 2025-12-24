@@ -9,6 +9,7 @@ import {
   StyleSheet,
   RefreshControl,
   Dimensions,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -87,12 +88,21 @@ export default function HomeScreen() {
           >
             {/* Welcome Header */}
             <View style={styles.header}>
-              <ThemedText size="3xl" weight="bold">
-                {t("home.welcome")} 🏆
-              </ThemedText>
-              <ThemedText variant="secondary" size="lg">
-                {t("home.subtitle")}
-              </ThemedText>
+              <View style={styles.logoContainer}>
+                <Image
+                  source={require("../../assets/images/logo.png")}
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
+                <View>
+                  <ThemedText size="3xl" weight="bold">
+                    {t("home.welcome")}
+                  </ThemedText>
+                  <ThemedText variant="secondary" size="lg">
+                    {t("home.subtitle")}
+                  </ThemedText>
+                </View>
+              </View>
             </View>
 
             {/* Dixie Greeting */}
@@ -272,7 +282,16 @@ const styles = StyleSheet.create({
     flex: 0.4,
   },
   header: {
-    marginBottom: 20,
+    marginBottom: 24,
+  },
+  logoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
+  logoImage: {
+    width: 60,
+    height: 60,
   },
   section: {
     marginBottom: 20,
