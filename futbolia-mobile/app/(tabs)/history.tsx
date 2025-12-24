@@ -9,8 +9,9 @@ import {
   StyleSheet,
   RefreshControl,
   FlatList,
+  TouchableOpacity,
 } from "react-native";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "@/src/theme";
@@ -30,6 +31,7 @@ import {
 export default function HistoryScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const router = useRouter();
 
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [stats, setStats] = useState<PredictionStats | null>(null);
@@ -74,60 +76,65 @@ export default function HistoryScreen() {
   };
 
   const renderPredictionItem = ({ item }: { item: Prediction }) => (
-    <Card variant="default" padding="md" style={styles.predictionCard}>
-      {/* Match Header */}
-      <View style={styles.cardHeader}>
-        <ThemedText variant="muted" size="xs">
-          {item.match?.league || "Liga"}
-        </ThemedText>
-        <ThemedText variant="muted" size="xs">
-          {formatDate(item.created_at)}
-        </ThemedText>
-      </View>
-
-      {/* Teams */}
-      <View style={styles.teamsRow}>
-        <View style={styles.teamInfo}>
-          <ThemedText weight="semibold" size="sm" numberOfLines={1}>
-            {item.match?.home_team?.name || "Local"}
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={() => router.push(`/prediction/${item.id}`)}
+    >
+      <Card variant="default" padding="md" style={styles.predictionCard}>
+        {/* Match Header */}
+        <View style={styles.cardHeader}>
+          <ThemedText variant="muted" size="xs">
+            {item.match?.league || "Liga"}
+          </ThemedText>
+          <ThemedText variant="muted" size="xs">
+            {formatDate(item.created_at)}
           </ThemedText>
         </View>
 
-        <View style={styles.scoreBox}>
-          <ThemedText
-            size="lg"
-            weight="bold"
-            style={{ color: theme.colors.primary }}
-          >
-            {item.result?.predicted_score || "?-?"}
-          </ThemedText>
+        {/* Teams */}
+        <View style={styles.teamsRow}>
+          <View style={styles.teamInfo}>
+            <ThemedText weight="semibold" size="sm" numberOfLines={1}>
+              {item.match?.home_team?.name || "Local"}
+            </ThemedText>
+          </View>
+
+          <View style={styles.scoreBox}>
+            <ThemedText
+              size="lg"
+              weight="bold"
+              style={{ color: theme.colors.primary }}
+            >
+              {item.result?.predicted_score || "?-?"}
+            </ThemedText>
+          </View>
+
+          <View style={[styles.teamInfo, { alignItems: "flex-end" }]}>
+            <ThemedText weight="semibold" size="sm" numberOfLines={1}>
+              {item.match?.away_team?.name || "Visitante"}
+            </ThemedText>
+          </View>
         </View>
 
-        <View style={[styles.teamInfo, { alignItems: "flex-end" }]}>
-          <ThemedText weight="semibold" size="sm" numberOfLines={1}>
-            {item.match?.away_team?.name || "Visitante"}
+        {/* Prediction Result */}
+        <View
+          style={[
+            styles.resultBadge,
+            {
+              backgroundColor: theme.colors.primary + "15",
+              borderColor: theme.colors.primary + "30",
+            },
+          ]}
+        >
+          <ThemedText variant="primary" size="sm" weight="semibold">
+            🏆 {item.result?.winner || "Sin resultado"}
+          </ThemedText>
+          <ThemedText variant="muted" size="xs">
+            {item.result?.confidence || 0}% confianza
           </ThemedText>
         </View>
-      </View>
-
-      {/* Prediction Result */}
-      <View
-        style={[
-          styles.resultBadge,
-          {
-            backgroundColor: theme.colors.primary + "15",
-            borderColor: theme.colors.primary + "30",
-          },
-        ]}
-      >
-        <ThemedText variant="primary" size="sm" weight="semibold">
-          🏆 {item.result?.winner || "Sin resultado"}
-        </ThemedText>
-        <ThemedText variant="muted" size="xs">
-          {item.result?.confidence || 0}% confianza
-        </ThemedText>
-      </View>
-    </Card>
+      </Card>
+    </TouchableOpacity>
   );
 
   return (
