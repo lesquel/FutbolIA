@@ -1,6 +1,6 @@
-# 📱 FutbolIA Mobile - React Native App
+# 📱 FutPredicIA Mobile - React Native App
 
-Aplicación móvil multiplataforma para FutbolIA, construida con Expo y React Native.
+Aplicación móvil multiplataforma para FutPredicIA, construida con Expo y React Native.
 
 ## 📋 Tabla de Contenidos
 
@@ -15,12 +15,13 @@ Aplicación móvil multiplataforma para FutbolIA, construida con Expo y React Na
 
 ## ✨ Características
 
-- 🎨 **Tema Oscuro/Claro** - Diseño moderno con verde neón
+- 🎨 **Tema Oscuro/Claro** - Diseño moderno con verde neón y azul profundo
 - 🌍 **Multiidioma** - Español e Inglés
 - 📱 **Multiplataforma** - iOS, Android y Web
 - 🔮 **Predicciones IA** - Integración con Dixie AI
 - 📊 **Historial** - Registro de todas tus predicciones
 - 🏆 **Diseño Responsivo** - Adaptado a móvil y tablet
+- 📶 **Modo Offline** - Acceso a favoritos y caché de predicciones sin internet
 
 ---
 

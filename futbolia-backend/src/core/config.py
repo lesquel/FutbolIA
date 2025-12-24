@@ -16,7 +16,7 @@ class Settings:
     """Application settings loaded from environment variables"""
     
     # Application
-    APP_NAME: str = "FutbolIA - Dixie"
+    APP_NAME: str = "FutPredicIA - Dixie"
     APP_VERSION: str = "1.0.0"
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
     DEBUG: bool = os.getenv("ENVIRONMENT", "development") == "development"

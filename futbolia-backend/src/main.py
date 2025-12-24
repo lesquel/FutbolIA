@@ -60,7 +60,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.APP_NAME,
     description="""
-    🏆 **FutbolIA - El Oráculo Deportivo**
+    🏆 **FutPredicIA - El Oráculo Deportivo**
     
     Una plataforma de predicciones de fútbol impulsada por IA que combina:
     - 📊 Estadísticas en vivo (API-Football)
@@ -114,7 +114,7 @@ async def root():
         "app": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "status": "online",
-        "message": "🏆 ¡Bienvenido a FutbolIA! Tu oráculo deportivo con IA.",
+        "message": "🏆 ¡Bienvenido a FutPredicIA! Tu oráculo deportivo con IA.",
         "docs": "/docs",
         "endpoints": {
             "auth": "/api/v1/auth",
