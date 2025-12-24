@@ -12,6 +12,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -74,11 +75,13 @@ export default function LoginScreen() {
         >
           {/* Logo & Header */}
           <View style={styles.header}>
-            <ThemedText size="3xl" weight="bold" style={styles.logo}>
-              ⚽
-            </ThemedText>
+            <Image
+              source={require("../assets/images/logo.png")}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
             <ThemedText size="3xl" weight="bold">
-              FutbolIA
+              FutPredicIA
             </ThemedText>
             <ThemedText variant="secondary" size="lg" style={styles.subtitle}>
               {t("auth.loginSubtitle")}
@@ -237,6 +240,11 @@ const styles = StyleSheet.create({
   header: {
     alignItems: "center",
     marginBottom: 32,
+  },
+  logoImage: {
+    width: 120,
+    height: 120,
+    marginBottom: 16,
   },
   logo: {
     fontSize: 64,

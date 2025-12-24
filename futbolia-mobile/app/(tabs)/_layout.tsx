@@ -5,7 +5,7 @@
 import React from "react";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Link, Tabs } from "expo-router";
-import { Pressable } from "react-native";
+import { Pressable, Image, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "@/src/theme";
@@ -54,7 +54,20 @@ export default function TabLayout() {
         options={{
           title: t("navigation.home"),
           tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
-          headerTitle: "FutbolIA 🏆",
+          headerTitle: () => (
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
+            >
+              <Image
+                source={require("../../assets/images/logo.png")}
+                style={{ width: 32, height: 32 }}
+                resizeMode="contain"
+              />
+              <ThemedText size="xl" weight="bold">
+                FutPredicIA
+              </ThemedText>
+            </View>
+          ),
           headerRight: () => (
             <Link href="/modal" asChild>
               <Pressable>
