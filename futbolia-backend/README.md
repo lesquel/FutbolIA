@@ -1,6 +1,6 @@
-# 🏆 FutbolIA Backend - Dixie AI
+# 🏆 FutPredicIA Backend - Dixie AI
 
-Backend API para FutbolIA, una plataforma de predicciones deportivas impulsada por IA.
+Backend API para FutPredicIA, una plataforma de predicciones deportivas impulsada por IA.
 
 ## 📋 Tabla de Contenidos
 
@@ -11,6 +11,7 @@ Backend API para FutbolIA, una plataforma de predicciones deportivas impulsada p
 - [Ejecución](#-ejecución)
 - [API Endpoints](#-api-endpoints)
 - [Estructura del Proyecto](#-estructura-del-proyecto)
+- [Documentación Técnica Detallada](TECHNICAL_DOCUMENTATION.md)
 
 ---
 
