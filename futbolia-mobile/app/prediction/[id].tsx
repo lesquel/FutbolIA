@@ -43,7 +43,9 @@ export default function PredictionDetailScreen() {
       if (response.success && response.data) {
         setPrediction(response.data);
       } else {
-        setError(response.error || "No se pudo cargar el detalle de la predicción");
+        setError(
+          response.error || "No se pudo cargar el detalle de la predicción"
+        );
       }
     } catch (err) {
       setError("Error de conexión al cargar el detalle");
@@ -59,7 +61,10 @@ export default function PredictionDetailScreen() {
         options={{
           title: t("prediction.detailTitle") || "Detalle de Predicción",
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
+            >
               <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
             </TouchableOpacity>
           ),
