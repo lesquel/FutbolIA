@@ -5,9 +5,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // API Configuration
-const API_BASE_URL = __DEV__
-  ? "http://localhost:8000/api/v1"
-  : "https://api.futbolia.com/api/v1";
+const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL ||
+  (__DEV__
+    ? "http://localhost:8000/api/v1"
+    : "https://futbolia.onrender.com/api/v1");
 
 const TOKEN_KEY = "@futbolia_token";
 
