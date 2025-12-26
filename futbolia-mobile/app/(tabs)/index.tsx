@@ -10,6 +10,7 @@ import {
   RefreshControl,
   Dimensions,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -70,189 +71,201 @@ export default function HomeScreen() {
 
   return (
     <ThemedView variant="background" style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={theme.colors.primary}
-          />
-        }
-      >
-        {/* Responsive Layout Container */}
-        <View style={[styles.content, isTablet && styles.contentTablet]}>
-          {/* Left Column (or full width on mobile) */}
-          <View
-            style={[styles.mainColumn, isTablet && styles.mainColumnTablet]}
-          >
-            {/* Welcome Header */}
-            <View style={styles.header}>
-              <View style={styles.logoContainer}>
-                <Image
-                  source={require("../../assets/images/logo.png")}
-                  style={styles.logoImage}
-                  resizeMode="contain"
-                />
-                <View>
-                  <ThemedText size="3xl" weight="bold">
-                    {t("home.welcome")}
-                  </ThemedText>
-                  <ThemedText variant="secondary" size="lg">
-                    {t("home.subtitle")}
-                  </ThemedText>
+      {loading && !refreshing ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <ThemedText variant="secondary" style={{ marginTop: 12 }}>
+            {t("common.loading") || "Cargando..."}
+          </ThemedText>
+        </View>
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={theme.colors.primary}
+            />
+          }
+        >
+          {/* Responsive Layout Container */}
+          <View style={[styles.content, isTablet && styles.contentTablet]}>
+            {/* Left Column (or full width on mobile) */}
+            <View
+              style={[styles.mainColumn, isTablet && styles.mainColumnTablet]}
+            >
+              {/* Welcome Header */}
+              <View style={styles.header}>
+                <View style={styles.logoContainer}>
+                  <Image
+                    source={require("../../assets/images/logo.png")}
+                    style={styles.logoImage}
+                    resizeMode="contain"
+                  />
+                  <View>
+                    <ThemedText size="3xl" weight="bold">
+                      {t("home.welcome")}
+                    </ThemedText>
+                    <ThemedText variant="secondary" size="lg">
+                      {t("home.subtitle")}
+                    </ThemedText>
+                  </View>
                 </View>
               </View>
-            </View>
 
-            {/* Dixie Greeting */}
-            <DixieChat showGreeting={true} />
+              {/* Dixie Greeting */}
+              <DixieChat showGreeting={true} />
 
-            {/* Featured Match */}
-            {featuredMatch && (
-              <View style={styles.section}>
-                <ThemedText
+              {/* Featured Match */}
+              {featuredMatch && (
+                <View style={styles.section}>
+                  <ThemedText
+                    size="lg"
+                    weight="semibold"
+                    style={styles.sectionTitle}
+                  >
+                    ⚽ {t("home.featuredMatch")}
+                  </ThemedText>
+                  <MatchCard
+                    match={featuredMatch}
+                    onPress={() => handleMatchPress(featuredMatch)}
+                    featured={true}
+                  />
+                </View>
+              )}
+
+              {/* Quick Predict Button */}
+              <View style={styles.quickPredictContainer}>
+                <Button
+                  title={`🔮 ${t("home.quickPredict")}`}
+                  variant="primary"
                   size="lg"
-                  weight="semibold"
-                  style={styles.sectionTitle}
-                >
-                  ⚽ {t("home.featuredMatch")}
-                </ThemedText>
-                <MatchCard
-                  match={featuredMatch}
-                  onPress={() => handleMatchPress(featuredMatch)}
-                  featured={true}
+                  fullWidth
+                  onPress={() => router.push("/predict")}
                 />
               </View>
-            )}
-
-            {/* Quick Predict Button */}
-            <View style={styles.quickPredictContainer}>
-              <Button
-                title={`🔮 ${t("home.quickPredict")}`}
-                variant="primary"
-                size="lg"
-                fullWidth
-                onPress={() => router.push("/predict")}
-              />
             </View>
+
+            {/* Right Column (only on tablet) */}
+            {isTablet && (
+              <View style={styles.sideColumn}>
+                {/* Upcoming Matches */}
+                <View style={styles.section}>
+                  <ThemedText
+                    size="lg"
+                    weight="semibold"
+                    style={styles.sectionTitle}
+                  >
+                    📅 {t("home.upcomingMatches")}
+                  </ThemedText>
+
+                  {otherMatches.map((match) => (
+                    <MatchCard
+                      key={match.id}
+                      match={match}
+                      onPress={() => handleMatchPress(match)}
+                    />
+                  ))}
+
+                  {otherMatches.length === 0 && (
+                    <Card padding="md">
+                      <ThemedText
+                        variant="muted"
+                        style={{ textAlign: "center" }}
+                      >
+                        {t("common.noResults")}
+                      </ThemedText>
+                    </Card>
+                  )}
+                </View>
+              </View>
+            )}
           </View>
 
-          {/* Right Column (only on tablet) */}
-          {isTablet && (
-            <View style={styles.sideColumn}>
-              {/* Upcoming Matches */}
-              <View style={styles.section}>
-                <ThemedText
-                  size="lg"
-                  weight="semibold"
-                  style={styles.sectionTitle}
-                >
+          {/* Upcoming Matches (Mobile only) */}
+          {!isTablet && otherMatches.length > 0 && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <ThemedText size="lg" weight="semibold">
                   📅 {t("home.upcomingMatches")}
                 </ThemedText>
-
-                {otherMatches.map((match) => (
-                  <MatchCard
-                    key={match.id}
-                    match={match}
-                    onPress={() => handleMatchPress(match)}
-                  />
-                ))}
-
-                {otherMatches.length === 0 && (
-                  <Card padding="md">
-                    <ThemedText variant="muted" style={{ textAlign: "center" }}>
-                      {t("common.noResults")}
-                    </ThemedText>
-                  </Card>
-                )}
+                <ThemedText
+                  variant="primary"
+                  size="sm"
+                  onPress={() => {
+                    /* Navigate to all matches */
+                  }}
+                >
+                  {t("home.viewAll")} →
+                </ThemedText>
               </View>
+
+              {otherMatches.map((match) => (
+                <MatchCard
+                  key={match.id}
+                  match={match}
+                  onPress={() => handleMatchPress(match)}
+                />
+              ))}
             </View>
           )}
-        </View>
 
-        {/* Upcoming Matches (Mobile only) */}
-        {!isTablet && otherMatches.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <ThemedText size="lg" weight="semibold">
-                📅 {t("home.upcomingMatches")}
-              </ThemedText>
-              <ThemedText
-                variant="primary"
-                size="sm"
-                onPress={() => {
-                  /* Navigate to all matches */
-                }}
-              >
-                {t("home.viewAll")} →
-              </ThemedText>
-            </View>
-
-            {otherMatches.map((match) => (
-              <MatchCard
-                key={match.id}
-                match={match}
-                onPress={() => handleMatchPress(match)}
+          {/* Stats Card */}
+          <Card variant="outlined" padding="md" style={styles.statsCard}>
+            <View style={styles.statsRow}>
+              <View style={styles.statItem}>
+                <ThemedText
+                  size="2xl"
+                  weight="bold"
+                  style={{ color: theme.colors.primary }}
+                >
+                  {matches.length}
+                </ThemedText>
+                <ThemedText variant="muted" size="xs">
+                  Partidos Disponibles
+                </ThemedText>
+              </View>
+              <View
+                style={[
+                  styles.statDivider,
+                  { backgroundColor: theme.colors.border },
+                ]}
               />
-            ))}
-          </View>
-        )}
-
-        {/* Stats Card */}
-        <Card variant="outlined" padding="md" style={styles.statsCard}>
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <ThemedText
-                size="2xl"
-                weight="bold"
-                style={{ color: theme.colors.primary }}
-              >
-                {matches.length}
-              </ThemedText>
-              <ThemedText variant="muted" size="xs">
-                Partidos Disponibles
-              </ThemedText>
+              <View style={styles.statItem}>
+                <ThemedText
+                  size="2xl"
+                  weight="bold"
+                  style={{ color: theme.colors.accentGold }}
+                >
+                  10
+                </ThemedText>
+                <ThemedText variant="muted" size="xs">
+                  Equipos con Datos
+                </ThemedText>
+              </View>
+              <View
+                style={[
+                  styles.statDivider,
+                  { backgroundColor: theme.colors.border },
+                ]}
+              />
+              <View style={styles.statItem}>
+                <ThemedText
+                  size="2xl"
+                  weight="bold"
+                  style={{ color: theme.colors.secondary }}
+                >
+                  45+
+                </ThemedText>
+                <ThemedText variant="muted" size="xs">
+                  Jugadores FIFA
+                </ThemedText>
+              </View>
             </View>
-            <View
-              style={[
-                styles.statDivider,
-                { backgroundColor: theme.colors.border },
-              ]}
-            />
-            <View style={styles.statItem}>
-              <ThemedText
-                size="2xl"
-                weight="bold"
-                style={{ color: theme.colors.accentGold }}
-              >
-                10
-              </ThemedText>
-              <ThemedText variant="muted" size="xs">
-                Equipos con Datos
-              </ThemedText>
-            </View>
-            <View
-              style={[
-                styles.statDivider,
-                { backgroundColor: theme.colors.border },
-              ]}
-            />
-            <View style={styles.statItem}>
-              <ThemedText
-                size="2xl"
-                weight="bold"
-                style={{ color: theme.colors.secondary }}
-              >
-                45+
-              </ThemedText>
-              <ThemedText variant="muted" size="xs">
-                Jugadores FIFA
-              </ThemedText>
-            </View>
-          </View>
-        </Card>
-      </ScrollView>
+          </Card>
+        </ScrollView>
+      )}
     </ThemedView>
   );
 }
@@ -260,6 +273,11 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   scrollContent: {
     padding: 16,
