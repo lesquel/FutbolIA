@@ -89,14 +89,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Check for cached user data
         const cachedUser = await AsyncStorage.getItem(USER_KEY);
         if (cachedUser) {
-          setUser(JSON.parse(cachedUser));
+          try {
+            setUser(JSON.parse(cachedUser));
+          } catch (e) {
+            console.error("Error parsing cached user:", e);
+            await AsyncStorage.removeItem(USER_KEY);
+          }
         }
       }
 
       // Load favorite teams
       const cachedTeams = await AsyncStorage.getItem(FAVORITE_TEAMS_KEY);
       if (cachedTeams) {
-        setFavoriteTeams(JSON.parse(cachedTeams));
+        try {
+          setFavoriteTeams(JSON.parse(cachedTeams));
+        } catch (e) {
+          console.error("Error parsing cached teams:", e);
+          await AsyncStorage.removeItem(FAVORITE_TEAMS_KEY);
+        }
       }
     } catch (err) {
       console.error("Auth initialization error:", err);
