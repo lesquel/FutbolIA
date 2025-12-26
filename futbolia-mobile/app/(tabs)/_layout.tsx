@@ -9,6 +9,46 @@ import { Pressable, Image, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "@/src/theme";
+import { ThemedText } from "@/src/components/ui";
+
+const HomeHeaderTitle = () => (
+  <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+    <Image
+      source={require("../../assets/images/logo.png")}
+      style={{ width: 32, height: 32 }}
+      resizeMode="contain"
+    />
+    <ThemedText size="xl" weight="bold">
+      FutPredicIA
+    </ThemedText>
+  </View>
+);
+
+const HomeHeaderRight = () => {
+  const { theme } = useTheme();
+  return (
+    <Link href="/modal" asChild>
+      <Pressable>
+        {({ pressed }) => (
+          <FontAwesome
+            name="info-circle"
+            size={22}
+            color={theme.colors.text}
+            style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+          />
+        )}
+      </Pressable>
+    </Link>
+  );
+};
+
+const TabIcon = ({
+  name,
+  color,
+}: {
+  name: React.ComponentProps<typeof FontAwesome>["name"];
+  color: string;
+}) => <TabBarIcon name={name} color={color} />;
 
 function TabBarIcon(
   props: Readonly<{
@@ -20,7 +60,7 @@ function TabBarIcon(
 }
 
 export default function TabLayout() {
-  const { theme, isDark } = useTheme();
+  const { theme } = useTheme();
   const { t } = useTranslation();
 
   return (
@@ -53,35 +93,9 @@ export default function TabLayout() {
         name="index"
         options={{
           title: t("navigation.home"),
-          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
-          headerTitle: () => (
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
-            >
-              <Image
-                source={require("../../assets/images/logo.png")}
-                style={{ width: 32, height: 32 }}
-                resizeMode="contain"
-              />
-              <ThemedText size="xl" weight="bold">
-                FutPredicIA
-              </ThemedText>
-            </View>
-          ),
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable>
-                {({ pressed }) => (
-                  <FontAwesome
-                    name="info-circle"
-                    size={22}
-                    color={theme.colors.text}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
-          ),
+          tabBarIcon: ({ color }) => <TabIcon name="home" color={color} />,
+          headerTitle: () => <HomeHeaderTitle />,
+          headerRight: () => <HomeHeaderRight />,
         }}
       />
 
@@ -90,7 +104,7 @@ export default function TabLayout() {
         name="predict"
         options={{
           title: t("navigation.predict"),
-          tabBarIcon: ({ color }) => <TabBarIcon name="magic" color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon name="magic" color={color} />,
           headerTitle: "🔮 Predecir",
         }}
       />
@@ -100,9 +114,7 @@ export default function TabLayout() {
         name="history"
         options={{
           title: t("navigation.history"),
-          tabBarIcon: ({ color }) => (
-            <TabBarIcon name="history" color={color} />
-          ),
+          tabBarIcon: ({ color }) => <TabIcon name="history" color={color} />,
           headerTitle: "📊 Historial",
         }}
       />
@@ -112,7 +124,7 @@ export default function TabLayout() {
         name="settings"
         options={{
           title: t("navigation.settings"),
-          tabBarIcon: ({ color }) => <TabBarIcon name="cog" color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon name="cog" color={color} />,
           headerTitle: "⚙️ Ajustes",
         }}
       />
