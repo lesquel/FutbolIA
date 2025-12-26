@@ -2,6 +2,7 @@
  * FutbolIA - Root Layout
  * Main app layout with theme, i18n and auth providers
  */
+import "react-native-reanimated";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import {
   DarkTheme,
@@ -12,7 +13,6 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
-import "react-native-reanimated";
 import "../global.css";
 
 // i18n initialization
