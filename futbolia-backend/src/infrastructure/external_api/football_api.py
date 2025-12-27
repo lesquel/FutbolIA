@@ -28,6 +28,9 @@ class FootballAPIClient:
     
     BASE_URL = "https://api.football-data.org/v4"
     
+    # Cache for teams to avoid repeated API calls
+    _teams_cache: List[dict] = []
+    
     # Códigos de ligas disponibles en tier gratuito
     LEAGUES = {
         "premier_league": "PL",
@@ -54,31 +57,36 @@ class FootballAPIClient:
             return cls._mock_team(team_name)
         
         try:
-            async with httpx.AsyncClient() as client:
-                # Buscar en todas las competiciones
-                response = await client.get(
-                    f"{cls.BASE_URL}/teams",
-                    headers=cls._get_headers(),
-                    params={"limit": 100}
-                )
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    teams = data.get("teams", [])
+            # Use cache if available
+            teams = cls._teams_cache
+            
+            if not teams:
+                async with httpx.AsyncClient() as client:
+                    # Buscar en todas las competiciones
+                    response = await client.get(
+                        f"{cls.BASE_URL}/teams",
+                        headers=cls._get_headers(),
+                        params={"limit": 100}
+                    )
                     
-                    # Buscar coincidencia por nombre
-                    for team_data in teams:
-                        if team_name.lower() in team_data["name"].lower() or \
-                           team_name.lower() in team_data.get("shortName", "").lower():
-                            return Team(
-                                id=str(team_data["id"]),
-                                name=team_data["name"],
-                                short_name=team_data.get("tla", "")[:3],
-                                logo_url=team_data.get("crest", ""),
-                                country=team_data.get("area", {}).get("name", ""),
-                            )
-                elif response.status_code == 429:
-                    print("⚠️ Football-Data.org: Rate limit alcanzado (10 req/min en tier gratuito)")
+                    if response.status_code == 200:
+                        data = response.json()
+                        teams = data.get("teams", [])
+                        cls._teams_cache = teams
+                    elif response.status_code == 429:
+                        print("⚠️ Football-Data.org: Rate limit alcanzado (10 req/min en tier gratuito)")
+            
+            # Buscar coincidencia por nombre
+            for team_data in teams:
+                if team_name.lower() in team_data["name"].lower() or \
+                   team_name.lower() in team_data.get("shortName", "").lower():
+                    return Team(
+                        id=str(team_data["id"]),
+                        name=team_data["name"],
+                        short_name=team_data.get("tla", "")[:3],
+                        logo_url=team_data.get("crest", ""),
+                        country=team_data.get("area", {}).get("name", ""),
+                    )
         except Exception as e:
             print(f"Football-Data.org error: {e}")
         

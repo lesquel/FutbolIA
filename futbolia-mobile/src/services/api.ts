@@ -141,7 +141,10 @@ const apiRequest = async <T>(
       headers["Authorization"] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const url = `${API_BASE_URL}${endpoint}`;
+    console.log(`🚀 API Request: ${url}`);
+
+    const response = await fetch(url, {
       ...options,
       headers,
     });
