@@ -67,6 +67,7 @@ class Settings:
                 "http://localhost:8081",
                 "http://localhost:19006",
                 "exp://localhost:8081",
+                "*",
             ]
     
     def is_production(self) -> bool:

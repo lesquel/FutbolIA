@@ -108,6 +108,17 @@ export default function LoginScreen() {
               </View>
             )}
 
+            {/* Debug Info (Only in Dev) */}
+            {__DEV__ && (
+              <ThemedText
+                size="xs"
+                variant="secondary"
+                style={{ textAlign: "center", marginBottom: 10, opacity: 0.5 }}
+              >
+                API: {process.env.EXPO_PUBLIC_API_URL || "Fallback (localhost)"}
+              </ThemedText>
+            )}
+
             {/* Email Input */}
             <View style={styles.inputGroup}>
               <ThemedText weight="medium" style={styles.label}>
