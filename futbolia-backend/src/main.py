@@ -90,10 +90,14 @@ app.add_middleware(
 )
 
 # CORS Middleware
+# Note: allow_credentials=True is incompatible with allow_origins=["*"]
+# We handle this by checking if "*" is in the origins list
+is_all_origins = "*" in settings.CORS_ORIGINS
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
+    allow_credentials=not is_all_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
