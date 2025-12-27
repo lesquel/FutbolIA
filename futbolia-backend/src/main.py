@@ -102,6 +102,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Request Logging Middleware
+@app.middleware("http")
+async def log_requests(request, call_next):
+    client_host = request.client.host if request.client else "unknown"
+    log_info(f"Incoming {request.method} request", 
+             path=request.url.path, 
+             client=client_host)
+    response = await call_next(request)
+    return response
+
 # Include routers
 API_PREFIX = "/api/v1"
 app.include_router(auth_router, prefix=API_PREFIX)
