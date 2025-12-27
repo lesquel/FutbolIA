@@ -2,6 +2,7 @@
 Prediction Use Cases
 Core business logic for match predictions using RAG + DeepSeek
 """
+import asyncio
 from typing import Optional
 
 from src.domain.entities import Team, Match, Prediction, PredictionResult
@@ -34,14 +35,25 @@ class PredictionUseCase:
         # Try local DB first (for user-added teams like Emelec, Boca)
         from src.infrastructure.db.team_repository import TeamRepository
         
-        home_team = await TeamRepository.find_by_name(home_team_name)
-        away_team = await TeamRepository.find_by_name(away_team_name)
+        # Parallelize local DB lookup
+        home_team, away_team = await asyncio.gather(
+            TeamRepository.find_by_name(home_team_name),
+            TeamRepository.find_by_name(away_team_name)
+        )
         
-        # If not in local DB, try external API
+        # If not in local DB, try external API (Parallelized)
+        external_lookups = []
         if not home_team:
-            home_team = await FootballAPIClient.get_team_by_name(home_team_name)
+            external_lookups.append(FootballAPIClient.get_team_by_name(home_team_name))
+        else:
+            external_lookups.append(asyncio.sleep(0, result=home_team))
+            
         if not away_team:
-            away_team = await FootballAPIClient.get_team_by_name(away_team_name)
+            external_lookups.append(FootballAPIClient.get_team_by_name(away_team_name))
+        else:
+            external_lookups.append(asyncio.sleep(0, result=away_team))
+            
+        home_team, away_team = await asyncio.gather(*external_lookups)
         
         if not home_team or not away_team:
             return {
@@ -49,23 +61,38 @@ class PredictionUseCase:
                 "error": "No se encontraron los equipos" if language == "es" else "Teams not found",
             }
         
-        # Get team form
-        home_team.form = await FootballAPIClient.get_team_form(home_team.id)
-        away_team.form = await FootballAPIClient.get_team_form(away_team.id)
+        # Get team form (Parallelized)
+        home_form_task = FootballAPIClient.get_team_form(home_team.id)
+        away_form_task = FootballAPIClient.get_team_form(away_team.id)
+        
+        home_team.form, away_team.form = await asyncio.gather(home_form_task, away_form_task)
         
         # Step 2: Get player attributes from ChromaDB (RAG context)
+        # These are synchronous calls in the current implementation, but we can still call them sequentially
+        # as they are usually fast (local vector DB)
         home_players = PlayerVectorStore.search_by_team(home_team.name, limit=15)
         away_players = PlayerVectorStore.search_by_team(away_team.name, limit=15)
         
-        # If no players in ChromaDB, generate with AI
-        home_players_raw = []
-        away_players_raw = []
+        # If no players in ChromaDB, generate with AI (Parallelized)
+        player_gen_tasks = []
         
         if not home_players:
             print(f"🔄 Generating players for {home_team.name} with AI...")
-            home_players_raw = await DixieAI.generate_team_players(home_team.name)
-            # Convert raw dicts to PlayerAttributes
-            from src.domain.entities import PlayerAttributes
+            player_gen_tasks.append(DixieAI.generate_team_players(home_team.name))
+        else:
+            player_gen_tasks.append(asyncio.sleep(0, result=None))
+            
+        if not away_players:
+            print(f"🔄 Generating players for {away_team.name} with AI...")
+            player_gen_tasks.append(DixieAI.generate_team_players(away_team.name))
+        else:
+            player_gen_tasks.append(asyncio.sleep(0, result=None))
+            
+        home_players_raw, away_players_raw = await asyncio.gather(*player_gen_tasks)
+        
+        # Process generated players if any
+        from src.domain.entities import PlayerAttributes
+        if home_players_raw:
             home_players = [
                 PlayerAttributes(
                     name=p.get("name", "Unknown"),
@@ -80,11 +107,8 @@ class PredictionUseCase:
                 )
                 for p in home_players_raw if isinstance(p, dict)
             ]
-        
-        if not away_players:
-            print(f"🔄 Generating players for {away_team.name} with AI...")
-            away_players_raw = await DixieAI.generate_team_players(away_team.name)
-            from src.domain.entities import PlayerAttributes
+            
+        if away_players_raw:
             away_players = [
                 PlayerAttributes(
                     name=p.get("name", "Unknown"),
