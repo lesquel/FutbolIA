@@ -45,6 +45,8 @@ export default function PredictScreen() {
   const [awayTeam, setAwayTeam] = useState<string | null>(
     (params.awayTeam as string) || null
   );
+  const [homeTeamData, setHomeTeamData] = useState<{ logo_url?: string; league?: string } | null>(null);
+  const [awayTeamData, setAwayTeamData] = useState<{ logo_url?: string; league?: string } | null>(null);
   const [prediction, setPrediction] = useState<Prediction | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -188,7 +190,10 @@ export default function PredictScreen() {
                   <TeamSelector
                     label={t("prediction.selectHomeTeam")}
                     selectedTeam={homeTeam}
-                    onSelectTeam={setHomeTeam}
+                    onSelectTeam={(team, data) => {
+                      setHomeTeam(team);
+                      setHomeTeamData(data || null);
+                    }}
                     excludeTeam={awayTeam}
                     icon={Home}
                   />
@@ -224,7 +229,10 @@ export default function PredictScreen() {
                   <TeamSelector
                     label={t("prediction.selectAwayTeam")}
                     selectedTeam={awayTeam}
-                    onSelectTeam={setAwayTeam}
+                    onSelectTeam={(team, data) => {
+                      setAwayTeam(team);
+                      setAwayTeamData(data || null);
+                    }}
                     excludeTeam={homeTeam}
                     icon={Bus}
                   />

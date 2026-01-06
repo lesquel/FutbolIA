@@ -531,16 +531,59 @@ async def bulk_add_teams(
 
 
 @router.get("/{team_name}/players")
-async def get_team_players(team_name: str):
+async def get_team_players(
+    team_name: str,
+    force_update: bool = Query(False, description="Force update players from API")
+):
     """
     👥 Get all players for a team - generates with AI if not found and SAVES to DB
     
     Flow:
-    1. Check ChromaDB first (fast, local)
-    2. If not found, generate with AI (DeepSeek)
-    3. SAVE generated players to ChromaDB for future queries
-    4. SAVE team to MongoDB for persistence
+    1. If force_update=True, fetch fresh players from API first
+    2. Check ChromaDB (fast, local)
+    3. If not found, generate with AI (DeepSeek)
+    4. SAVE generated players to ChromaDB for future queries
+    5. SAVE team to MongoDB for persistence
+    
+    ✅ NEW: Also returns last 5 matches for the team
+    ✅ NEW: Option to force update players from external APIs
     """
+    # If force_update, try to get fresh players from API first
+    if force_update:
+        try:
+            from src.infrastructure.external_api.api_selector import UnifiedAPIClient
+            team_with_squad = await UnifiedAPIClient.get_team_with_squad(team_name)
+            
+            if team_with_squad and team_with_squad.get("players"):
+                # Convert API players to our format
+                api_players = team_with_squad.get("players", [])
+                if api_players:
+                    from src.domain.entities import PlayerAttributes
+                    players = []
+                    for i, p_data in enumerate(api_players):
+                        player = PlayerAttributes(
+                            player_id=f"api_{team_name.lower().replace(' ', '_')}_{i}_{p_data.get('name', 'unknown').lower().replace(' ', '_')}",
+                            name=p_data.get("name", "Unknown"),
+                            team=team_name,
+                            position=p_data.get("position", "CM"),
+                            overall_rating=p_data.get("overall_rating", p_data.get("overall", 75)),
+                            pace=p_data.get("pace", 70),
+                            shooting=p_data.get("shooting", 65),
+                            passing=p_data.get("passing", 70),
+                            dribbling=p_data.get("dribbling", 68),
+                            defending=p_data.get("defending", 50),
+                            physical=p_data.get("physical", 70),
+                        )
+                        players.append(player)
+                    
+                    # Update ChromaDB with fresh players
+                    if players:
+                        PlayerVectorStore.add_players_batch(players)
+                        print(f"✅ Updated {len(players)} players for '{team_name}' from API")
+        except Exception as e:
+            print(f"⚠️ Error updating players from API for {team_name}: {e}")
+            # Continue with ChromaDB lookup
+    
     # First check ChromaDB
     players = PlayerVectorStore.search_by_team(team_name, limit=30)
     
