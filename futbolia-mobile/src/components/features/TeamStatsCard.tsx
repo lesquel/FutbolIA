@@ -2,9 +2,10 @@
  * TeamStatsCard - Shows team players and stats after selection
  */
 import { View, StyleSheet, ActivityIndicator } from "react-native";
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
+import { LucideIcon, Users } from "lucide-react-native";
 import { useTheme } from "@/src/theme";
-import { ThemedText, Card } from "@/src/components/ui";
+import { ThemedText, Card, Icon } from "@/src/components/ui";
 import { teamsApi, Player } from "@/src/services/api";
 
 interface TeamStats {
@@ -18,7 +19,7 @@ interface TeamStats {
 
 interface TeamStatsCardProps {
   readonly teamName: string | null;
-  readonly emoji?: string;
+  readonly icon?: LucideIcon;
 }
 
 // Helper to get position color
@@ -57,7 +58,10 @@ const StatBar = ({
   </View>
 );
 
-export function TeamStatsCard({ teamName, emoji = "⚽" }: TeamStatsCardProps) {
+export const TeamStatsCard = memo(function TeamStatsCard({ 
+  teamName, 
+  icon: IconComponent = Users 
+}: TeamStatsCardProps) {
   const { theme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
@@ -124,9 +128,12 @@ export function TeamStatsCard({ teamName, emoji = "⚽" }: TeamStatsCardProps) {
     <Card variant="outlined" padding="md" style={styles.card}>
       {/* Header */}
       <View style={styles.header}>
-        <ThemedText size="base" weight="bold">
-          {emoji} {teamName}
-        </ThemedText>
+        <View style={styles.headerRow}>
+          <Icon icon={IconComponent} size={20} variant="primary" />
+          <ThemedText size="base" weight="bold">
+            {teamName}
+          </ThemedText>
+        </View>
         {stats && (
           <View
             style={[
@@ -179,9 +186,12 @@ export function TeamStatsCard({ teamName, emoji = "⚽" }: TeamStatsCardProps) {
       {/* Players List */}
       {players.length > 0 && (
         <View style={styles.playersSection}>
-          <ThemedText variant="muted" size="xs" style={styles.playersTitle}>
-            👥 Plantilla ({players.length} jugadores)
-          </ThemedText>
+          <View style={styles.playersTitleRow}>
+            <Icon icon={Users} size={14} variant="muted" />
+            <ThemedText variant="muted" size="xs" style={styles.playersTitle}>
+              Plantilla ({players.length} jugadores)
+            </ThemedText>
+          </View>
           <View style={styles.playersGrid}>
             {players.slice(0, 11).map((player) => (
               <View
@@ -218,7 +228,7 @@ export function TeamStatsCard({ teamName, emoji = "⚽" }: TeamStatsCardProps) {
       )}
     </Card>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {
@@ -237,6 +247,17 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 12,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  playersTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 8,
   },
   ovrBadge: {
     paddingHorizontal: 10,

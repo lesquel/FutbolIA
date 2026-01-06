@@ -14,9 +14,10 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { Calendar } from "lucide-react-native";
 
 import { useTheme } from "@/src/theme";
-import { ThemedView, ThemedText, Card, Button } from "@/src/components/ui";
+import { ThemedView, ThemedText, Card, Button, Icon } from "@/src/components/ui";
 import { MatchCard, DixieChat } from "@/src/components/features";
 import { predictionsApi, Match } from "@/src/services/api";
 
@@ -152,13 +153,16 @@ export default function HomeScreen() {
               <View style={styles.sideColumn}>
                 {/* Upcoming Matches */}
                 <View style={styles.section}>
-                  <ThemedText
-                    size="lg"
-                    weight="semibold"
-                    style={styles.sectionTitle}
-                  >
-                    📅 {t("home.upcomingMatches")}
-                  </ThemedText>
+                  <View style={styles.sectionTitleRow}>
+                    <Icon icon={Calendar} size={20} variant="primary" />
+                    <ThemedText
+                      size="lg"
+                      weight="semibold"
+                      style={styles.sectionTitle}
+                    >
+                      {t("home.upcomingMatches")}
+                    </ThemedText>
+                  </View>
 
                   {otherMatches.map((match) => (
                     <MatchCard
@@ -187,9 +191,12 @@ export default function HomeScreen() {
           {!isTablet && otherMatches.length > 0 && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <ThemedText size="lg" weight="semibold">
-                  📅 {t("home.upcomingMatches")}
-                </ThemedText>
+                <View style={styles.sectionTitleRow}>
+                  <Icon icon={Calendar} size={20} variant="primary" />
+                  <ThemedText size="lg" weight="semibold">
+                    {t("home.upcomingMatches")}
+                  </ThemedText>
+                </View>
                 <ThemedText
                   variant="primary"
                   size="sm"
@@ -315,6 +322,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sectionTitle: {
+    marginBottom: 12,
+    flex: 1,
+  },
+  sectionTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
     marginBottom: 12,
   },
   sectionHeader: {

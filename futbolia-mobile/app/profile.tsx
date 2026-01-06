@@ -131,9 +131,12 @@ export default function ProfileScreen() {
 
         {/* Stats Section */}
         <View style={styles.section}>
-          <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
-            📊 {t("profile.statistics")}
-          </ThemedText>
+          <View style={styles.statsTitleRow}>
+            <Icon icon={BarChart3} size={18} variant="primary" />
+            <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
+              {t("profile.statistics")}
+            </ThemedText>
+          </View>
 
           <View style={styles.statsGrid}>
             <Card variant="outlined" padding="md" style={styles.statCard}>
@@ -371,6 +374,13 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionTitle: {
+    marginBottom: 12,
+    flex: 1,
+  },
+  statsTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
     marginBottom: 12,
   },
   sectionHeader: {

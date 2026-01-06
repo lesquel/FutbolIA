@@ -2,7 +2,7 @@
  * TeamSelector - Dropdown/Modal for selecting teams
  * Now with button-based search to reduce server load!
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef, memo } from "react";
 import {
   View,
   Modal,
@@ -14,8 +14,9 @@ import {
   Alert,
   Image,
 } from "react-native";
+import { Search, X, Check, Sparkles, Loader2 } from "lucide-react-native";
 import { useTheme } from "@/src/theme";
-import { ThemedText, Card, Input, Button } from "@/src/components/ui";
+import { ThemedText, Card, Input, Button, Icon } from "@/src/components/ui";
 import { teamsApi, TeamSearchResult } from "@/src/services/api";
 
 // Fallback teams if API is offline or for quick selection
@@ -77,13 +78,15 @@ interface TeamSelectorProps {
   selectedTeam: string | null;
   onSelectTeam: (team: string) => void;
   excludeTeam?: string | null; // To prevent selecting the same team twice
+  icon?: any; // LucideIcon
 }
 
-export function TeamSelector({
+export const TeamSelector = memo(function TeamSelector({
   label,
   selectedTeam,
   onSelectTeam,
   excludeTeam,
+  icon: IconComponent,
 }: TeamSelectorProps) {
   const { theme } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
@@ -92,6 +95,7 @@ export function TeamSelector({
   const [loading, setLoading] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Initial load of popular teams or teams with players
   useEffect(() => {
@@ -125,31 +129,37 @@ export function TeamSelector({
     loadInitialTeams();
   }, []);
 
-  // Manual search function (called by button)
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      // Reset to initial teams if search is empty
-      setHasSearched(false);
-      const response = await teamsApi.getTeamsWithPlayers();
-      if (response.success && response.data?.teams) {
-        setTeams(response.data.teams);
-      }
-      return;
+  // Manual search function (called by button) with debouncing
+  const handleSearch = useCallback(async () => {
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
     }
 
-    setLoading(true);
-    setHasSearched(true);
-    try {
-      const response = await teamsApi.search(searchQuery, true);
-      if (response.success && response.data?.teams) {
-        setTeams(response.data.teams);
+    debounceTimer.current = setTimeout(async () => {
+      if (!searchQuery.trim()) {
+        // Reset to initial teams if search is empty
+        setHasSearched(false);
+        const response = await teamsApi.getTeamsWithPlayers();
+        if (response.success && response.data?.teams) {
+          setTeams(response.data.teams);
+        }
+        return;
       }
-    } catch (error) {
-      console.log("Search error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+
+      setLoading(true);
+      setHasSearched(true);
+      try {
+        const response = await teamsApi.search(searchQuery, true);
+        if (response.success && response.data?.teams) {
+          setTeams(response.data.teams);
+        }
+      } catch (error) {
+        console.log("Search error:", error);
+      } finally {
+        setLoading(false);
+      }
+    }, 500); // 500ms debounce
+  }, [searchQuery]);
 
   // Reset search when modal closes
   const handleCloseModal = () => {
@@ -179,7 +189,7 @@ export function TeamSelector({
         await teamsApi.generatePlayers(searchQuery, 15, 75);
 
         Alert.alert(
-          "✅ Equipo Agregado",
+          "Equipo Agregado",
           `${searchQuery} ha sido agregado con éxito. Dixie ya conoce a sus jugadores.`,
           [{ text: "¡Genial!", onPress: () => handleSelectTeam(searchQuery) }]
         );
@@ -254,14 +264,15 @@ export function TeamSelector({
                 { backgroundColor: theme.colors.success + "20" },
               ]}
             >
-              <ThemedText size="xs" style={{ color: theme.colors.success }}>
-                ✓ Datos
+              <Icon icon={Check} size={12} variant="success" />
+              <ThemedText size="xs" style={{ color: theme.colors.success, marginLeft: 4 }}>
+                Datos
               </ThemedText>
             </View>
           )}
         </View>
         {selectedTeam === item.name && (
-          <ThemedText variant="primary">✓</ThemedText>
+          <Icon icon={Check} size={20} variant="primary" />
         )}
       </TouchableOpacity>
     );
@@ -269,9 +280,12 @@ export function TeamSelector({
 
   return (
     <View style={styles.container}>
-      <ThemedText variant="secondary" size="sm" style={styles.label}>
-        {label}
-      </ThemedText>
+      <View style={styles.labelRow}>
+        {IconComponent && <Icon icon={IconComponent} size={16} variant="secondary" />}
+        <ThemedText variant="secondary" size="sm" style={styles.label}>
+          {label}
+        </ThemedText>
+      </View>
 
       <TouchableOpacity
         onPress={() => setModalVisible(true)}
@@ -333,7 +347,7 @@ export function TeamSelector({
                 Seleccionar Equipo
               </ThemedText>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <ThemedText size="2xl">✕</ThemedText>
+                <Icon icon={X} size={24} variant="muted" />
               </TouchableOpacity>
             </View>
 
@@ -350,11 +364,12 @@ export function TeamSelector({
                   />
                 </View>
                 <Button
-                  title="🔍"
+                  title=""
                   variant="primary"
                   size="md"
                   onPress={handleSearch}
                   loading={loading}
+                  icon={loading ? Loader2 : Search}
                   style={styles.searchButton}
                 />
               </View>
@@ -375,8 +390,9 @@ export function TeamSelector({
               ListHeaderComponent={
                 hasSearched && teams.length > 0 ? (
                   <View style={styles.searchResultsHeader}>
+                    <Icon icon={Check} size={16} variant="success" />
                     <ThemedText variant="muted" size="sm">
-                      ✅ {teams.length} equipo(s) encontrado(s)
+                      {teams.length} equipo(s) encontrado(s)
                     </ThemedText>
                   </View>
                 ) : null
@@ -387,7 +403,7 @@ export function TeamSelector({
                     <ThemedText variant="muted" style={styles.emptyText}>
                       {hasSearched && searchQuery.length > 0
                         ? `No se encontró "${searchQuery}" en la base de datos.`
-                        : "Escribe el nombre del equipo y presiona 🔍 para buscar."}
+                        : "Escribe el nombre del equipo y presiona buscar."}
                     </ThemedText>
 
                     {hasSearched && searchQuery.length >= 2 && (
@@ -395,27 +411,28 @@ export function TeamSelector({
                         <ThemedText weight="bold" style={{ marginBottom: 8 }}>
                           🤖 ¿Agregar {searchQuery} con IA?
                         </ThemedText>
-                        <ThemedText
-                          size="sm"
-                          variant="secondary"
-                          style={{ marginBottom: 16 }}
-                        >
-                          Dixie buscará los jugadores reales de este equipo y
-                          los guardará en la base de datos para futuras
-                          consultas.
-                        </ThemedText>
-                        <Button
-                          title={
-                            isAdding
-                              ? "🔄 Generando jugadores..."
-                              : `✨ Agregar ${searchQuery} con IA`
-                          }
-                          onPress={handleAddNewTeam}
-                          disabled={isAdding}
-                          loading={isAdding}
-                          size="sm"
-                          variant="primary"
-                        />
+                    <ThemedText
+                      size="sm"
+                      variant="secondary"
+                      style={{ marginBottom: 16 }}
+                    >
+                      Dixie buscará los jugadores reales de este equipo y
+                      los guardará en la base de datos para futuras
+                      consultas.
+                    </ThemedText>
+                    <Button
+                      title={
+                        isAdding
+                          ? "Generando jugadores..."
+                          : `Agregar ${searchQuery} con IA`
+                      }
+                      onPress={handleAddNewTeam}
+                      disabled={isAdding}
+                      loading={isAdding}
+                      icon={isAdding ? Loader2 : Sparkles}
+                      size="sm"
+                      variant="primary"
+                    />
                       </Card>
                     )}
                   </View>
@@ -427,14 +444,20 @@ export function TeamSelector({
       </Modal>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
     marginBottom: 16,
   },
-  label: {
+  labelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     marginBottom: 8,
+  },
+  label: {
+    flex: 1,
   },
   selector: {
     flexDirection: "row",
@@ -494,11 +517,22 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   searchResultsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     paddingVertical: 8,
     paddingHorizontal: 4,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(0,0,0,0.1)",
     marginBottom: 8,
+  },
+  dataBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginRight: 8,
   },
   teamList: {
     flex: 1,

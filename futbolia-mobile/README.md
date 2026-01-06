@@ -198,8 +198,6 @@ cd futbolia-mobile
 
 # 2. Instalar dependencias
 bun install
-# o con npm
-npm install
 
 # 3. Copiar configuración
 cp .env.template .env
@@ -242,8 +240,6 @@ ifconfig | grep "inet "
 ```bash
 # Iniciar Expo
 bun start
-# o
-npx expo start
 
 # Opciones disponibles:
 # - Presiona 'w' para abrir en Web
@@ -255,14 +251,14 @@ npx expo start
 ### Limpiar caché
 
 ```bash
-npx expo start --clear
+bunx expo start --clear
 ```
 
 ### Build de producción
 
 ```bash
 # Build para todas las plataformas
-npx expo build
+bunx expo build
 
 # Build específico
 eas build --platform android
@@ -418,8 +414,6 @@ const { t } = useTranslation();
 ```bash
 # Ejecutar tests
 bun test
-# o
-npm test
 ```
 
 ---

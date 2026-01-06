@@ -4,9 +4,10 @@
  */
 import { StatusBar } from "expo-status-bar";
 import { Platform, StyleSheet, ScrollView, View } from "react-native";
+import { Wrench } from "lucide-react-native";
 
 import { useTheme } from "@/src/theme";
-import { ThemedView, ThemedText, Card } from "@/src/components/ui";
+import { ThemedView, ThemedText, Card, Icon } from "@/src/components/ui";
 
 export default function ModalScreen() {
   const { theme } = useTheme();
@@ -114,9 +115,12 @@ export default function ModalScreen() {
 
         {/* Tech Stack */}
         <Card variant="outlined" padding="lg" style={styles.card}>
-          <ThemedText size="lg" weight="bold" style={styles.cardTitle}>
-            🛠️ Tecnologías
-          </ThemedText>
+          <View style={styles.cardTitleRow}>
+            <Icon icon={Wrench} size={20} variant="primary" />
+            <ThemedText size="lg" weight="bold" style={styles.cardTitle}>
+              Tecnologías
+            </ThemedText>
+          </View>
 
           <View style={styles.techList}>
             <ThemedText variant="secondary">
@@ -180,8 +184,14 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 12,
   },
-  cardTitle: {
+  cardTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
     marginBottom: 16,
+  },
+  cardTitle: {
+    flex: 1,
   },
   description: {
     lineHeight: 22,
