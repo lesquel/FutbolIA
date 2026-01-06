@@ -62,16 +62,20 @@ async def predict_match(
     
     # Record prediction stats for Dixie
     try:
-        predicted_winner = result.get("data", {}).get("prediction", {}).get("winner", "")
-        confidence = result.get("data", {}).get("prediction", {}).get("confidence", 0)
+        prediction_data = result.get("data", {}).get("prediction", {})
+        prediction_id = prediction_data.get("id", "")
+        predicted_winner = prediction_data.get("winner", "")
+        confidence = prediction_data.get("confidence", 0)
         
-        await DixieStats.record_prediction(
-            home_team=request.home_team,
-            away_team=request.away_team,
-            predicted_winner=predicted_winner,
-            confidence=confidence,
-            user_id=current_user.id
-        )
+        if prediction_id:
+            await DixieStats.record_prediction(
+                prediction_id=prediction_id,
+                home_team=request.home_team,
+                away_team=request.away_team,
+                predicted_winner=predicted_winner,
+                confidence=confidence,
+                user_id=current_user.id
+            )
         
         log_prediction(
             home_team=request.home_team,
@@ -99,6 +103,15 @@ async def get_history(
     return result
 
 
+@router.get("/matches")
+async def get_upcoming_matches(
+    league_id: int = Query(default=39, description="League ID (39=Premier League, 140=La Liga)")
+):
+    """⚽ Get upcoming matches available for prediction"""
+    result = await PredictionUseCase.get_available_matches(league_id)
+    return result
+
+
 @router.get("/{prediction_id}")
 async def get_prediction_detail(
     prediction_id: str,
@@ -111,15 +124,6 @@ async def get_prediction_detail(
     )
     if not result["success"]:
         raise HTTPException(status_code=404, detail=result["error"])
-    return result
-
-
-@router.get("/matches")
-async def get_upcoming_matches(
-    league_id: int = Query(default=39, description="League ID (39=Premier League, 140=La Liga)")
-):
-    """⚽ Get upcoming matches available for prediction"""
-    result = await PredictionUseCase.get_available_matches(league_id)
     return result
 
 
