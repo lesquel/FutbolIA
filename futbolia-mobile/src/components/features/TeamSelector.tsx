@@ -101,28 +101,31 @@ export const TeamSelector = memo(function TeamSelector({
   useEffect(() => {
     const loadInitialTeams = async () => {
       try {
+        // Set fallback teams immediately for instant UI
+        setTeams(
+          POPULAR_TEAMS.map((t) => ({
+            id: t.name.toLowerCase().replaceAll(/\s+/g, "_"),
+            name: t.name,
+            league: t.league,
+            logo_url: t.logo_url,
+            has_players: true,
+            player_count: 11,
+          }))
+        );
+        
+        // Then try to load from API (non-blocking)
         const response = await teamsApi.getTeamsWithPlayers();
         if (
           response.success &&
           response.data?.teams &&
           response.data.teams.length > 0
         ) {
+          // Update with real data if available
           setTeams(response.data.teams);
-        } else {
-          // Fallback to popular teams formatted as TeamSearchResult
-          setTeams(
-            POPULAR_TEAMS.map((t) => ({
-              id: t.name.toLowerCase().replaceAll(/\s+/g, "_"),
-              name: t.name,
-              league: t.league,
-              logo_url: t.logo_url,
-              has_players: true,
-              player_count: 11,
-            }))
-          );
         }
       } catch (error) {
         console.log("Error loading initial teams:", error);
+        // Keep fallback teams on error
       }
     };
 
@@ -149,12 +152,31 @@ export const TeamSelector = memo(function TeamSelector({
       setLoading(true);
       setHasSearched(true);
       try {
-        const response = await teamsApi.search(searchQuery, true);
+        // Search with timeout handling
+        const response = await Promise.race([
+          teamsApi.search(searchQuery, true),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error("Timeout")), 5000)
+          )
+        ]) as any;
+        
         if (response.success && response.data?.teams) {
           setTeams(response.data.teams);
+        } else {
+          // Show error but keep previous results
+          Alert.alert(
+            "Búsqueda",
+            response.error || "No se encontraron equipos. Intenta con otro nombre."
+          );
         }
-      } catch (error) {
+      } catch (error: any) {
         console.log("Search error:", error);
+        Alert.alert(
+          "Error de búsqueda",
+          error.message === "Timeout" 
+            ? "La búsqueda está tardando mucho. Intenta con un nombre más específico."
+            : "Error al buscar equipos. Verifica tu conexión."
+        );
       } finally {
         setLoading(false);
       }

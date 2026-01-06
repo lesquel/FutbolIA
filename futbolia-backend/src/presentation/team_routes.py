@@ -12,6 +12,8 @@ from src.infrastructure.chromadb.player_store import PlayerVectorStore
 from src.infrastructure.external_api.football_api import FootballAPIClient
 from src.infrastructure.external_api.api_selector import UnifiedAPIClient
 from src.presentation.auth_routes import get_current_user, get_optional_user
+from src.core.cache import api_cache
+import asyncio
 
 
 router = APIRouter(prefix="/teams", tags=["Teams"])
@@ -98,7 +100,8 @@ async def search_teams(
         if q.lower() in team_name.lower():
             players = PlayerVectorStore.search_by_team(team_name, limit=1)
             if players:
-                player_count = len(PlayerVectorStore.search_by_team(team_name, limit=20))
+                # Estimate player count to avoid slow full search
+                player_count = 11  # Default estimate for major teams
                 results["with_players"].append({
                     "id": f"chroma_{team_name.lower().replace(' ', '_')}",
                     "name": team_name,
@@ -110,22 +113,29 @@ async def search_teams(
                     "player_count": player_count
                 })
     
-    # Search in external APIs (Unified client with fallback)
+    # Search in external APIs (Unified client with fallback) - with timeout
     if search_api:
-        # Try unified client (tries TheSportsDB -> Football-Data.org -> API-Football)
-        api_team = await UnifiedAPIClient.get_team_by_name(q)
-        if api_team:
-            results["api"].append({
-                "id": api_team.id,
-                "name": api_team.name,
-                "short_name": api_team.short_name,
-                "logo_url": api_team.logo_url,
-                "country": api_team.country or "",
-                "league": api_team.league or "",
-                "has_players": False,
-                "player_count": 0,
-                "source": "external_api"
-            })
+        try:
+            # Try unified client with 2 second timeout to avoid blocking
+            api_team = await asyncio.wait_for(
+                UnifiedAPIClient.get_team_by_name(q),
+                timeout=2.0
+            )
+            if api_team:
+                results["api"].append({
+                    "id": api_team.id,
+                    "name": api_team.name,
+                    "short_name": api_team.short_name,
+                    "logo_url": api_team.logo_url,
+                    "country": api_team.country or "",
+                    "league": api_team.league or "",
+                    "has_players": False,
+                    "player_count": 0,
+                    "source": "external_api"
+                })
+        except (asyncio.TimeoutError, Exception) as e:
+            # Silently fail - we already have local results
+            print(f"⚠️ External API search timeout/error for '{q}': {e}")
     
     # Merge and deduplicate results
     all_teams = []
@@ -162,57 +172,84 @@ async def search_teams(
 async def get_teams_with_players():
     """
     🏆 Get all teams that have player data in the system
-    Combines teams from MongoDB and ChromaDB
+    Optimized with caching to avoid slow ChromaDB queries
     """
+    cache_key = "teams_with_players_list"
+    
+    # Check cache first (5 minute cache)
+    cached_teams = await api_cache.get(cache_key)
+    if cached_teams is not None:
+        return {
+            "success": True,
+            "data": {
+                "teams": cached_teams,
+                "total": len(cached_teams)
+            }
+        }
+    
     teams = []
     seen_names = set()
     
-    # 1. Get teams from MongoDB that have players
-    mongo_teams = await TeamRepository.get_teams_with_players()
-    for team in mongo_teams:
-        if team.name.lower() not in seen_names:
-            seen_names.add(team.name.lower())
-            # Get actual player count from ChromaDB
-            player_count = len(PlayerVectorStore.search_by_team(team.name, limit=30))
-            teams.append({
-                "id": team.id,
-                "name": team.name,
-                "short_name": team.short_name,
-                "logo_url": team.logo_url,
-                "country": team.country,
-                "league": team.league,
-                "has_players": True,
-                "player_count": player_count,
-                "source": "mongodb"
-            })
-    
-    # 2. Also check major European teams in ChromaDB (seed data)
-    major_teams = [
-        "Real Madrid", "Manchester City", "Barcelona", "Bayern Munich",
-        "Liverpool", "Arsenal", "Paris Saint-Germain", "Inter Milan",
-        "Juventus", "Atletico Madrid"
-    ]
-    
-    for team_name in major_teams:
-        if team_name.lower() not in seen_names:
-            players = PlayerVectorStore.search_by_team(team_name, limit=1)
-            if players:
-                player_count = len(PlayerVectorStore.search_by_team(team_name, limit=20))
-                seen_names.add(team_name.lower())
+    try:
+        # 1. Get teams from MongoDB that have players (fast)
+        mongo_teams = await TeamRepository.get_teams_with_players()
+        for team in mongo_teams:
+            if team.name.lower() not in seen_names:
+                seen_names.add(team.name.lower())
+                # Use stored player_count if available, otherwise estimate
+                # Avoid slow ChromaDB query here
+                player_count = getattr(team, 'player_count', 11) or 11
                 teams.append({
-                    "id": f"chroma_{team_name.lower().replace(' ', '_')}",
-                    "name": team_name,
-                    "short_name": team_name[:3].upper(),
-                    "logo_url": "",
-                    "country": "",
-                    "league": "",
+                    "id": team.id,
+                    "name": team.name,
+                    "short_name": team.short_name,
+                    "logo_url": team.logo_url or "",
+                    "country": team.country or "",
+                    "league": team.league or "",
                     "has_players": True,
                     "player_count": player_count,
-                    "source": "chromadb"
+                    "source": "mongodb"
                 })
-    
-    # Sort by name
-    teams.sort(key=lambda t: t["name"])
+        
+        # 2. Also check major European teams in ChromaDB (seed data)
+        # Only check if we have few teams to avoid slow queries
+        if len(teams) < 10:
+            major_teams = [
+                "Real Madrid", "Manchester City", "Barcelona", "Bayern Munich",
+                "Liverpool", "Arsenal", "Paris Saint-Germain", "Inter Milan",
+                "Juventus", "Atletico Madrid"
+            ]
+            
+            for team_name in major_teams:
+                if team_name.lower() not in seen_names:
+                    # Quick check - only search for 1 player to see if team exists
+                    players = PlayerVectorStore.search_by_team(team_name, limit=1)
+                    if players:
+                        # Estimate player count (avoid full search)
+                        player_count = 11  # Default estimate
+                        seen_names.add(team_name.lower())
+                        teams.append({
+                            "id": f"chroma_{team_name.lower().replace(' ', '_')}",
+                            "name": team_name,
+                            "short_name": team_name[:3].upper(),
+                            "logo_url": "",
+                            "country": "",
+                            "league": "",
+                            "has_players": True,
+                            "player_count": player_count,
+                            "source": "chromadb"
+                        })
+        
+        # Sort by name
+        teams.sort(key=lambda t: t["name"])
+        
+        # Cache for 5 minutes
+        await api_cache.set(cache_key, teams, ttl=300)
+        
+    except Exception as e:
+        print(f"⚠️ Error loading teams with players: {e}")
+        # Return empty list on error instead of failing
+        teams = []
     
     return {
         "success": True,

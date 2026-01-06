@@ -4,7 +4,7 @@
  */
 import { StatusBar } from "expo-status-bar";
 import { Platform, StyleSheet, ScrollView, View } from "react-native";
-import { Wrench } from "lucide-react-native";
+import { Wrench, Trophy, Sparkles, Settings } from "lucide-react-native";
 
 import { useTheme } from "@/src/theme";
 import { ThemedView, ThemedText, Card, Icon } from "@/src/components/ui";
@@ -17,7 +17,7 @@ export default function ModalScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         {/* Header */}
         <View style={styles.header}>
-          <ThemedText size="3xl">🏆</ThemedText>
+          <Icon icon={Trophy} size={64} variant="primary" />
           <ThemedText size="2xl" weight="bold" style={styles.title}>
             FutbolIA
           </ThemedText>
@@ -29,7 +29,7 @@ export default function ModalScreen() {
         {/* About Dixie */}
         <Card variant="outlined" padding="lg" style={styles.card}>
           <View style={styles.cardHeader}>
-            <ThemedText size="2xl">🔮</ThemedText>
+            <Icon icon={Sparkles} size={28} variant="primary" />
             <ThemedText size="lg" weight="bold">
               Conoce a Dixie
             </ThemedText>
@@ -43,9 +43,12 @@ export default function ModalScreen() {
 
         {/* How it works */}
         <Card variant="outlined" padding="lg" style={styles.card}>
-          <ThemedText size="lg" weight="bold" style={styles.cardTitle}>
-            ⚙️ ¿Cómo funciona?
-          </ThemedText>
+          <View style={styles.cardTitleRow}>
+            <Icon icon={Settings} size={20} variant="primary" />
+            <ThemedText size="lg" weight="bold" style={styles.cardTitle}>
+              ¿Cómo funciona?
+            </ThemedText>
+          </View>
 
           <View style={styles.step}>
             <View

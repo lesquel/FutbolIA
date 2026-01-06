@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Calendar } from "lucide-react-native";
+import { Calendar, Sparkles } from "lucide-react-native";
 
 import { useTheme } from "@/src/theme";
 import { ThemedView, ThemedText, Card, Button, Icon } from "@/src/components/ui";
@@ -139,11 +139,13 @@ export default function HomeScreen() {
               {/* Quick Predict Button */}
               <View style={styles.quickPredictContainer}>
                 <Button
-                  title={`🔮 ${t("home.quickPredict")}`}
+                  title={t("home.quickPredict")}
                   variant="primary"
                   size="lg"
                   fullWidth
                   onPress={() => router.push("/predict")}
+                  icon={Sparkles}
+                  iconPosition="left"
                 />
               </View>
             </View>

@@ -139,9 +139,19 @@ async def root():
     }
 
 
+# Health check endpoints (both root and under API prefix)
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
+    """Health check endpoint (root)"""
+    return {
+        "status": "healthy",
+        "database": "connected",
+        "vectorstore": f"{PlayerVectorStore.count()} players",
+    }
+
+@app.get(f"{API_PREFIX}/health")
+async def health_check_api():
+    """Health check endpoint (under API prefix)"""
     return {
         "status": "healthy",
         "database": "connected",

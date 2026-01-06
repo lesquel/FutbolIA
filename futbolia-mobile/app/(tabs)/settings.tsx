@@ -27,6 +27,7 @@ import { useTheme } from "@/src/theme";
 import { useAuth } from "@/src/context";
 import { changeLanguage, getCurrentLanguage } from "@/src/i18n/i18n";
 import { ThemedView, ThemedText, Card, Icon } from "@/src/components/ui";
+import { Trophy } from "lucide-react-native";
 
 export default function SettingsScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
@@ -280,11 +281,15 @@ export default function SettingsScreen() {
           </ThemedText>
 
           <Card variant="default" padding="none">
-            <SettingRow
-              icon="🏆"
-              title="FutbolIA"
-              subtitle="Tu oráculo deportivo con IA"
-            />
+            <View style={styles.settingRow}>
+              <Icon icon={Trophy} size={24} variant="primary" />
+              <View style={styles.settingInfo}>
+                <ThemedText weight="medium">FutbolIA</ThemedText>
+                <ThemedText variant="muted" size="sm">
+                  Tu oráculo deportivo con IA
+                </ThemedText>
+              </View>
+            </View>
 
             <View
               style={[styles.divider, { backgroundColor: theme.colors.border }]}
