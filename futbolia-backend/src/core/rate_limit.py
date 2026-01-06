@@ -7,7 +7,7 @@ from collections import defaultdict
 from typing import Dict, Tuple, Optional
 from fastapi import Request, HTTPException, status
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response
+from starlette.responses import Response, JSONResponse
 
 from src.core.config import settings
 from src.core.logger import log_warning
@@ -126,9 +126,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 limit=limit,
                 count=count
             )
-            raise HTTPException(
+            # Return JSON response directly instead of raising HTTPException
+            # This ensures proper 429 status code instead of 500
+            return JSONResponse(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail={
+                content={
+                    "success": False,
                     "error": "Rate limit exceeded",
                     "message": f"Too many requests. Limit: {limit}/min. Try again in {reset_time}s",
                     "retry_after": reset_time

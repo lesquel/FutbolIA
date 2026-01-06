@@ -3,6 +3,7 @@ Prediction Use Cases
 Core business logic for match predictions using RAG + DeepSeek
 """
 import asyncio
+import httpx
 from typing import Optional
 
 from src.domain.entities import Team, Match, Prediction, PredictionResult
@@ -195,59 +196,136 @@ class PredictionUseCase:
     @classmethod
     async def get_available_matches(cls, league_id: int = 39) -> dict:
         """
-        Get upcoming matches for a league
-        Optimized: Returns cached/mock data quickly to avoid slow API calls on home screen
-        """
-        try:
-            # Try to get real fixtures (with timeout to avoid blocking)
-            matches = await asyncio.wait_for(
-                FootballAPIClient.get_upcoming_fixtures(league_id, limit=10),
-                timeout=3.0  # 3 second timeout
-            )
-            
-            if matches:
-                return {
-                    "success": True,
-                    "data": {
-                        "matches": [m.to_dict() for m in matches],
-                    }
-                }
-        except (asyncio.TimeoutError, Exception) as e:
-            print(f"⚠️ Slow API call for matches, using mock data: {e}")
+        Get upcoming matches from the top 5 leagues (men's football)
         
-        # Fallback: Return mock/featured matches quickly
-        # This ensures home screen loads fast even if external API is slow
-        mock_matches = [
-            {
-                "id": "mock_1",
-                "home_team": {"name": "Real Madrid", "logo": ""},
-                "away_team": {"name": "Barcelona", "logo": ""},
-                "date": "2024-12-20T20:00:00Z",
-                "status": "scheduled",
-                "league": "La Liga"
-            },
-            {
-                "id": "mock_2",
-                "home_team": {"name": "Manchester City", "logo": ""},
-                "away_team": {"name": "Liverpool", "logo": ""},
-                "date": "2024-12-21T15:00:00Z",
-                "status": "scheduled",
-                "league": "Premier League"
-            },
-            {
-                "id": "mock_3",
-                "home_team": {"name": "Bayern Munich", "logo": ""},
-                "away_team": {"name": "Borussia Dortmund", "logo": ""},
-                "date": "2024-12-22T18:00:00Z",
-                "status": "scheduled",
-                "league": "Bundesliga"
+        Top 5 Leagues:
+        - Premier League (PL) - ID: 2021
+        - La Liga (PD) - ID: 2014
+        - Serie A (SA) - ID: 2019
+        - Bundesliga (BL1) - ID: 2002
+        - Ligue 1 (FL1) - ID: 2015
+        
+        Returns next 5 matches from each league (25 total, but limited to 25)
+        """
+        from src.infrastructure.external_api.thesportsdb import TheSportsDBClient
+        from src.infrastructure.external_api.football_api import FootballAPIClient
+        
+        # Top 5 leagues mapping (Football-Data.org codes)
+        TOP_LEAGUES = {
+            "Premier League": "PL",
+            "La Liga": "PD",
+            "Serie A": "SA",
+            "Bundesliga": "BL1",
+            "Ligue 1": "FL1",
+        }
+        
+        all_matches = []
+        
+        # Try to get matches from TheSportsDB first (FREE, no API key)
+        try:
+            # TheSportsDB league IDs for top 5 leagues
+            tsdb_league_ids = {
+                "Premier League": "4328",  # Premier League
+                "La Liga": "4335",          # La Liga
+                "Serie A": "4332",         # Serie A
+                "Bundesliga": "4331",      # Bundesliga
+                "Ligue 1": "4334",         # Ligue 1
             }
-        ]
+            
+            for league_name, league_id in tsdb_league_ids.items():
+                try:
+                    # Get next events for the league
+                    async with httpx.AsyncClient(timeout=5.0) as client:
+                        response = await client.get(
+                            f"https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php",
+                            params={"id": league_id}
+                        )
+                        
+                        if response.status_code == 200:
+                            data = response.json()
+                            events = data.get("events", [])[:5]  # Next 5 matches
+                            
+                            for event in events:
+                                all_matches.append({
+                                    "id": f"tsdb_{event.get('idEvent', '')}",
+                                    "home_team": {
+                                        "name": event.get("strHomeTeam", ""),
+                                        "logo": event.get("strHomeTeamBadge", ""),
+                                    },
+                                    "away_team": {
+                                        "name": event.get("strAwayTeam", ""),
+                                        "logo": event.get("strAwayTeamBadge", ""),
+                                    },
+                                    "date": event.get("dateEvent", ""),
+                                    "time": event.get("strTime", ""),
+                                    "status": "scheduled",
+                                    "league": league_name,
+                                    "venue": event.get("strVenue", ""),
+                                })
+                except Exception as e:
+                    print(f"⚠️ Error getting {league_name} matches from TheSportsDB: {e}")
+                    continue
+        except Exception as e:
+            print(f"⚠️ TheSportsDB failed, trying Football-Data.org: {e}")
+        
+        # Fallback to Football-Data.org if TheSportsDB didn't return enough matches
+        if len(all_matches) < 10:
+            try:
+                for league_name, league_code in TOP_LEAGUES.items():
+                    try:
+                        matches = await asyncio.wait_for(
+                            FootballAPIClient.get_upcoming_fixtures(league_code, limit=5),
+                            timeout=2.0
+                        )
+                        
+                        for match in matches[:5]:  # Next 5 matches
+                            match_dict = match.to_dict()
+                            match_dict["league"] = league_name
+                            all_matches.append(match_dict)
+                    except (asyncio.TimeoutError, Exception) as e:
+                        print(f"⚠️ Error getting {league_name} from Football-Data.org: {e}")
+                        continue
+            except Exception as e:
+                print(f"⚠️ Football-Data.org failed: {e}")
+        
+        # Sort by date and limit to 25 matches
+        all_matches.sort(key=lambda x: x.get("date", ""))
+        all_matches = all_matches[:25]
+        
+        # If we still don't have matches, use mock data
+        if not all_matches:
+            print("⚠️ No matches from APIs, using mock data")
+            all_matches = [
+                {
+                    "id": "mock_1",
+                    "home_team": {"name": "Real Madrid", "logo": ""},
+                    "away_team": {"name": "Barcelona", "logo": ""},
+                    "date": "2024-12-20T20:00:00Z",
+                    "status": "scheduled",
+                    "league": "La Liga"
+                },
+                {
+                    "id": "mock_2",
+                    "home_team": {"name": "Manchester City", "logo": ""},
+                    "away_team": {"name": "Liverpool", "logo": ""},
+                    "date": "2024-12-21T15:00:00Z",
+                    "status": "scheduled",
+                    "league": "Premier League"
+                },
+                {
+                    "id": "mock_3",
+                    "home_team": {"name": "Bayern Munich", "logo": ""},
+                    "away_team": {"name": "Borussia Dortmund", "logo": ""},
+                    "date": "2024-12-22T18:00:00Z",
+                    "status": "scheduled",
+                    "league": "Bundesliga"
+                }
+            ]
         
         return {
             "success": True,
             "data": {
-                "matches": mock_matches,
+                "matches": all_matches,
             }
         }
     

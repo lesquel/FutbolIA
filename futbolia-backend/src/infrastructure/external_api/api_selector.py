@@ -33,6 +33,13 @@ class UnifiedAPIClient:
         try:
             team_data = await TheSportsDBClient.search_team(team_name)
             if team_data:
+                # Get detailed team info to ensure we have league data
+                team_id = team_data.get("idTeam")
+                if team_id:
+                    detailed_team = await TheSportsDBClient.get_team_by_id(team_id)
+                    if detailed_team:
+                        team_data = detailed_team
+                
                 return Team(
                     id=f"tsdb_{team_data.get('idTeam')}",
                     name=team_data.get("strTeam", team_name),
@@ -40,6 +47,7 @@ class UnifiedAPIClient:
                     logo_url=team_data.get("strTeamBadge", ""),
                     country=team_data.get("strCountry", ""),
                     venue=team_data.get("strStadium", ""),
+                    league=team_data.get("strLeague", ""),  # ✅ Extraer liga
                 )
         except Exception as e:
             print(f"⚠️ TheSportsDB failed: {e}, trying fallback...")
@@ -57,6 +65,7 @@ class UnifiedAPIClient:
             team_data = await APIFootballClient.search_team(team_name)
             if team_data:
                 team_info = team_data.get("team", {})
+                league_info = team_data.get("league", {})
                 return Team(
                     id=f"apif_{team_info.get('id')}",
                     name=team_info.get("name", team_name),
@@ -64,6 +73,7 @@ class UnifiedAPIClient:
                     logo_url=team_info.get("logo", ""),
                     country=team_info.get("country", ""),
                     venue=team_info.get("venue", {}).get("name", ""),
+                    league=league_info.get("name", ""),  # ✅ Extraer liga de API-Football
                 )
         except Exception as e:
             print(f"⚠️ API-Football failed: {e}")
