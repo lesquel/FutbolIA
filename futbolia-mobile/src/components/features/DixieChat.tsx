@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Animated,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { Sparkles, Trophy } from "lucide-react-native";
 import { useTheme } from "@/src/theme";
@@ -66,7 +67,8 @@ export const DixieChat = memo(function DixieChat({
       <Card variant="outlined" padding="md">
         {/* Dixie Avatar */}
         <View style={styles.header}>
-          <View
+          <Image
+            source={require("@/assets/images/Dixie.png")}
             style={[
               styles.avatar,
               {
@@ -76,9 +78,7 @@ export const DixieChat = memo(function DixieChat({
                 borderColor: theme.colors.primary,
               },
             ]}
-          >
-            <Icon icon={Sparkles} size={28} variant="primary" />
-          </View>
+          />
 
           <View style={styles.headerInfo}>
             <ThemedText weight="bold" size="lg">
