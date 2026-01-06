@@ -301,7 +301,7 @@ export default function SettingsScreen() {
             />
 
             <SettingRow
-              icon="🤖"
+              icon="🧠"
               title="Dixie AI"
               subtitle="Powered by DeepSeek"
             />

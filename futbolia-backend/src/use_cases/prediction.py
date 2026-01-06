@@ -9,6 +9,7 @@ from src.domain.entities import Team, Match, Prediction, PredictionResult
 from src.infrastructure.chromadb.player_store import PlayerVectorStore
 from src.infrastructure.llm.dixie import DixieAI
 from src.infrastructure.external_api.football_api import FootballAPIClient
+from src.infrastructure.external_api.api_selector import UnifiedAPIClient
 from src.infrastructure.db.prediction_repository import PredictionRepository
 
 
@@ -41,19 +42,17 @@ class PredictionUseCase:
             TeamRepository.find_by_name(away_team_name)
         )
         
-        # If not in local DB, try external API (Parallelized)
-        external_lookups = []
-        if not home_team:
-            external_lookups.append(FootballAPIClient.get_team_by_name(home_team_name))
-        else:
-            external_lookups.append(asyncio.sleep(0, result=home_team))
-            
-        if not away_team:
-            external_lookups.append(FootballAPIClient.get_team_by_name(away_team_name))
-        else:
-            external_lookups.append(asyncio.sleep(0, result=away_team))
-            
-        home_team, away_team = await asyncio.gather(*external_lookups)
+        # If not in local DB, try external API with fallback (Parallelized)
+        async def get_team_or_fetch(team_name: str, existing_team: Optional[Team]) -> Optional[Team]:
+            """Helper to return existing team or fetch from API"""
+            if existing_team:
+                return existing_team
+            return await UnifiedAPIClient.get_team_by_name(team_name)
+        
+        home_team, away_team = await asyncio.gather(
+            get_team_or_fetch(home_team_name, home_team),
+            get_team_or_fetch(away_team_name, away_team)
+        )
         
         if not home_team or not away_team:
             return {

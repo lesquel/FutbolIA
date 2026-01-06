@@ -13,10 +13,35 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
+import { LogBox, Platform } from "react-native";
 import "../global.css";
 
 // i18n initialization
 import "@/src/i18n/i18n";
+
+// Silenciar warnings específicos de React Native Web
+if (Platform.OS === "web") {
+  // Silenciar warnings de pointerEvents y touch events
+  const originalWarn = console.warn;
+  console.warn = (...args: any[]) => {
+    const message = args[0]?.toString() || "";
+    if (
+      message.includes("props.pointerEvents is deprecated") ||
+      message.includes("Cannot record touch end without a touch start") ||
+      message.includes("useNativeDriver is not supported")
+    ) {
+      return; // Silenciar estos warnings
+    }
+    originalWarn.apply(console, args);
+  };
+} else {
+  // Para plataformas nativas, usar LogBox
+  LogBox.ignoreLogs([
+    "props.pointerEvents is deprecated",
+    "Cannot record touch end without a touch start",
+    "useNativeDriver is not supported",
+  ]);
+}
 
 // Theme provider
 import { ThemeProvider, useTheme } from "@/src/theme";

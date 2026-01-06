@@ -127,28 +127,43 @@ class TTLCache:
         
         return value
     
-    def get_stats(self) -> Dict[str, Any]:
-        """Get cache statistics"""
-        async def _get_stats():
-            async with self._lock:
-                await self._cleanup_expired()
-                return {
-                    "size": len(self._cache),
-                    "max_size": self.max_size,
-                    "default_ttl": self.default_ttl,
-                    "entries": {
-                        key: {
-                            "age_seconds": entry.get_age(),
-                            "ttl_seconds": entry.ttl_seconds,
-                            "expires_in": entry.ttl_seconds - entry.get_age(),
-                        }
-                        for key, entry in self._cache.items()
-                    }
-                }
+    async def get_stats(self) -> Dict[str, Any]:
+        """
+        Get cache statistics
         
-        # For sync access, we'll need to handle this differently
-        # In practice, this should be called from async context
-        return {"size": len(self._cache), "max_size": self.max_size}
+        Returns comprehensive cache statistics including:
+        - Current size and max size
+        - Default TTL
+        - Details for each cache entry (age, TTL, expiration time)
+        """
+        async with self._lock:
+            await self._cleanup_expired()
+            return {
+                "size": len(self._cache),
+                "max_size": self.max_size,
+                "default_ttl": self.default_ttl,
+                "entries": {
+                    key: {
+                        "age_seconds": entry.get_age(),
+                        "ttl_seconds": entry.ttl_seconds,
+                        "expires_in": entry.ttl_seconds - entry.get_age(),
+                    }
+                    for key, entry in self._cache.items()
+                }
+            }
+    
+    def get_stats_sync(self) -> Dict[str, Any]:
+        """
+        Get basic cache statistics synchronously (without cleanup)
+        
+        Use this only when async context is not available.
+        For full stats with cleanup, use get_stats() instead.
+        """
+        return {
+            "size": len(self._cache),
+            "max_size": self.max_size,
+            "default_ttl": self.default_ttl,
+        }
 
 
 # Global cache instances for different data types
