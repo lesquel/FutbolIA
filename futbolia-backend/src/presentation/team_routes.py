@@ -19,6 +19,67 @@ import asyncio
 router = APIRouter(prefix="/teams", tags=["Teams"])
 
 
+# ==================== League Mapping ====================
+# Mapeo de equipos principales a sus ligas
+LEAGUE_MAPPING = {
+    # La Liga (España)
+    "Real Madrid": "La Liga",
+    "Barcelona": "La Liga",
+    "Atletico Madrid": "La Liga",
+    "Atlético Madrid": "La Liga",
+    "Sevilla": "La Liga",
+    "Valencia": "La Liga",
+    "Real Betis": "La Liga",
+    "Villarreal": "La Liga",
+    "Real Sociedad": "La Liga",
+    "Athletic Bilbao": "La Liga",
+    
+    # Premier League (Inglaterra)
+    "Manchester City": "Premier League",
+    "Liverpool": "Premier League",
+    "Arsenal": "Premier League",
+    "Chelsea": "Premier League",
+    "Tottenham": "Premier League",
+    "Tottenham Hotspur": "Premier League",
+    "Manchester United": "Premier League",
+    "Newcastle United": "Premier League",
+    "Brighton": "Premier League",
+    "West Ham": "Premier League",
+    "Aston Villa": "Premier League",
+    
+    # Serie A (Italia)
+    "Inter Milan": "Serie A",
+    "AC Milan": "Serie A",
+    "Juventus": "Serie A",
+    "Napoli": "Serie A",
+    "AS Roma": "Serie A",
+    "Roma": "Serie A",
+    "Lazio": "Serie A",
+    "Atalanta": "Serie A",
+    
+    # Bundesliga (Alemania)
+    "Bayern Munich": "Bundesliga",
+    "Borussia Dortmund": "Bundesliga",
+    "RB Leipzig": "Bundesliga",
+    "Bayer Leverkusen": "Bundesliga",
+    "Eintracht Frankfurt": "Bundesliga",
+    "Borussia Mönchengladbach": "Bundesliga",
+    
+    # Ligue 1 (Francia)
+    "Paris Saint-Germain": "Ligue 1",
+    "PSG": "Ligue 1",
+    "Marseille": "Ligue 1",
+    "Lyon": "Ligue 1",
+    "Monaco": "Ligue 1",
+    "Lille": "Ligue 1",
+}
+
+
+def get_team_league(team_name: str) -> str:
+    """Obtener la liga de un equipo usando el mapeo"""
+    return LEAGUE_MAPPING.get(team_name, "")
+
+
 # ==================== Request/Response Models ====================
 
 class TeamResponse(BaseModel):
@@ -102,13 +163,15 @@ async def search_teams(
             if players:
                 # Estimate player count to avoid slow full search
                 player_count = 11  # Default estimate for major teams
+                # ✅ Usar mapeo de ligas
+                league = get_team_league(team_name)
                 results["with_players"].append({
                     "id": f"chroma_{team_name.lower().replace(' ', '_')}",
                     "name": team_name,
                     "short_name": team_name[:3].upper(),
                     "logo_url": "",
                     "country": "",
-                    "league": "",
+                    "league": league,  # ✅ Incluir liga
                     "has_players": True,
                     "player_count": player_count
                 })
@@ -122,13 +185,15 @@ async def search_teams(
                 timeout=2.0
             )
             if api_team:
+                # ✅ Si la liga está vacía, intentar obtenerla del mapeo
+                league = api_team.league or get_team_league(api_team.name)
                 results["api"].append({
                     "id": api_team.id,
                     "name": api_team.name,
                     "short_name": api_team.short_name,
                     "logo_url": api_team.logo_url,
                     "country": api_team.country or "",
-                    "league": api_team.league or "",
+                    "league": league,  # ✅ Usar liga extraída o mapeada
                     "has_players": False,
                     "player_count": 0,
                     "source": "external_api"
@@ -227,6 +292,8 @@ async def get_teams_with_players():
                     if players:
                         # Estimate player count (avoid full search)
                         player_count = 11  # Default estimate
+                        # ✅ Usar mapeo de ligas
+                        league = get_team_league(team_name)
                         seen_names.add(team_name.lower())
                         teams.append({
                             "id": f"chroma_{team_name.lower().replace(' ', '_')}",
@@ -234,7 +301,7 @@ async def get_teams_with_players():
                             "short_name": team_name[:3].upper(),
                             "logo_url": "",
                             "country": "",
-                            "league": "",
+                            "league": league,  # ✅ Incluir liga
                             "has_players": True,
                             "player_count": player_count,
                             "source": "chromadb"
@@ -543,6 +610,43 @@ async def get_team_players(team_name: str):
     else:
         team_stats = None
     
+    # ✅ NEW: Get last 5 matches for the team
+    last_matches = []
+    try:
+        # Try to get team ID from MongoDB or API
+        team = await TeamRepository.find_by_name(team_name)
+        team_id = None
+        
+        if team and team.id.startswith("tsdb_"):
+            team_id = team.id.replace("tsdb_", "")
+        else:
+            # Try to get from TheSportsDB
+            from src.infrastructure.external_api.thesportsdb import TheSportsDBClient
+            team_data = await TheSportsDBClient.search_team(team_name)
+            if team_data:
+                team_id = team_data.get("idTeam")
+        
+        if team_id:
+            from src.infrastructure.external_api.thesportsdb import TheSportsDBClient
+            matches_raw = await TheSportsDBClient.get_last_matches(team_id, limit=5)
+            
+            # Format matches
+            for match in matches_raw:
+                last_matches.append({
+                    "id": match.get("idEvent", ""),
+                    "date": match.get("dateEvent", ""),
+                    "home_team": match.get("strHomeTeam", ""),
+                    "away_team": match.get("strAwayTeam", ""),
+                    "home_score": match.get("intHomeScore"),
+                    "away_score": match.get("intAwayScore"),
+                    "result": match.get("strResult", ""),
+                    "league": match.get("strLeague", ""),
+                    "venue": match.get("strVenue", ""),
+                })
+    except Exception as e:
+        print(f"⚠️ Error getting last matches for {team_name}: {e}")
+        # Continue without matches if API fails
+    
     return {
         "success": True,
         "data": {
@@ -550,6 +654,7 @@ async def get_team_players(team_name: str):
             "players": [p.to_dict() for p in players],
             "count": len(players),
             "stats": team_stats,
+            "last_matches": last_matches,  # ✅ Últimos 5 partidos
         }
     }
 

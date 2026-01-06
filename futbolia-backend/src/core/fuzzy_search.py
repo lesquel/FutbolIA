@@ -89,7 +89,7 @@ TEAM_COUNTRIES = {
     "boca juniors": "Argentina", "river plate": "Argentina", "racing club": "Argentina",
     "flamengo": "Brasil", "palmeiras": "Brasil", "santos": "Brasil",
     "barcelona sc": "Ecuador", "emelec": "Ecuador", "liga de quito": "Ecuador",
-    "atletico nacional": "Colombia", "millonarios": "Colombia",
+    "atletico nacional": "Ecuador", "millonarios": "Ecuador",  # Cambiado de Colombia a Ecuador
     
     # National teams
     "ecuador": "Ecuador", "colombia": "Colombia", "argentina": "Argentina",

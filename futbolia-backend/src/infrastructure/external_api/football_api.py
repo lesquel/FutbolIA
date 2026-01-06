@@ -96,12 +96,23 @@ class FootballAPIClient:
             for team_data in teams:
                 if team_name.lower() in team_data["name"].lower() or \
                    team_name.lower() in team_data.get("shortName", "").lower():
+                    # Try to get league from running competitions
+                    league = ""
+                    try:
+                        running_competitions = team_data.get("runningCompetitions", [])
+                        if running_competitions:
+                            # Get the first active league (usually the main one)
+                            league = running_competitions[0].get("name", "")
+                    except Exception:
+                        pass
+                    
                     team = Team(
                         id=str(team_data["id"]),
                         name=team_data["name"],
                         short_name=team_data.get("tla", "")[:3],
                         logo_url=team_data.get("crest", ""),
                         country=team_data.get("area", {}).get("name", ""),
+                        league=league,  # ✅ Incluir liga si está disponible
                     )
                     # Cache individual team for 2 hours
                     await team_cache.set(cache_key, team, ttl=7200)

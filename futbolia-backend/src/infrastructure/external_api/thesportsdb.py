@@ -204,6 +204,7 @@ class TheSportsDBClient:
             logo_url=team_data.get("strTeamBadge", ""),
             country=team_data.get("strCountry", ""),
             venue=team_data.get("strStadium", ""),
+            league=team_data.get("strLeague", ""),  # ✅ Extraer liga
         )
         
         # Then get the squad

@@ -132,6 +132,16 @@ export const TeamSelector = memo(function TeamSelector({
     loadInitialTeams();
   }, []);
 
+  // Cleanup debounce timer on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+        debounceTimer.current = null;
+      }
+    };
+  }, []);
+
   // Manual search function (called by button) with debouncing
   const handleSearch = useCallback(async () => {
     if (debounceTimer.current) {
