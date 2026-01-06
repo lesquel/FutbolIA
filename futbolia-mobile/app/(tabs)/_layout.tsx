@@ -105,7 +105,12 @@ export default function TabLayout() {
         options={{
           title: t("navigation.predict"),
           tabBarIcon: ({ color }) => <TabIcon name="magic" color={color} />,
-          headerTitle: "🔮 Predecir",
+          headerTitle: () => (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Icon icon={Sparkles} size={20} variant="primary" />
+              <ThemedText size="lg" weight="bold">Predecir</ThemedText>
+            </View>
+          ),
         }}
       />
 
@@ -115,7 +120,12 @@ export default function TabLayout() {
         options={{
           title: t("navigation.history"),
           tabBarIcon: ({ color }) => <TabIcon name="history" color={color} />,
-          headerTitle: "📊 Historial",
+          headerTitle: () => (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Icon icon={BarChart3} size={20} variant="primary" />
+              <ThemedText size="lg" weight="bold">Historial</ThemedText>
+            </View>
+          ),
         }}
       />
 
@@ -125,7 +135,12 @@ export default function TabLayout() {
         options={{
           title: t("navigation.settings"),
           tabBarIcon: ({ color }) => <TabIcon name="cog" color={color} />,
-          headerTitle: "⚙️ Ajustes",
+          headerTitle: () => (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Icon icon={Settings} size={20} variant="primary" />
+              <ThemedText size="lg" weight="bold">Ajustes</ThemedText>
+            </View>
+          ),
         }}
       />
     </Tabs>

@@ -13,11 +13,20 @@ import {
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "expo-router";
+import {
+  Wrench,
+  Atom,
+  Smartphone,
+  Zap,
+  Brain,
+  Database,
+  Search,
+} from "lucide-react-native";
 
 import { useTheme } from "@/src/theme";
 import { useAuth } from "@/src/context";
 import { changeLanguage, getCurrentLanguage } from "@/src/i18n/i18n";
-import { ThemedView, ThemedText, Card } from "@/src/components/ui";
+import { ThemedView, ThemedText, Card, Icon } from "@/src/components/ui";
 
 export default function SettingsScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
@@ -301,43 +310,46 @@ export default function SettingsScreen() {
 
         {/* Tech Stack Info */}
         <Card variant="outlined" padding="md" style={styles.techCard}>
-          <ThemedText weight="semibold" style={styles.techTitle}>
-            🛠️ Stack Tecnológico
-          </ThemedText>
+          <View style={styles.techTitleRow}>
+            <Icon icon={Wrench} size={20} variant="primary" />
+            <ThemedText weight="semibold" style={styles.techTitle}>
+              Stack Tecnológico
+            </ThemedText>
+          </View>
 
           <View style={styles.techGrid}>
             <View style={styles.techItem}>
-              <ThemedText size="lg">⚛️</ThemedText>
+              <Icon icon={Atom} size={24} variant="primary" />
               <ThemedText variant="muted" size="xs">
                 React Native
               </ThemedText>
             </View>
             <View style={styles.techItem}>
-              <ThemedText size="lg">📱</ThemedText>
+              <Icon icon={Smartphone} size={24} variant="primary" />
               <ThemedText variant="muted" size="xs">
                 Expo
               </ThemedText>
             </View>
             <View style={styles.techItem}>
-              <ThemedText size="lg">⚡</ThemedText>
+              <Icon icon={Zap} size={24} variant="primary" />
               <ThemedText variant="muted" size="xs">
                 FastAPI
               </ThemedText>
             </View>
             <View style={styles.techItem}>
-              <ThemedText size="lg">🧠</ThemedText>
+              <Icon icon={Brain} size={24} variant="primary" />
               <ThemedText variant="muted" size="xs">
                 DeepSeek
               </ThemedText>
             </View>
             <View style={styles.techItem}>
-              <ThemedText size="lg">🗄️</ThemedText>
+              <Icon icon={Database} size={24} variant="primary" />
               <ThemedText variant="muted" size="xs">
                 MongoDB
               </ThemedText>
             </View>
             <View style={styles.techItem}>
-              <ThemedText size="lg">🔍</ThemedText>
+              <Icon icon={Search} size={24} variant="primary" />
               <ThemedText variant="muted" size="xs">
                 ChromaDB
               </ThemedText>

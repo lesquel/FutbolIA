@@ -6,3 +6,4 @@ export { Card } from "./Card";
 export { Input } from "./Input";
 export { ConfidenceRing } from "./ConfidenceRing";
 export { TeamBadge } from "./TeamBadge";
+export { Icon } from "./Icon";

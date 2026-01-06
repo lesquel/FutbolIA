@@ -1,7 +1,7 @@
 /**
  * DixieChat - The AI assistant chat component
  */
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, memo } from "react";
 import {
   View,
   ScrollView,
@@ -9,9 +9,10 @@ import {
   Animated,
   ActivityIndicator,
 } from "react-native";
+import { Sparkles } from "lucide-react-native";
 import { useTheme } from "@/src/theme";
 import { useTranslation } from "@/src/i18n/i18n";
-import { ThemedText, Card } from "@/src/components/ui";
+import { ThemedText, Card, Icon } from "@/src/components/ui";
 
 interface DixieChatProps {
   message?: string;
@@ -19,7 +20,7 @@ interface DixieChatProps {
   showGreeting?: boolean;
 }
 
-export function DixieChat({
+export const DixieChat = memo(function DixieChat({
   message,
   isLoading = false,
   showGreeting = true,
@@ -76,7 +77,7 @@ export function DixieChat({
               },
             ]}
           >
-            <ThemedText size="2xl">🔮</ThemedText>
+            <Icon icon={Sparkles} size={28} variant="primary" />
           </View>
 
           <View style={styles.headerInfo}>
@@ -136,7 +137,7 @@ export function DixieChat({
       </Card>
     </Animated.View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

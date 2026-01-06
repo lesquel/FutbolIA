@@ -2,7 +2,7 @@
  * FutbolIA - Predict Screen
  * Main prediction interface with team selection
  */
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   ScrollView,
   View,
@@ -15,11 +15,11 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { FontAwesome } from "@expo/vector-icons";
+import { Lock, Sparkles, Home, Bus, AlertCircle } from "lucide-react-native";
 
 import { useTheme } from "@/src/theme";
 import { useAuth } from "@/src/context";
-import { ThemedView, ThemedText, Card, Button } from "@/src/components/ui";
+import { ThemedView, ThemedText, Card, Button, Icon } from "@/src/components/ui";
 import {
   TeamSelector,
   TeamStatsCard,
@@ -50,9 +50,12 @@ export default function PredictScreen() {
   const [error, setError] = useState<string | null>(null);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
-  const canPredict = homeTeam && awayTeam && homeTeam !== awayTeam;
+  const canPredict = useMemo(
+    () => homeTeam && awayTeam && homeTeam !== awayTeam,
+    [homeTeam, awayTeam]
+  );
 
-  const handlePredict = async () => {
+  const handlePredict = useCallback(async () => {
     if (!homeTeam || !awayTeam) return;
 
     // Check if user is authenticated
@@ -85,15 +88,15 @@ export default function PredictScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [homeTeam, awayTeam, user]);
 
-  const handleNewPrediction = () => {
+  const handleNewPrediction = useCallback(() => {
     setPrediction(null);
     setHomeTeam(null);
     setAwayTeam(null);
     setError(null);
     setShowAuthPrompt(false);
-  };
+  }, []);
 
   // Auth Prompt Component
   const AuthPrompt = () => (
@@ -104,7 +107,7 @@ export default function PredictScreen() {
           { backgroundColor: theme.colors.primary + "20" },
         ]}
       >
-        <FontAwesome name="lock" size={32} color={theme.colors.primary} />
+        <Icon icon={Lock} size={32} variant="primary" />
       </View>
       <ThemedText size="xl" weight="bold" style={styles.authTitle}>
         {t("auth.loginRequired")}
@@ -156,9 +159,12 @@ export default function PredictScreen() {
             <View style={[styles.column, isTablet && styles.columnTablet]}>
               {/* Header */}
               <View style={styles.header}>
-                <ThemedText size="2xl" weight="bold">
-                  🔮 {t("prediction.newPrediction")}
-                </ThemedText>
+                <View style={styles.headerRow}>
+                  <Icon icon={Sparkles} size={28} variant="primary" />
+                  <ThemedText size="2xl" weight="bold">
+                    {t("prediction.newPrediction")}
+                  </ThemedText>
+                </View>
                 <ThemedText variant="secondary">
                   {t("home.selectTeams")}
                 </ThemedText>
@@ -180,14 +186,15 @@ export default function PredictScreen() {
                 >
                   {/* Home Team */}
                   <TeamSelector
-                    label={`🏠 ${t("prediction.selectHomeTeam")}`}
+                    label={t("prediction.selectHomeTeam")}
                     selectedTeam={homeTeam}
                     onSelectTeam={setHomeTeam}
                     excludeTeam={awayTeam}
+                    icon={Home}
                   />
 
                   {/* Home Team Stats */}
-                  <TeamStatsCard teamName={homeTeam} emoji="🏠" />
+                  <TeamStatsCard teamName={homeTeam} icon={Home} />
 
                   {/* VS Indicator */}
                   <View style={styles.vsIndicator}>
@@ -215,14 +222,15 @@ export default function PredictScreen() {
 
                   {/* Away Team */}
                   <TeamSelector
-                    label={`🚌 ${t("prediction.selectAwayTeam")}`}
+                    label={t("prediction.selectAwayTeam")}
                     selectedTeam={awayTeam}
                     onSelectTeam={setAwayTeam}
                     excludeTeam={homeTeam}
+                    icon={Bus}
                   />
 
                   {/* Away Team Stats */}
-                  <TeamStatsCard teamName={awayTeam} emoji="🚌" />
+                  <TeamStatsCard teamName={awayTeam} icon={Bus} />
 
                   {/* Error Message */}
                   {error && (
@@ -232,8 +240,9 @@ export default function PredictScreen() {
                         { backgroundColor: theme.colors.error + "20" },
                       ]}
                     >
-                      <ThemedText variant="error" size="sm">
-                        ⚠️ {error}
+                      <Icon icon={AlertCircle} size={18} variant="error" />
+                      <ThemedText variant="error" size="sm" style={styles.errorText}>
+                        {error}
                       </ThemedText>
                     </View>
                   )}
@@ -243,8 +252,9 @@ export default function PredictScreen() {
                     title={
                       loading
                         ? t("prediction.generating")
-                        : `🔮 ${t("prediction.predict")}`
+                        : t("prediction.predict")
                     }
+                    icon={loading ? undefined : Sparkles}
                     variant="primary"
                     size="lg"
                     fullWidth
@@ -297,9 +307,7 @@ export default function PredictScreen() {
               {/* Empty State (Tablet only) */}
               {isTablet && !prediction && !loading && (
                 <Card variant="outlined" padding="lg" style={styles.emptyCard}>
-                  <ThemedText size="3xl" style={styles.emptyIcon}>
-                    ⚽
-                  </ThemedText>
+                  <Icon icon={Sparkles} size={64} variant="muted" />
                   <ThemedText variant="muted" style={styles.emptyText}>
                     Selecciona dos equipos para ver la predicción de Dixie
                   </ThemedText>
@@ -336,6 +344,22 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 16,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  errorBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  errorText: {
+    flex: 1,
   },
   selectionCard: {
     marginTop: 8,
