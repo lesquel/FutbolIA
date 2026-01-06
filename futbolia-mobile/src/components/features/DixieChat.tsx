@@ -9,7 +9,7 @@ import {
   Animated,
   ActivityIndicator,
 } from "react-native";
-import { Sparkles } from "lucide-react-native";
+import { Sparkles, Trophy } from "lucide-react-native";
 import { useTheme } from "@/src/theme";
 import { useTranslation } from "@/src/i18n/i18n";
 import { ThemedText, Card, Icon } from "@/src/components/ui";
@@ -122,16 +122,23 @@ export const DixieChat = memo(function DixieChat({
               </ThemedText>
             </View>
           ) : (
-            <ThemedText variant="secondary" size="sm" style={styles.chatText}>
-              {message
-                ? displayedText
-                : showGreeting
-                ? greeting
-                : t("dixie.ready")}
-              {message && displayedText.length < message.length && (
-                <ThemedText variant="primary">▋</ThemedText>
+            <View style={styles.chatContent}>
+              {showGreeting && !message && (
+                <View style={styles.greetingIcon}>
+                  <Icon icon={Trophy} size={16} variant="primary" />
+                </View>
               )}
-            </ThemedText>
+              <ThemedText variant="secondary" size="sm" style={styles.chatText}>
+                {message
+                  ? displayedText
+                  : showGreeting
+                  ? greeting
+                  : t("dixie.ready")}
+                {message && displayedText.length < message.length && (
+                  <ThemedText variant="primary">▋</ThemedText>
+                )}
+              </ThemedText>
+            </View>
           )}
         </View>
       </Card>
@@ -176,8 +183,17 @@ const styles = StyleSheet.create({
     padding: 16,
     minHeight: 60,
   },
+  chatContent: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+  },
+  greetingIcon: {
+    marginTop: 2,
+  },
   chatText: {
     lineHeight: 22,
+    flex: 1,
   },
   loadingContainer: {
     flexDirection: "row",

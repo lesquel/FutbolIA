@@ -18,7 +18,8 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "@/src/theme";
 import { useAuth } from "@/src/context";
-import { ThemedView, ThemedText, Card, Button } from "@/src/components/ui";
+import { ThemedView, ThemedText, Card, Button, Icon } from "@/src/components/ui";
+import { Gift, Check } from "lucide-react-native";
 
 export default function RegisterScreen() {
   const { theme } = useTheme();
@@ -261,24 +262,27 @@ export default function RegisterScreen() {
 
           {/* Benefits */}
           <Card variant="outlined" padding="md" style={styles.benefitsCard}>
-            <ThemedText weight="semibold" style={styles.benefitsTitle}>
-              🎁 {t("auth.benefits")}
-            </ThemedText>
+            <View style={styles.benefitsTitleRow}>
+              <Icon icon={Gift} size={20} variant="primary" />
+              <ThemedText weight="semibold" style={styles.benefitsTitle}>
+                {t("auth.benefits")}
+              </ThemedText>
+            </View>
             <View style={styles.benefitsList}>
               <View style={styles.benefitItem}>
-                <ThemedText>✅</ThemedText>
+                <Icon icon={Check} size={18} variant="success" />
                 <ThemedText variant="secondary" size="sm">
                   {t("auth.benefit1")}
                 </ThemedText>
               </View>
               <View style={styles.benefitItem}>
-                <ThemedText>✅</ThemedText>
+                <Icon icon={Check} size={18} variant="success" />
                 <ThemedText variant="secondary" size="sm">
                   {t("auth.benefit2")}
                 </ThemedText>
               </View>
               <View style={styles.benefitItem}>
-                <ThemedText>✅</ThemedText>
+                <Icon icon={Check} size={18} variant="success" />
                 <ThemedText variant="secondary" size="sm">
                   {t("auth.benefit3")}
                 </ThemedText>
@@ -369,8 +373,14 @@ const styles = StyleSheet.create({
   benefitsCard: {
     marginBottom: 20,
   },
-  benefitsTitle: {
+  benefitsTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
     marginBottom: 12,
+  },
+  benefitsTitle: {
+    flex: 1,
   },
   benefitsList: {
     gap: 8,

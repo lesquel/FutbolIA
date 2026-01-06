@@ -85,7 +85,9 @@ API_FOOTBALL_KEY=tu_api_key_opcional
 FOOTBALL_DATA_API_KEY=tu_api_key_opcional
 
 # 🌍 CORS (para desarrollo local)
-CORS_ORIGINS=http://localhost:3000,http://localhost:8081,http://localhost:19006,exp://localhost:8081,*
+# Usa * para permitir todas las conexiones en desarrollo
+# O especifica IPs específicas: http://192.168.1.100:8081,http://192.168.90.209:8081
+CORS_ORIGINS=*
 
 # ⏱️ Rate Limiting
 RATE_LIMIT_PER_MINUTE=60
@@ -231,11 +233,70 @@ Esto abrirá Expo DevTools. Puedes:
 
 ### Frontend no conecta con Backend
 
-- **Error de CORS**: Verifica que `CORS_ORIGINS` en el backend incluya tu IP
-- **Error de conexión**: 
-  - Verifica que el backend esté corriendo
-  - Verifica que `EXPO_PUBLIC_API_URL` tenga la IP correcta (no `localhost`)
-  - Verifica el firewall de Windows
+**Error común**: `Failed to fetch. Verifique que el servidor en http://192.168.90.209:8000/api/v1 sea accesible.`
+
+**Solución paso a paso:**
+
+1. **Verifica que el backend esté corriendo:**
+   ```bash
+   # Deberías ver: "Uvicorn running on http://0.0.0.0:8000"
+   ```
+
+2. **Obtén tu IP local:**
+   ```bash
+   # Windows
+   ipconfig
+   # Busca "IPv4 Address"
+   
+   # Mac/Linux
+   ifconfig | grep "inet "
+   ```
+
+3. **Configura la URL del API en el frontend:**
+   
+   Crea un archivo `.env` en `futbolia-mobile/`:
+   ```env
+   EXPO_PUBLIC_API_URL=http://TU_IP_LOCAL:8000/api/v1
+   ```
+   
+   **Ejemplo:** Si tu IP es `192.168.1.100`:
+   ```env
+   EXPO_PUBLIC_API_URL=http://192.168.1.100:8000/api/v1
+   ```
+
+4. **Configura CORS en el backend:**
+   
+   En `futbolia-backend/.env`:
+   ```env
+   CORS_ORIGINS=*
+   ```
+   
+   Esto permite todas las conexiones en desarrollo.
+
+5. **Reinicia ambos servidores:**
+   ```bash
+   # Backend
+   cd futbolia-backend
+   uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+   
+   # Frontend
+   cd futbolia-mobile
+   bun start --clear
+   ```
+
+6. **Prueba la conexión:**
+   
+   Abre en tu navegador: `http://TU_IP:8000/api/v1/health`
+   
+   Deberías ver: `{"status":"healthy"}`
+
+**Notas importantes:**
+- **Para dispositivo físico**: Usa la IP de tu computadora (no `localhost`)
+- **Para emulador Android**: Usa `10.0.2.2` en lugar de `localhost`
+- **Para simulador iOS**: Usa `localhost` o `127.0.0.1`
+- **Asegúrate de que ambos estén en la misma red WiFi**
+
+📖 **Ver guía completa**: `SOLUCION_ERROR_CONEXION.md`
 
 ### Iconos no aparecen
 

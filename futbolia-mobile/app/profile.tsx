@@ -16,7 +16,8 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "@/src/theme";
 import { useAuth, FavoriteTeam } from "@/src/context";
-import { ThemedView, ThemedText, Card, Button } from "@/src/components/ui";
+import { ThemedView, ThemedText, Card, Button, Icon } from "@/src/components/ui";
+import { BarChart3, Trophy, Settings } from "lucide-react-native";
 
 export default function ProfileScreen() {
   const { theme } = useTheme();
@@ -179,9 +180,7 @@ export default function ProfileScreen() {
             </Card>
 
             <Card variant="outlined" padding="md" style={styles.statCard}>
-              <ThemedText size="xl" weight="bold">
-                🏆
-              </ThemedText>
+              <Icon icon={Trophy} size={32} variant="primary" />
               <ThemedText variant="secondary" size="sm" numberOfLines={1}>
                 {stats.favoriteLeague}
               </ThemedText>
@@ -268,9 +267,12 @@ export default function ProfileScreen() {
 
         {/* Account Actions */}
         <View style={styles.section}>
-          <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
-            ⚙️ {t("profile.account")}
-          </ThemedText>
+          <View style={styles.statsTitleRow}>
+            <Icon icon={Settings} size={18} variant="primary" />
+            <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
+              {t("profile.account")}
+            </ThemedText>
+          </View>
 
           <Card variant="default" padding="none">
             <TouchableOpacity
@@ -294,7 +296,7 @@ export default function ProfileScreen() {
               style={styles.actionRow}
               onPress={() => router.push("/settings")}
             >
-              <ThemedText>⚙️</ThemedText>
+              <Icon icon={Settings} size={20} variant="primary" />
               <ThemedText style={styles.actionText}>
                 {t("profile.settings")}
               </ThemedText>

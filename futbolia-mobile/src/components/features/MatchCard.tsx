@@ -2,8 +2,9 @@
  * MatchCard - Card displaying match information
  */
 import { View, TouchableOpacity, StyleSheet } from "react-native";
+import { Sparkles } from "lucide-react-native";
 import { useTheme } from "@/src/theme";
-import { ThemedText, Card, TeamBadge } from "@/src/components/ui";
+import { ThemedText, Card, TeamBadge, Icon } from "@/src/components/ui";
 import { Match } from "@/src/services/api";
 
 interface MatchCardProps {
@@ -89,9 +90,12 @@ export function MatchCard({
               { backgroundColor: theme.colors.primary + "20" },
             ]}
           >
-            <ThemedText variant="primary" size="sm" weight="semibold">
-              🔮 Toca para predecir con Dixie
-            </ThemedText>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Icon icon={Sparkles} size={16} variant="primary" />
+              <ThemedText variant="primary" size="sm" weight="semibold">
+                Toca para predecir con Dixie
+              </ThemedText>
+            </View>
           </View>
         )}
       </Card>

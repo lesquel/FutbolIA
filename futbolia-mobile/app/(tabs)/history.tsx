@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { ClipboardList, BarChart3 } from "lucide-react-native";
+import { ClipboardList, BarChart3, Trophy } from "lucide-react-native";
 
 import { useTheme } from "@/src/theme";
 import {
@@ -128,9 +128,12 @@ export default function HistoryScreen() {
             },
           ]}
         >
-          <ThemedText variant="primary" size="sm" weight="semibold">
-            🏆 {item.result?.winner || "Sin resultado"}
-          </ThemedText>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <Icon icon={Trophy} size={16} variant="primary" />
+            <ThemedText variant="primary" size="sm" weight="semibold">
+              {item.result?.winner || "Sin resultado"}
+            </ThemedText>
+          </View>
           <ThemedText variant="muted" size="xs">
             {item.result?.confidence || 0}% confianza
           </ThemedText>

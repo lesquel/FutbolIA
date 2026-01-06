@@ -23,6 +23,7 @@ import { useTheme } from "@/src/theme";
 import { useAuth, FavoriteTeam } from "@/src/context";
 import { ThemedView, ThemedText, Button } from "@/src/components/ui";
 import { teamsApi, TeamSearchResult } from "@/src/services/api";
+import { Check } from "lucide-react-native";
 
 // Available leagues with their teams (free tier Football-Data.org)
 const LEAGUES = [
@@ -379,7 +380,7 @@ export default function TeamsScreen() {
       addFavoriteTeam(teamToAdd);
 
       Alert.alert(
-        "✅ Equipo Agregado",
+        "Equipo Agregado",
         `${teamToAdd.name} ha sido agregado a la base de datos y a tus favoritos.`,
         [{ text: "OK" }]
       );
