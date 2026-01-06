@@ -149,12 +149,14 @@ async def get_available_teams():
     ]
     
     available_teams = []
+    # Use async-safe thread pool and cache results per request to avoid duplicate queries
     for team_name in major_teams:
-        players = PlayerVectorStore.search_by_team(team_name, limit=1)
+        # Single query per team (limit=20) instead of querying twice
+        players = await PlayerVectorStore.search_by_team_async(team_name, limit=20)
         if players:
             available_teams.append({
                 "name": team_name,
-                "player_count": len(PlayerVectorStore.search_by_team(team_name, limit=20))
+                "player_count": len(players)
             })
     
     return {

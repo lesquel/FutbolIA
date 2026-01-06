@@ -84,5 +84,8 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
     CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
-# Comando de inicio (CORREGIDO: src.main:app)
-CMD ["sh", "-c", "python -m uvicorn src.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers"]
+# Comando de inicio con múltiples workers para mayor concurrencia
+# Usa Gunicorn + Uvicorn workers en producción
+# En desarrollo: usar --workers 1 (un solo worker)
+# En producción: workers = 2-4 * CPU cores (detectado automáticamente)
+CMD ["sh", "-c", "python -m gunicorn src.main:app --workers ${WORKERS:-4} --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:${PORT:-8000} --max-requests 1000 --max-requests-jitter 100 --timeout 120 --access-logfile - --error-logfile -"]

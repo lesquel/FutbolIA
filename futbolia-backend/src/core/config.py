@@ -34,6 +34,9 @@ class Settings:
     CHROMA_PERSIST_DIR: str = os.getenv("CHROMADB_PATH", "./data/chromadb")
     CHROMA_COLLECTION_NAME: str = os.getenv("CHROMADB_COLLECTION", "player_attributes")
     
+    # Redis (optional, for distributed rate limiting)
+    REDIS_URL: str = os.getenv("REDIS_URL", "")
+    
     # DeepSeek (Dixie)
     DEEPSEEK_API_KEY: str = os.getenv("DEEPSEEK_API_KEY", "")
     DEEPSEEK_BASE_URL: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")

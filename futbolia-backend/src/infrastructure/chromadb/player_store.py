@@ -2,6 +2,7 @@
 ChromaDB Vector Store
 Stores and retrieves player attributes for RAG-based predictions
 """
+import asyncio
 import chromadb
 from chromadb.config import Settings as ChromaSettings
 from typing import List, Optional
@@ -61,6 +62,11 @@ class PlayerVectorStore:
         )
     
     @classmethod
+    async def add_player_async(cls, player: PlayerAttributes) -> None:
+        """Add a player to the vector store (async-safe via thread)"""
+        await asyncio.to_thread(cls.add_player, player)
+    
+    @classmethod
     def add_players_batch(cls, players: List[PlayerAttributes]) -> None:
         """Add multiple players to the vector store"""
         if cls._collection is None:
@@ -83,6 +89,11 @@ class PlayerVectorStore:
         
         cls._collection.add(ids=ids, documents=documents, metadatas=metadatas)
         print(f"✅ Added {len(players)} players to vector store")
+    
+    @classmethod
+    async def add_players_batch_async(cls, players: List[PlayerAttributes]) -> None:
+        """Add multiple players to the vector store (async-safe via thread)"""
+        await asyncio.to_thread(cls.add_players_batch, players)
     
     @classmethod
     def search_by_team(cls, team_name: str, limit: int = 11) -> List[PlayerAttributes]:
@@ -113,6 +124,11 @@ class PlayerVectorStore:
         return []
     
     @classmethod
+    async def search_by_team_async(cls, team_name: str, limit: int = 11) -> List[PlayerAttributes]:
+        """Search for players by team name (async-safe via thread)"""
+        return await asyncio.to_thread(cls.search_by_team, team_name, limit)
+    
+    @classmethod
     def search_by_name(cls, player_name: str, limit: int = 5) -> List[PlayerAttributes]:
         """Search for players by name (semantic search)"""
         if cls._collection is None:
@@ -124,6 +140,11 @@ class PlayerVectorStore:
         )
         
         return cls._results_to_players(results)
+    
+    @classmethod
+    async def search_by_name_async(cls, player_name: str, limit: int = 5) -> List[PlayerAttributes]:
+        """Search for players by name (async-safe via thread)"""
+        return await asyncio.to_thread(cls.search_by_name, player_name, limit)
     
     @classmethod
     def get_star_players(cls, team_name: str, top_n: int = 3) -> List[PlayerAttributes]:
@@ -167,11 +188,21 @@ class PlayerVectorStore:
         }
     
     @classmethod
+    async def get_player_comparison_async(cls, team_a: str, team_b: str) -> dict:
+        """Get player comparison between two teams (async-safe via thread)"""
+        return await asyncio.to_thread(cls.get_player_comparison, team_a, team_b)
+    
+    @classmethod
     def count(cls) -> int:
         """Get total number of players in the store"""
         if cls._collection is None:
             cls.initialize()
         return cls._collection.count()
+    
+    @classmethod
+    async def count_async(cls) -> int:
+        """Get total number of players in the store (async-safe via thread)"""
+        return await asyncio.to_thread(cls.count)
     
     @staticmethod
     def _results_to_players(results: dict) -> List[PlayerAttributes]:

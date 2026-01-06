@@ -30,7 +30,8 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/logo.png"
+      "favicon": "./assets/images/logo.png",
+      "supportsTablet": true
     },
     "plugins": ["expo-router"],
     "experiments": {

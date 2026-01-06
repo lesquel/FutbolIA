@@ -11,6 +11,30 @@ from src.core.config import settings
 from src.domain.entities import Team, Match, MatchStatus
 
 
+class HTTPClientManager:
+    """Singleton HTTP client manager with connection pooling"""
+    _client: Optional[httpx.AsyncClient] = None
+    
+    @classmethod
+    async def get_client(cls) -> httpx.AsyncClient:
+        """Get or create global HTTP client"""
+        if cls._client is None:
+            # Create client with pooling and timeouts
+            cls._client = httpx.AsyncClient(
+                timeout=30.0,
+                limits=httpx.Limits(max_keepalive_connections=5, max_connections=20),
+                verify=True
+            )
+        return cls._client
+    
+    @classmethod
+    async def close(cls):
+        """Close the HTTP client"""
+        if cls._client is not None:
+            await cls._client.aclose()
+            cls._client = None
+
+
 class FootballAPIClient:
     """
     Client for Football-Data.org API (FREE)
@@ -61,20 +85,20 @@ class FootballAPIClient:
             teams = cls._teams_cache
             
             if not teams:
-                async with httpx.AsyncClient() as client:
-                    # Buscar en todas las competiciones
-                    response = await client.get(
-                        f"{cls.BASE_URL}/teams",
-                        headers=cls._get_headers(),
-                        params={"limit": 100}
-                    )
-                    
-                    if response.status_code == 200:
-                        data = response.json()
-                        teams = data.get("teams", [])
-                        cls._teams_cache = teams
-                    elif response.status_code == 429:
-                        print("⚠️ Football-Data.org: Rate limit alcanzado (10 req/min en tier gratuito)")
+                client = await HTTPClientManager.get_client()
+                # Buscar en todas las competiciones
+                response = await client.get(
+                    f"{cls.BASE_URL}/teams",
+                    headers=cls._get_headers(),
+                    params={"limit": 100}
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    teams = data.get("teams", [])
+                    cls._teams_cache = teams
+                elif response.status_code == 429:
+                    print("⚠️ Football-Data.org: Rate limit alcanzado (10 req/min en tier gratuito)")
             
             # Buscar coincidencia por nombre
             for team_data in teams:

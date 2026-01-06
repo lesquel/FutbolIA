@@ -9,10 +9,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.core.config import settings
 from src.core.logger import log_info, log_error, get_logger
 from src.core.rate_limit import RateLimitMiddleware
+from src.core.cache import LLMCache
 from src.infrastructure.db.mongodb import MongoDB
 from src.infrastructure.chromadb.player_store import PlayerVectorStore
 from src.infrastructure.chromadb.seed_data import seed_players
 from src.infrastructure.llm.dixie import DixieAI
+from src.infrastructure.external_api.football_api import HTTPClientManager
 from src.presentation.auth_routes import router as auth_router
 from src.presentation.prediction_routes import router as prediction_router
 from src.presentation.team_routes import router as team_router
@@ -44,6 +46,10 @@ async def lifespan(app: FastAPI):
     DixieAI.initialize()
     log_info("Dixie AI initialized")
     
+    # Initialize global HTTP client
+    await HTTPClientManager.get_client()
+    log_info("HTTP client pool initialized")
+    
     log_info("All systems ready!", 
              host=settings.HOST, 
              port=settings.PORT)
@@ -53,6 +59,8 @@ async def lifespan(app: FastAPI):
     # Shutdown
     log_info("Shutting down FutbolIA Backend...")
     await MongoDB.disconnect()
+    await HTTPClientManager.close()
+    await LLMCache.clear_all()
     log_info("Goodbye!")
 
 

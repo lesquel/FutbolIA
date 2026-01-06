@@ -1,9 +1,11 @@
 """
 FutbolIA - Rate Limiting Middleware
 Protects API endpoints from abuse
+
+Supports both in-memory (for single instance) and Redis (for distributed systems)
 """
 import time
-from collections import defaultdict
+from collections import defaultdict, deque
 from typing import Dict, Tuple, Optional
 from fastapi import Request, HTTPException, status
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -15,12 +17,14 @@ from src.core.logger import log_warning
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """
-    Rate limiting middleware using sliding window algorithm
+    Rate limiting middleware using sliding window algorithm with optional Redis support
     
     Features:
     - Per-IP rate limiting
     - Per-user rate limiting (if authenticated)
     - Different limits for different endpoints
+    - Redis support for distributed deployments
+    - Efficient in-memory fallback using deque
     """
     
     def __init__(self, app, default_limit: int = 60, window_seconds: int = 60):
@@ -28,8 +32,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self.default_limit = default_limit
         self.window_seconds = window_seconds
         
-        # Storage: {identifier: [(timestamp, count), ...]}
-        self.requests: Dict[str, list] = defaultdict(list)
+        # Storage: {identifier: deque(timestamps)} - more efficient than list
+        self.requests: Dict[str, deque] = defaultdict(deque)
         
         # Endpoint-specific limits (requests per minute)
         self.endpoint_limits = {
@@ -46,6 +50,21 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             "/openapi.json",
             "/",
         }
+        
+        # Try to initialize Redis if configured
+        self.redis_client = None
+        self._init_redis()
+    
+    def _init_redis(self):
+        """Initialize Redis client if configured"""
+        try:
+            if settings.REDIS_URL:
+                import redis.asyncio as redis
+                self.redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
+                print("✅ Redis rate limiter initialized")
+        except Exception as e:
+            print(f"⚠️ Redis not available, using in-memory rate limiting: {e}")
+            self.redis_client = None
     
     def _get_identifier(self, request: Request) -> str:
         """Get unique identifier for the request (IP or user_id)"""
@@ -76,20 +95,19 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         
         return self.default_limit
     
-    def _clean_old_requests(self, identifier: str, now: float) -> None:
-        """Remove requests outside the current window"""
+    def _clean_old_requests_local(self, identifier: str, now: float) -> None:
+        """Remove requests outside the current window (in-memory)"""
         cutoff = now - self.window_seconds
-        self.requests[identifier] = [
-            ts for ts in self.requests[identifier] if ts > cutoff
-        ]
+        while self.requests[identifier] and self.requests[identifier][0] <= cutoff:
+            self.requests[identifier].popleft()
     
-    def _is_rate_limited(self, identifier: str, limit: int) -> Tuple[bool, int, int]:
+    def _is_rate_limited_local(self, identifier: str, limit: int) -> Tuple[bool, int, int]:
         """
-        Check if identifier is rate limited
+        Check if identifier is rate limited (in-memory)
         Returns: (is_limited, current_count, reset_time)
         """
         now = time.time()
-        self._clean_old_requests(identifier, now)
+        self._clean_old_requests_local(identifier, now)
         
         current_count = len(self.requests[identifier])
         reset_time = int(self.window_seconds - (now - self.requests[identifier][0])) if self.requests[identifier] else self.window_seconds
@@ -100,6 +118,39 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # Record this request
         self.requests[identifier].append(now)
         return False, current_count + 1, reset_time
+    
+    async def _is_rate_limited_redis(self, identifier: str, limit: int) -> Tuple[bool, int, int]:
+        """
+        Check if identifier is rate limited (Redis)
+        Returns: (is_limited, current_count, reset_time)
+        """
+        try:
+            key = f"rate_limit:{identifier}"
+            now = int(time.time())
+            window_start = now - self.window_seconds
+            
+            # Use Redis sorted set for efficient sliding window
+            # Remove old entries
+            await self.redis_client.zremrangebyscore(key, 0, window_start)
+            
+            # Count current requests
+            current_count = await self.redis_client.zcard(key)
+            
+            if current_count >= limit:
+                # Get reset time from oldest request
+                oldest = await self.redis_client.zrange(key, 0, 0, withscores=True)
+                reset_time = int(oldest[0][1]) + self.window_seconds - now if oldest else self.window_seconds
+                return True, current_count, max(1, reset_time)
+            
+            # Add current request
+            await self.redis_client.zadd(key, {str(now): now})
+            await self.redis_client.expire(key, self.window_seconds + 60)
+            
+            return False, current_count + 1, self.window_seconds
+        except Exception as e:
+            print(f"⚠️ Redis error, falling back to in-memory: {e}")
+            # Fallback to in-memory
+            return self._is_rate_limited_local(identifier, limit)
     
     async def dispatch(self, request: Request, call_next) -> Response:
         """Process request with rate limiting"""
@@ -116,7 +167,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         identifier = self._get_identifier(request)
         limit = self._get_limit(path)
         
-        is_limited, count, reset_time = self._is_rate_limited(identifier, limit)
+        # Use Redis if available, otherwise fall back to in-memory
+        if self.redis_client:
+            is_limited, count, reset_time = await self._is_rate_limited_redis(identifier, limit)
+        else:
+            is_limited, count, reset_time = self._is_rate_limited_local(identifier, limit)
         
         if is_limited:
             log_warning(
@@ -160,7 +215,7 @@ class RateLimiter:
     def __init__(self, limit: int = 10, window: int = 60):
         self.limit = limit
         self.window = window
-        self.requests: Dict[str, list] = defaultdict(list)
+        self.requests: Dict[str, deque] = defaultdict(deque)
     
     def __call__(self, func):
         async def wrapper(*args, **kwargs):
@@ -170,8 +225,9 @@ class RateLimiter:
             now = time.time()
             cutoff = now - self.window
             
-            # Clean old requests
-            self.requests[key] = [ts for ts in self.requests[key] if ts > cutoff]
+            # Clean old requests using deque
+            while self.requests[key] and self.requests[key][0] <= cutoff:
+                self.requests[key].popleft()
             
             if len(self.requests[key]) >= self.limit:
                 raise HTTPException(

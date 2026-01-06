@@ -10,6 +10,8 @@ from src.infrastructure.chromadb.player_store import PlayerVectorStore
 from src.infrastructure.llm.dixie import DixieAI
 from src.infrastructure.external_api.football_api import FootballAPIClient
 from src.infrastructure.db.prediction_repository import PredictionRepository
+from src.core.cache import LLMCache
+from src.core.background_jobs import BackgroundJobQueue
 
 
 class PredictionUseCase:
@@ -25,11 +27,18 @@ class PredictionUseCase:
     ) -> dict:
         """
         Generate a prediction for a match using the hybrid RAG approach:
-        1. Fetch team data from API-Football (or mock)
-        2. Get player attributes from ChromaDB
-        3. Send context to Dixie (DeepSeek) for analysis
-        4. Save prediction to MongoDB
+        1. Check cache for existing prediction
+        2. Fetch team data from API-Football (or mock)
+        3. Get player attributes from ChromaDB (async-safe)
+        4. Send context to Dixie (DeepSeek) for analysis
+        5. Save prediction to MongoDB
         """
+        
+        # Step 0: Check cache first
+        cached_prediction = await LLMCache.get_prediction(home_team_name, away_team_name, language)
+        if cached_prediction:
+            cached_prediction["_from_cache"] = True
+            return cached_prediction
         
         # Step 1: Get team information
         # Try local DB first (for user-added teams like Emelec, Boca)
@@ -68,27 +77,44 @@ class PredictionUseCase:
         home_team.form, away_team.form = await asyncio.gather(home_form_task, away_form_task)
         
         # Step 2: Get player attributes from ChromaDB (RAG context)
-        # These are synchronous calls in the current implementation, but we can still call them sequentially
-        # as they are usually fast (local vector DB)
-        home_players = PlayerVectorStore.search_by_team(home_team.name, limit=15)
-        away_players = PlayerVectorStore.search_by_team(away_team.name, limit=15)
+        # Use async-safe thread pool to avoid blocking event loop
+        home_players = await PlayerVectorStore.search_by_team_async(home_team.name, limit=15)
+        away_players = await PlayerVectorStore.search_by_team_async(away_team.name, limit=15)
         
         # If no players in ChromaDB, generate with AI (Parallelized)
         player_gen_tasks = []
         
         if not home_players:
             print(f"🔄 Generating players for {home_team.name} with AI...")
-            player_gen_tasks.append(DixieAI.generate_team_players(home_team.name))
+            # Check cache first
+            cached_home_players = await LLMCache.get_players(home_team.name)
+            if cached_home_players:
+                print(f"✅ Using cached players for {home_team.name}")
+                player_gen_tasks.append(asyncio.sleep(0, result=cached_home_players))
+            else:
+                player_gen_tasks.append(DixieAI.generate_team_players(home_team.name))
         else:
             player_gen_tasks.append(asyncio.sleep(0, result=None))
             
         if not away_players:
             print(f"🔄 Generating players for {away_team.name} with AI...")
-            player_gen_tasks.append(DixieAI.generate_team_players(away_team.name))
+            # Check cache first
+            cached_away_players = await LLMCache.get_players(away_team.name)
+            if cached_away_players:
+                print(f"✅ Using cached players for {away_team.name}")
+                player_gen_tasks.append(asyncio.sleep(0, result=cached_away_players))
+            else:
+                player_gen_tasks.append(DixieAI.generate_team_players(away_team.name))
         else:
             player_gen_tasks.append(asyncio.sleep(0, result=None))
             
         home_players_raw, away_players_raw = await asyncio.gather(*player_gen_tasks)
+        
+        # Cache generated players
+        if home_players_raw and isinstance(home_players_raw, list):
+            await LLMCache.set_players(home_team.name, home_players_raw)
+        if away_players_raw and isinstance(away_players_raw, list):
+            await LLMCache.set_players(away_team.name, away_players_raw)
         
         # Process generated players if any
         from src.domain.entities import PlayerAttributes
@@ -132,6 +158,9 @@ class PredictionUseCase:
             players_b=away_players,
             language=language,
         )
+        
+        # Cache the prediction result
+        await LLMCache.set_prediction(home_team_name, away_team_name, prediction_result, language)
         
         # Step 4: Create match and prediction objects
         match = Match(
@@ -207,8 +236,8 @@ class PredictionUseCase:
     
     @classmethod
     async def get_player_comparison(cls, team_a: str, team_b: str) -> dict:
-        """Get player comparison data for two teams"""
-        comparison = PlayerVectorStore.get_player_comparison(team_a, team_b)
+        """Get player comparison data for two teams (async-safe)"""
+        comparison = await PlayerVectorStore.get_player_comparison_async(team_a, team_b)
         
         return {
             "success": True,
