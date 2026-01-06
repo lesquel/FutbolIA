@@ -136,7 +136,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     "message": f"Too many requests. Limit: {limit}/min. Try again in {reset_time}s",
                     "retry_after": reset_time
                 },
-                headers={"Retry-After": str(reset_time)}
+                headers={
+                    "Retry-After": str(reset_time),
+                    "X-RateLimit-Limit": str(limit),
+                    "X-RateLimit-Remaining": "0",
+                    "X-RateLimit-Reset": str(reset_time)
+                }
             )
         
         # Add rate limit headers to response

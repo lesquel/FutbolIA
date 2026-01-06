@@ -76,7 +76,7 @@ const POPULAR_TEAMS = [
 interface TeamSelectorProps {
   label: string;
   selectedTeam: string | null;
-  onSelectTeam: (team: string) => void;
+  onSelectTeam: (team: string, teamData?: { logo_url?: string; league?: string }) => void;
   excludeTeam?: string | null; // To prevent selecting the same team twice
   icon?: any; // LucideIcon
 }
@@ -95,7 +95,7 @@ export const TeamSelector = memo(function TeamSelector({
   const [loading, setLoading] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Initial load of popular teams or teams with players
   useEffect(() => {
@@ -106,8 +106,10 @@ export const TeamSelector = memo(function TeamSelector({
           POPULAR_TEAMS.map((t) => ({
             id: t.name.toLowerCase().replaceAll(/\s+/g, "_"),
             name: t.name,
+            short_name: t.name.substring(0, 3).toUpperCase(),
             league: t.league,
             logo_url: t.logo_url,
+            country: "",
             has_players: true,
             player_count: 11,
           }))
@@ -200,8 +202,13 @@ export const TeamSelector = memo(function TeamSelector({
     setHasSearched(false);
   };
 
-  const handleSelectTeam = (teamName: string) => {
-    onSelectTeam(teamName);
+  const handleSelectTeam = (teamName: string, teamData?: TeamSearchResult) => {
+    if (teamName === excludeTeam) return;
+    // Pass team data (logo and league) along with the name
+    onSelectTeam(teamName, {
+      logo_url: teamData?.logo_url,
+      league: teamData?.league,
+    });
     handleCloseModal();
   };
 
@@ -252,7 +259,7 @@ export const TeamSelector = memo(function TeamSelector({
 
     return (
       <TouchableOpacity
-        onPress={() => handleSelectTeam(item.name)}
+        onPress={() => handleSelectTeam(item.name, item)}
         style={[
           styles.teamItem,
           {
@@ -282,12 +289,8 @@ export const TeamSelector = memo(function TeamSelector({
             )}
           </View>
           <View style={{ flex: 1 }}>
-            <ThemedText weight="semibold" numberOfLines={1}>
-              {item.name}
-            </ThemedText>
-            <ThemedText variant="muted" size="xs">
-              {item.league || item.country || "Liga desconocida"}
-            </ThemedText>
+            <ThemedText weight="semibold" numberOfLines={1}>{item.name}</ThemedText>
+            <ThemedText variant="muted" size="xs">{item.league || item.country || "Liga desconocida"}</ThemedText>
           </View>
           {item.has_players && (
             <View
@@ -297,9 +300,7 @@ export const TeamSelector = memo(function TeamSelector({
               ]}
             >
               <Icon icon={Check} size={12} variant="success" />
-              <ThemedText size="xs" style={{ color: theme.colors.success, marginLeft: 4 }}>
-                Datos
-              </ThemedText>
+              <ThemedText size="xs" style={{ color: theme.colors.success, marginLeft: 4 }}>Datos</ThemedText>
             </View>
           )}
         </View>
@@ -313,10 +314,8 @@ export const TeamSelector = memo(function TeamSelector({
   return (
     <View style={styles.container}>
       <View style={styles.labelRow}>
-        {IconComponent && <Icon icon={IconComponent} size={16} variant="secondary" />}
-        <ThemedText variant="secondary" size="sm" style={styles.label}>
-          {label}
-        </ThemedText>
+        {IconComponent ? <Icon icon={IconComponent} size={16} variant="secondary" /> : null}
+        <ThemedText variant="secondary" size="sm" style={styles.label}>{label}</ThemedText>
       </View>
 
       <TouchableOpacity
@@ -336,17 +335,38 @@ export const TeamSelector = memo(function TeamSelector({
         >
           {selectedTeam ? (
             <View style={styles.selectedTeam}>
-              <View
-                style={[
-                  styles.teamBadge,
-                  { backgroundColor: theme.colors.primary + "20" },
-                ]}
-              >
-                <ThemedText variant="primary" weight="bold">
-                  {getInitials(selectedTeam)}
-                </ThemedText>
-              </View>
-              <ThemedText weight="semibold">{selectedTeam}</ThemedText>
+              {/* Find team data to show logo and league */}
+              {(() => {
+                const teamData = teams.find(t => t.name === selectedTeam);
+                return (
+                  <>
+                    <View
+                      style={[
+                        styles.teamBadge,
+                        { backgroundColor: theme.colors.primary + "20" },
+                      ]}
+                    >
+                      {teamData?.logo_url ? (
+                        <Image
+                          source={{ uri: teamData.logo_url }}
+                          style={styles.teamLogoSmall}
+                          resizeMode="contain"
+                        />
+                      ) : (
+                        <ThemedText variant="primary" weight="bold">
+                          {getInitials(selectedTeam)}
+                        </ThemedText>
+                      )}
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <ThemedText weight="semibold">{selectedTeam}</ThemedText>
+                      {teamData?.league ? (
+                        <ThemedText variant="muted" size="xs">{teamData.league}</ThemedText>
+                      ) : null}
+                    </View>
+                  </>
+                );
+              })()}
             </View>
           ) : (
             <ThemedText variant="muted">Seleccionar equipo...</ThemedText>
@@ -375,9 +395,7 @@ export const TeamSelector = memo(function TeamSelector({
           >
             {/* Modal Header */}
             <View style={styles.modalHeader}>
-              <ThemedText size="xl" weight="bold">
-                Seleccionar Equipo
-              </ThemedText>
+              <ThemedText size="xl" weight="bold">Seleccionar Equipo</ThemedText>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
                 <Icon icon={X} size={24} variant="muted" />
               </TouchableOpacity>
@@ -421,50 +439,35 @@ export const TeamSelector = memo(function TeamSelector({
               style={styles.teamList}
               ListHeaderComponent={
                 hasSearched && teams.length > 0 ? (
-                  <View style={styles.searchResultsHeader}>
+                    <View style={styles.searchResultsHeader}>
                     <Icon icon={Check} size={16} variant="success" />
-                    <ThemedText variant="muted" size="sm">
-                      {teams.length} equipo(s) encontrado(s)
-                    </ThemedText>
+                    <ThemedText variant="muted" size="sm">{teams.length} equipo(s) encontrado(s)</ThemedText>
                   </View>
                 ) : null
               }
               ListEmptyComponent={
                 !loading ? (
                   <View style={styles.emptyContainer}>
-                    <ThemedText variant="muted" style={styles.emptyText}>
-                      {hasSearched && searchQuery.length > 0
+                    <ThemedText variant="muted" style={styles.emptyText}>{hasSearched && searchQuery.length > 0
                         ? `No se encontró "${searchQuery}" en la base de datos.`
-                        : "Escribe el nombre del equipo y presiona buscar."}
-                    </ThemedText>
-
+                        : "Escribe el nombre del equipo y presiona buscar."}</ThemedText>
                     {hasSearched && searchQuery.length >= 2 && (
                       <Card variant="outlined" style={styles.addCard}>
-                        <ThemedText weight="bold" style={{ marginBottom: 8 }}>
-                          ¿Agregar {searchQuery} con IA?
-                        </ThemedText>
-                    <ThemedText
-                      size="sm"
-                      variant="secondary"
-                      style={{ marginBottom: 16 }}
-                    >
-                      Dixie buscará los jugadores reales de este equipo y
-                      los guardará en la base de datos para futuras
-                      consultas.
-                    </ThemedText>
-                    <Button
-                      title={
-                        isAdding
-                          ? "Generando jugadores..."
-                          : `Agregar ${searchQuery} con IA`
-                      }
-                      onPress={handleAddNewTeam}
-                      disabled={isAdding}
-                      loading={isAdding}
-                      icon={isAdding ? Loader2 : Sparkles}
-                      size="sm"
-                      variant="primary"
-                    />
+                        <ThemedText weight="bold" style={{ marginBottom: 8 }}>{`¿Agregar ${searchQuery} con IA?`}</ThemedText>
+                        <ThemedText
+                          size="sm"
+                          variant="secondary"
+                          style={{ marginBottom: 16 }}
+                        >Dixie buscará los jugadores reales de este equipo y los guardará en la base de datos para futuras consultas.</ThemedText>
+                        <Button
+                          title={isAdding ? "Generando jugadores..." : `Agregar ${searchQuery} con IA`}
+                          onPress={handleAddNewTeam}
+                          disabled={isAdding}
+                          loading={isAdding}
+                          icon={isAdding ? Loader2 : Sparkles}
+                          size="sm"
+                          variant="primary"
+                        />
                       </Card>
                     )}
                   </View>
@@ -594,11 +597,9 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-  dataBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-    marginRight: 8,
+  teamLogoSmall: {
+    width: "100%",
+    height: "100%",
   },
   emptyContainer: {
     padding: 20,
