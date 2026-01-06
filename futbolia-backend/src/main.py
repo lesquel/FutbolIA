@@ -94,12 +94,23 @@ app.add_middleware(
 # We handle this by checking if "*" is in the origins list
 is_all_origins = "*" in settings.CORS_ORIGINS
 
+# In development, allow all origins if "*" is specified
+if is_all_origins:
+    cors_origins = ["*"]
+else:
+    cors_origins = settings.CORS_ORIGINS
+
+log_info("CORS configuration", 
+         origins=cors_origins[:3] if len(cors_origins) > 3 else cors_origins,
+         allow_all=is_all_origins)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=cors_origins,
     allow_credentials=not is_all_origins,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Request Logging Middleware
