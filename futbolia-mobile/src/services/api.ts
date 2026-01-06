@@ -139,7 +139,6 @@ const apiRequest = async <T>(
     }
 
     const url = `${API_BASE_URL}${endpoint}`;
-    console.log(`🚀 API Request: ${url}`);
 
     const response = await fetch(url, {
       ...options,
@@ -157,12 +156,6 @@ const apiRequest = async <T>(
 
     return data;
   } catch (error: any) {
-    console.error("🚀 API Error Details:", {
-      message: error.message,
-      url: `${API_BASE_URL}${endpoint}`,
-      stack: error.stack,
-    });
-
     return {
       success: false,
       error: `Error de conexión: ${error.message}. Verifique que el servidor en ${API_BASE_URL} sea accesible.`,

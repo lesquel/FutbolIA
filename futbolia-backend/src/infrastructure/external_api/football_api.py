@@ -83,6 +83,14 @@ class FootballAPIClient:
                     elif response.status_code == 429:
                         print("⚠️ Football-Data.org: Rate limit alcanzado (10 req/min en tier gratuito)")
                         return cls._mock_team(team_name)
+                    else:
+                        # Handle other error status codes (403, 500, etc.)
+                        print(f"⚠️ Football-Data.org: Error {response.status_code} al obtener equipos")
+                        return cls._mock_team(team_name)
+            
+            # Verificar que teams no sea None antes de iterar
+            if teams is None:
+                return cls._mock_team(team_name)
             
             # Buscar coincidencia por nombre
             for team_data in teams:

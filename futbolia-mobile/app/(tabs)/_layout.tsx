@@ -9,7 +9,8 @@ import { Pressable, Image, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "@/src/theme";
-import { ThemedText } from "@/src/components/ui";
+import { ThemedText, Icon } from "@/src/components/ui";
+import { Sparkles, BarChart3, Settings } from "lucide-react-native";
 
 const HomeHeaderTitle = () => (
   <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>

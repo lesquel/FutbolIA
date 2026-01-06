@@ -225,7 +225,6 @@ export default function LoginScreen() {
               { backgroundColor: theme.colors.primary + "15" },
             ]}
           >
-            <ThemedText size="xl">🤖</ThemedText>
             <ThemedText variant="secondary" size="sm" style={styles.dixieText}>
               {t("auth.dixieWelcome")}
             </ThemedText>

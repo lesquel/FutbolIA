@@ -10,6 +10,7 @@ from src.domain.entities import Team, PlayerAttributes
 from src.infrastructure.db.team_repository import TeamRepository
 from src.infrastructure.chromadb.player_store import PlayerVectorStore
 from src.infrastructure.external_api.football_api import FootballAPIClient
+from src.infrastructure.external_api.api_selector import UnifiedAPIClient
 from src.presentation.auth_routes import get_current_user, get_optional_user
 
 
@@ -109,9 +110,10 @@ async def search_teams(
                     "player_count": player_count
                 })
     
-    # Search in Football-Data.org API
+    # Search in external APIs (Unified client with fallback)
     if search_api:
-        api_team = await FootballAPIClient.get_team_by_name(q)
+        # Try unified client (tries TheSportsDB -> Football-Data.org -> API-Football)
+        api_team = await UnifiedAPIClient.get_team_by_name(q)
         if api_team:
             results["api"].append({
                 "id": api_team.id,
@@ -122,7 +124,7 @@ async def search_teams(
                 "league": api_team.league or "",
                 "has_players": False,
                 "player_count": 0,
-                "source": "football-data.org"
+                "source": "external_api"
             })
     
     # Merge and deduplicate results

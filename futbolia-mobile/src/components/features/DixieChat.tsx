@@ -37,7 +37,7 @@ export const DixieChat = memo(function DixieChat({
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 500,
-      useNativeDriver: true,
+      useNativeDriver: false, // false for web compatibility
     }).start();
   }, []);
 

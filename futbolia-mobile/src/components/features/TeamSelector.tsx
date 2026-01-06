@@ -409,7 +409,7 @@ export const TeamSelector = memo(function TeamSelector({
                     {hasSearched && searchQuery.length >= 2 && (
                       <Card variant="outlined" style={styles.addCard}>
                         <ThemedText weight="bold" style={{ marginBottom: 8 }}>
-                          🤖 ¿Agregar {searchQuery} con IA?
+                          ¿Agregar {searchQuery} con IA?
                         </ThemedText>
                     <ThemedText
                       size="sm"
