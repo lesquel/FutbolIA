@@ -63,8 +63,14 @@ class TheSportsDBClient:
         # Check cache first
         cached_result = await team_cache.get(cache_key)
         if cached_result is not None:
-            print(f"✅ Cache hit for team: {team_name}")
-            return cached_result
+            cached_name = cached_result.get("strTeam", "").lower()
+            # Validar que el cache coincide con la búsqueda
+            if team_name.lower() in cached_name or cached_name in team_name.lower():
+                print(f"✅ Cache hit for team: {team_name}")
+                return cached_result
+            else:
+                print(f"⚠️ Cache mismatch for search '{team_name}': got '{cached_name}', deleting corrupted cache")
+                await team_cache.delete(cache_key)
         
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
@@ -79,10 +85,23 @@ class TheSportsDBClient:
                     
                     teams = data.get("teams", [])
                     if teams and len(teams) > 0:
-                        # Return first match
-                        team_data = teams[0]
-                        # Cache for 3 hours (team_cache TTL is 7200 seconds, which is fine)
-                        await team_cache.set(cache_key, team_data)
+                        # Find the best match (prefer exact or partial match)
+                        team_data = None
+                        for t in teams:
+                            t_name = t.get("strTeam", "").lower()
+                            if team_name.lower() in t_name or t_name in team_name.lower():
+                                team_data = t
+                                break
+                        
+                        # If no good match, use first result
+                        if not team_data:
+                            team_data = teams[0]
+                        
+                        # Cache only if name matches reasonably
+                        result_name = team_data.get("strTeam", "").lower()
+                        if team_name.lower() in result_name or result_name in team_name.lower():
+                            await team_cache.set(cache_key, team_data)
+                        
                         print(f"✅ Found team: {team_data.get('strTeam', team_name)} (ID: {team_data.get('idTeam')})")
                         return team_data
                     
@@ -101,7 +120,12 @@ class TheSportsDBClient:
         # Check cache first
         cached_result = await team_cache.get(cache_key)
         if cached_result is not None:
-            return cached_result
+            # Validar que el cache tiene el ID correcto
+            if str(cached_result.get("idTeam")) == str(team_id):
+                return cached_result
+            else:
+                print(f"⚠️ Cache mismatch for team {team_id}: got {cached_result.get('idTeam')}, deleting corrupted cache")
+                await team_cache.delete(cache_key)
         
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
@@ -116,9 +140,13 @@ class TheSportsDBClient:
                     teams = data.get("teams", [])
                     if teams and len(teams) > 0:
                         team_data = teams[0]
-                        # Cache for 2 hours (team_cache TTL is 7200 seconds)
-                        await team_cache.set(cache_key, team_data)
-                        return team_data
+                        # Validar que el equipo devuelto coincide con el ID solicitado
+                        if str(team_data.get("idTeam")) == str(team_id):
+                            # Cache for 2 hours (team_cache TTL is 7200 seconds)
+                            await team_cache.set(cache_key, team_data)
+                            return team_data
+                        else:
+                            print(f"⚠️ API returned wrong team ID: expected {team_id}, got {team_data.get('idTeam')}")
                     
         except Exception as e:
             print(f"❌ TheSportsDB get team error: {e}")

@@ -257,6 +257,17 @@ export const predictionsApi = {
       "/predictions/teams"
     );
   },
+
+  /**
+   * Get user's prediction history with statistics
+   * @param limit - Maximum number of predictions to return (default: 20)
+   * @returns User's predictions and stats
+   */
+  getHistory: async (limit: number = 20) => {
+    return apiRequest<{ predictions: Prediction[]; stats: PredictionStats }>(
+      `/predictions/history?limit=${limit}`
+    );
+  },
 };
 
 // ==================== TEAMS API ====================

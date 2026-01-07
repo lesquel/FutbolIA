@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from typing import Optional
 
-from src.core.logger import log_info, log_warning, log_error, log_prediction
+from src.core.logger import log_info, log_warning, log_error, log_prediction, log_debug
 from src.use_cases.prediction import PredictionUseCase
 from src.presentation.auth_routes import get_current_user
 from src.infrastructure.db.dixie_stats import DixieStats
@@ -90,6 +90,36 @@ async def predict_match(
     return result
 
 
+
+
+@router.get("/history")
+async def get_prediction_history(
+    limit: int = Query(default=20, le=100),
+    current_user = Depends(get_current_user)
+):
+    """
+    📜 Get user's prediction history with statistics
+    
+    Returns the user's past predictions sorted by date (newest first)
+    and overall statistics (total, correct, accuracy).
+    """
+    from src.infrastructure.db.prediction_repository import PredictionRepository
+    
+    try:
+        # Get predictions and stats in parallel
+        predictions = await PredictionRepository.find_by_user(current_user.id, limit)
+        stats = await PredictionRepository.get_stats(current_user.id)
+        
+        return {
+            "success": True,
+            "data": {
+                "predictions": [p.to_dict() for p in predictions],
+                "stats": stats,
+            }
+        }
+    except Exception as e:
+        log_error("Error fetching prediction history", error=str(e))
+        raise HTTPException(status_code=500, detail="Error fetching prediction history")
 
 
 @router.get("/matches")
