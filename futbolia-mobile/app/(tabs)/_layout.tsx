@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "@/src/theme";
 import { ThemedText, Icon } from "@/src/components/ui";
-import { Sparkles, BarChart3, Settings } from "lucide-react-native";
+import { Sparkles, BarChart3, Settings, ClipboardList } from "lucide-react-native";
 
 const HomeHeaderTitle = () => (
   <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
@@ -115,6 +115,20 @@ export default function TabLayout() {
         }}
       />
 
+      {/* History Tab */}
+      <Tabs.Screen
+        name="history"
+        options={{
+          title: t("navigation.history"),
+          tabBarIcon: ({ color }) => <TabIcon name="history" color={color} />,
+          headerTitle: () => (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Icon icon={ClipboardList} size={20} variant="primary" />
+              <ThemedText size="lg" weight="bold">Historial</ThemedText>
+            </View>
+          ),
+        }}
+      />
 
       {/* Settings Tab */}
       <Tabs.Screen
