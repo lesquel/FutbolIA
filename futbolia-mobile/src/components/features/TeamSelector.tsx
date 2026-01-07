@@ -24,10 +24,33 @@ const ALLOWED_LEAGUES = [
   "Premier League",
 ];
 
+// Equipos conocidos de Premier League (para validación cuando no hay liga en la respuesta)
+const PREMIER_LEAGUE_TEAMS = [
+  "Arsenal", "Aston Villa", "AFC Bournemouth", "Brentford", "Brighton",
+  "Brighton & Hove Albion", "Chelsea", "Crystal Palace", "Everton", "Fulham",
+  "Ipswich Town", "Leeds United", "Leicester City", "Liverpool", "Manchester City",
+  "Manchester United", "Newcastle United", "Nottingham Forest", "Southampton",
+  "Sunderland", "Tottenham", "Tottenham Hotspur", "West Ham", "West Ham United",
+  "Wolverhampton", "Wolverhampton Wanderers", "Burnley", "Luton Town", "Sheffield United",
+];
+
+// Función para verificar si un nombre de equipo es de Premier League
+const isPremierLeagueTeam = (teamName: string): boolean => {
+  const normalizedName = teamName.toLowerCase().replace(/\s*(fc|afc)\s*$/i, "").trim();
+  return PREMIER_LEAGUE_TEAMS.some(known => 
+    normalizedName.includes(known.toLowerCase()) || 
+    known.toLowerCase().includes(normalizedName)
+  );
+};
+
 // Función para filtrar equipos por ligas permitidas
 const isTeamInAllowedLeague = (team: TeamSearchResult): boolean => {
-  if (!team.league) return false;
-  return ALLOWED_LEAGUES.includes(team.league);
+  // Si tiene liga y es una de las permitidas, aceptar
+  if (team.league && ALLOWED_LEAGUES.includes(team.league)) {
+    return true;
+  }
+  // Si el nombre del equipo es conocido de Premier League, aceptar
+  return isPremierLeagueTeam(team.name);
 };
 
 // Fallback teams if API is offline or for quick selection (solo Premier League)
@@ -424,7 +447,7 @@ export const TeamSelector = memo(function TeamSelector({
               <View style={styles.searchInputRow}>
                 <View style={styles.searchInputWrapper}>
                   <Input
-                    placeholder="Buscar equipo (ej: Emelec, Boca...)"
+                    placeholder="Buscar equipo..."
                     value={searchQuery}
                     onChangeText={setSearchQuery}
                     onSubmitEditing={handleSearch}
