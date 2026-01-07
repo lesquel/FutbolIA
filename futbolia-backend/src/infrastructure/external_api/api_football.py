@@ -164,7 +164,6 @@ class APIFootballClient:
             short_name=team_info.get("code", team_info["name"][:3].upper()),
             logo_url=team_info.get("logo", ""),
             country=team_info.get("country", ""),
-            venue=venue.get("name", ""),
         )
         
         # Then get the squad

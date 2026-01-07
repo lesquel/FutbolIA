@@ -235,19 +235,13 @@ export const predictionsApi = {
     );
   },
 
-  getHistory: async (limit: number = 20) => {
-    return apiRequest<{ predictions: Prediction[]; stats: PredictionStats }>(
-      `/predictions/history?limit=${limit}`
-    );
-  },
-
   getPredictionDetail: async (id: string) => {
     return apiRequest<Prediction>(`/predictions/${id}`);
   },
 
-  getUpcomingMatches: async (leagueId: number = 39) => {
+  getUpcomingMatches: async () => {
     return apiRequest<{ matches: Match[] }>(
-      `/predictions/matches?league_id=${leagueId}`
+      `/predictions/matches`
     );
   },
 

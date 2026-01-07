@@ -149,20 +149,6 @@ export default function SettingsScreen() {
                   ]}
                 />
 
-                <SettingRow
-                  icon={Heart}
-                  title={t("profile.favoriteTeams")}
-                  subtitle="Gestiona tus equipos favoritos"
-                  onPress={() => router.push("/teams")}
-                  right={<Icon icon={ChevronRight} size={18} variant="muted" />}
-                />
-
-                <View
-                  style={[
-                    styles.divider,
-                    { backgroundColor: theme.colors.border },
-                  ]}
-                />
 
                 <SettingRow
                   icon={LogOut}

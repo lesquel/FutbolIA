@@ -115,20 +115,6 @@ export default function TabLayout() {
         }}
       />
 
-      {/* History Tab */}
-      <Tabs.Screen
-        name="history"
-        options={{
-          title: t("navigation.history"),
-          tabBarIcon: ({ color }) => <TabIcon name="history" color={color} />,
-          headerTitle: () => (
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <Icon icon={BarChart3} size={20} variant="primary" />
-              <ThemedText size="lg" weight="bold">Historial</ThemedText>
-            </View>
-          ),
-        }}
-      />
 
       {/* Settings Tab */}
       <Tabs.Screen
