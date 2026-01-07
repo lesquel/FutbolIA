@@ -203,7 +203,6 @@ class TheSportsDBClient:
             short_name=team_data.get("strTeamShort", team_data.get("strTeam", team_name)[:3].upper()),
             logo_url=team_data.get("strTeamBadge", ""),
             country=team_data.get("strCountry", ""),
-            venue=team_data.get("strStadium", ""),
             league=team_data.get("strLeague", ""),  # ✅ Extraer liga
         )
         

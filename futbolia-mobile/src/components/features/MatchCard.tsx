@@ -20,15 +20,32 @@ export function MatchCard({
 }: MatchCardProps) {
   const { theme } = useTheme();
 
+  /**
+   * Formatea la fecha/hora del partido a zona horaria de Ecuador (UTC-5)
+   * @param dateString - Fecha en formato ISO 8601 (ej: "2025-01-10T19:00:00Z")
+   * @returns Fecha formateada en español con hora de Ecuador
+   */
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("es-ES", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    try {
+      const date = new Date(dateString);
+      
+      // Verificar si la fecha es válida
+      if (isNaN(date.getTime())) {
+        return dateString; // Devolver string original si no es parseable
+      }
+      
+      // Formatear a zona horaria de Ecuador (America/Guayaquil = UTC-5)
+      return date.toLocaleDateString("es-EC", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "America/Guayaquil", // Zona horaria de Ecuador
+      });
+    } catch {
+      return dateString;
+    }
   };
 
   return (

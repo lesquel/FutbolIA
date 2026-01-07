@@ -25,14 +25,9 @@ import { ThemedView, ThemedText, Button, Icon } from "@/src/components/ui";
 import { teamsApi, TeamSearchResult } from "@/src/services/api";
 import { Check, Heart, Plus, Search, X, Globe, ArrowLeft, Shield } from "lucide-react-native";
 
-// Available leagues with their teams (free tier Football-Data.org)
+// Solo Premier League 2025-2026
 const LEAGUES = [
   { id: "PL", name: "Premier League", countryCode: "ENG", countryName: "England" },
-  { id: "PD", name: "La Liga", countryCode: "ESP", countryName: "Spain" },
-  { id: "SA", name: "Serie A", countryCode: "ITA", countryName: "Italy" },
-  { id: "BL1", name: "Bundesliga", countryCode: "GER", countryName: "Germany" },
-  { id: "FL1", name: "Ligue 1", countryCode: "FRA", countryName: "France" },
-  { id: "CL", name: "Champions League", countryCode: "UEFA", countryName: "Europe" },
 ];
 
 // Popular teams data (hardcoded for offline access + quick loading)

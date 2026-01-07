@@ -163,19 +163,6 @@ class PredictionUseCase:
             }
         }
     
-    @classmethod
-    async def get_user_history(cls, user_id: str, limit: int = 20) -> dict:
-        """Get prediction history for a user"""
-        predictions = await PredictionRepository.find_by_user(user_id, limit)
-        stats = await PredictionRepository.get_stats(user_id)
-        
-        return {
-            "success": True,
-            "data": {
-                "predictions": [p.to_dict() for p in predictions],
-                "stats": stats,
-            }
-        }
     
     @classmethod
     async def get_prediction_by_id(cls, prediction_id: str, user_id: str) -> dict:
@@ -196,28 +183,18 @@ class PredictionUseCase:
     @classmethod
     async def get_available_matches(cls, league_id: int = 39) -> dict:
         """
-        Get upcoming matches from the top 5 leagues (men's football)
+        Get next 5 upcoming matches from Premier League 2025-2026
         
-        Top 5 Leagues:
-        - Premier League (PL) - ID: 2021
-        - La Liga (PD) - ID: 2014
-        - Serie A (SA) - ID: 2019
-        - Bundesliga (BL1) - ID: 2002
-        - Ligue 1 (FL1) - ID: 2015
-        
-        Returns next 5 matches from each league (25 total, but limited to 25)
+        Solo Premier League temporada 2025-2026.
+        Returns next 5 matches total
         """
         from src.infrastructure.external_api.thesportsdb import TheSportsDBClient
         from src.infrastructure.external_api.football_api import FootballAPIClient
         from datetime import datetime, timedelta
         
-        # Top 5 leagues mapping (Football-Data.org codes)
+        # Solo Premier League 2025-2026
         TOP_LEAGUES = {
             "Premier League": "PL",
-            "La Liga": "PD",
-            "Serie A": "SA",
-            "Bundesliga": "BL1",
-            "Ligue 1": "FL1",
         }
         
         all_matches = []
@@ -237,15 +214,16 @@ class PredictionUseCase:
         # Try to get matches from TheSportsDB first (FREE, no API key)
         try:
             # TheSportsDB league IDs for top 5 leagues
+            # ID: (display_name, expected_strLeague_values)
             tsdb_league_ids = {
-                "Premier League": "4328",
-                "La Liga": "4335",
-                "Serie A": "4332",
-                "Bundesliga": "4331",
-                "Ligue 1": "4334",
+                "4328": ("Premier League", ["English Premier League", "Premier League"]),
+                "4335": ("La Liga", ["Spanish La Liga", "La Liga"]),
+                "4332": ("Serie A", ["Italian Serie A", "Serie A"]),
+                "4331": ("Bundesliga", ["German Bundesliga", "Bundesliga"]),
+                "4334": ("Ligue 1", ["French Ligue 1", "Ligue 1"]),
             }
             
-            for league_name, league_id in tsdb_league_ids.items():
+            for league_id, (display_name, valid_league_names) in tsdb_league_ids.items():
                 try:
                     async with httpx.AsyncClient(timeout=8.0) as client:
                         response = await client.get(
@@ -257,11 +235,26 @@ class PredictionUseCase:
                             data = response.json()
                             events = data.get("events") or []
                             
-                            for event in events[:5]:
+                            for event in events[:10]:  # Revisar más eventos para filtrar
+                                # Validar que el partido sea realmente de la liga esperada
+                                event_league = event.get("strLeague", "")
+                                if not any(valid in event_league for valid in valid_league_names):
+                                    # Saltear partidos que no son de la liga correcta
+                                    continue
+                                
                                 event_date = parse_match_date(event.get("dateEvent", ""))
                                 
                                 # Only include future matches (within next 30 days)
                                 if event_date and event_date >= current_date:
+                                    # Combinar fecha y hora en formato ISO 8601 completo (UTC)
+                                    date_str = event.get("dateEvent", "")
+                                    time_str = event.get("strTime", "00:00:00")
+                                    # Asegurar formato correcto de hora
+                                    if time_str and len(time_str) == 5:  # "19:00"
+                                        time_str = f"{time_str}:00"
+                                    # Crear datetime completo en formato ISO con zona UTC
+                                    datetime_iso = f"{date_str}T{time_str}Z" if date_str else ""
+                                    
                                     all_matches.append({
                                         "id": f"tsdb_{event.get('idEvent', '')}",
                                         "home_team": {
@@ -272,14 +265,14 @@ class PredictionUseCase:
                                             "name": event.get("strAwayTeam", ""),
                                             "logo_url": event.get("strAwayTeamBadge", ""),
                                         },
-                                        "date": event.get("dateEvent", ""),
-                                        "time": event.get("strTime", ""),
+                                        "date": datetime_iso,  # Formato ISO completo con zona UTC
+                                        "time": time_str,
                                         "status": "scheduled",
-                                        "league": league_name,
+                                        "league": display_name,  # Usar nombre display normalizado
                                         "venue": event.get("strVenue", ""),
                                     })
                 except Exception as e:
-                    print(f"⚠️ Error getting {league_name} matches from TheSportsDB: {e}")
+                    print(f"⚠️ Error getting {display_name} matches from TheSportsDB: {e}")
                     continue
         except Exception as e:
             print(f"⚠️ TheSportsDB failed: {e}")
@@ -309,9 +302,16 @@ class PredictionUseCase:
             except Exception as e:
                 print(f"⚠️ Football-Data.org failed: {e}")
         
-        # Sort by date
+        # Sort by date and get only the next 5 matches
         all_matches.sort(key=lambda x: x.get("date", "9999-12-31"))
-        all_matches = all_matches[:25]
+        # Filtrar solo partidos futuros (no pasados)
+        future_matches = [
+            m for m in all_matches 
+            if parse_match_date(m.get("date", "")) and 
+            parse_match_date(m.get("date", "")) >= current_date
+        ]
+        # Retornar solo los próximos 5 partidos
+        all_matches = future_matches[:5]
         
         # If we still don't have matches, generate realistic mock data
         if not all_matches:
@@ -328,12 +328,14 @@ class PredictionUseCase:
             
             for i, (home, away, league) in enumerate(mock_matches):
                 match_date = current_date + timedelta(days=i + 1)
+                # Formato ISO completo con hora UTC
+                datetime_iso = match_date.strftime("%Y-%m-%dT20:00:00Z")
                 all_matches.append({
                     "id": f"mock_{i + 1}",
                     "home_team": {"name": home, "logo_url": ""},
                     "away_team": {"name": away, "logo_url": ""},
-                    "date": match_date.strftime("%Y-%m-%d"),
-                    "time": "20:00",
+                    "date": datetime_iso,  # Formato ISO completo
+                    "time": "20:00:00",
                     "status": "scheduled",
                     "league": league,
                     "venue": f"Estadio de {home}",

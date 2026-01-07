@@ -19,27 +19,23 @@ import { useTheme } from "@/src/theme";
 import { ThemedText, Card, Input, Button, Icon } from "@/src/components/ui";
 import { teamsApi, TeamSearchResult } from "@/src/services/api";
 
-// Fallback teams if API is offline or for quick selection
+// Solo Premier League 2025-2026
+const ALLOWED_LEAGUES = [
+  "Premier League",
+];
+
+// Función para filtrar equipos por ligas permitidas
+const isTeamInAllowedLeague = (team: TeamSearchResult): boolean => {
+  if (!team.league) return false;
+  return ALLOWED_LEAGUES.includes(team.league);
+};
+
+// Fallback teams if API is offline or for quick selection (solo Premier League)
 const POPULAR_TEAMS = [
-  {
-    name: "Real Madrid",
-    league: "La Liga",
-    logo_url: "https://crests.football-data.org/86.png",
-  },
   {
     name: "Manchester City",
     league: "Premier League",
     logo_url: "https://crests.football-data.org/65.png",
-  },
-  {
-    name: "Barcelona",
-    league: "La Liga",
-    logo_url: "https://crests.football-data.org/81.png",
-  },
-  {
-    name: "Bayern Munich",
-    league: "Bundesliga",
-    logo_url: "https://crests.football-data.org/5.png",
   },
   {
     name: "Liverpool",
@@ -52,24 +48,39 @@ const POPULAR_TEAMS = [
     logo_url: "https://crests.football-data.org/57.png",
   },
   {
-    name: "Paris Saint-Germain",
-    league: "Ligue 1",
-    logo_url: "https://crests.football-data.org/524.png",
+    name: "Chelsea",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/61.png",
   },
   {
-    name: "Inter Milan",
-    league: "Serie A",
-    logo_url: "https://crests.football-data.org/108.png",
+    name: "Tottenham Hotspur",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/73.png",
   },
   {
-    name: "Juventus",
-    league: "Serie A",
-    logo_url: "https://crests.football-data.org/109.png",
+    name: "Manchester United",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/66.png",
   },
   {
-    name: "Atletico Madrid",
-    league: "La Liga",
-    logo_url: "https://crests.football-data.org/78.png",
+    name: "Newcastle United",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/67.png",
+  },
+  {
+    name: "Aston Villa",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/58.png",
+  },
+  {
+    name: "Brighton & Hove Albion",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/397.png",
+  },
+  {
+    name: "West Ham United",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/563.png",
   },
 ];
 
@@ -122,8 +133,11 @@ export const TeamSelector = memo(function TeamSelector({
           response.data?.teams &&
           response.data.teams.length > 0
         ) {
-          // Update with real data if available
-          setTeams(response.data.teams);
+          // Filtrar solo equipos de las 5 ligas principales
+          const filteredTeams = response.data.teams.filter(isTeamInAllowedLeague);
+          if (filteredTeams.length > 0) {
+            setTeams(filteredTeams);
+          }
         }
       } catch (error) {
         console.log("Error loading initial teams:", error);
@@ -156,7 +170,9 @@ export const TeamSelector = memo(function TeamSelector({
         setHasSearched(false);
         const response = await teamsApi.getTeamsWithPlayers();
         if (response.success && response.data?.teams) {
-          setTeams(response.data.teams);
+          // Filtrar solo equipos de las 5 ligas principales
+          const filteredTeams = response.data.teams.filter(isTeamInAllowedLeague);
+          setTeams(filteredTeams);
         }
         return;
       }
@@ -173,7 +189,9 @@ export const TeamSelector = memo(function TeamSelector({
         ]) as any;
         
         if (response.success && response.data?.teams) {
-          setTeams(response.data.teams);
+          // Filtrar solo equipos de las 5 ligas principales
+          const filteredTeams = response.data.teams.filter(isTeamInAllowedLeague);
+          setTeams(filteredTeams);
         } else {
           // Show error but keep previous results
           Alert.alert(

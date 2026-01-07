@@ -46,7 +46,6 @@ class UnifiedAPIClient:
                     short_name=team_data.get("strTeamShort", team_data.get("strTeam", team_name)[:3].upper()),
                     logo_url=team_data.get("strTeamBadge", ""),
                     country=team_data.get("strCountry", ""),
-                    venue=team_data.get("strStadium", ""),
                     league=team_data.get("strLeague", ""),  # ✅ Extraer liga
                 )
         except Exception as e:
@@ -72,7 +71,6 @@ class UnifiedAPIClient:
                     short_name=team_info.get("code", team_info.get("name", team_name)[:3].upper()),
                     logo_url=team_info.get("logo", ""),
                     country=team_info.get("country", ""),
-                    venue=team_info.get("venue", {}).get("name", ""),
                     league=league_info.get("name", ""),  # ✅ Extraer liga de API-Football
                 )
         except Exception as e:

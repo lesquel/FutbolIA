@@ -90,25 +90,16 @@ async def predict_match(
     return result
 
 
-@router.get("/history")
-async def get_history(
-    limit: int = Query(default=20, le=100),
-    current_user = Depends(get_current_user)
-):
-    """📊 Get user's prediction history and stats"""
-    result = await PredictionUseCase.get_user_history(
-        user_id=current_user.id,
-        limit=limit,
-    )
-    return result
 
 
 @router.get("/matches")
-async def get_upcoming_matches(
-    league_id: int = Query(default=39, description="League ID (39=Premier League, 140=La Liga)")
-):
-    """⚽ Get upcoming matches available for prediction"""
-    result = await PredictionUseCase.get_available_matches(league_id)
+async def get_upcoming_matches():
+    """
+    ⚽ Get next 5 upcoming matches from Premier League 2025-2026
+    
+    Returns only future matches based on current time (webhook-like behavior)
+    """
+    result = await PredictionUseCase.get_available_matches()
     return result
 
 
@@ -139,21 +130,28 @@ async def compare_teams(request: CompareTeamsRequest):
 
 @router.get("/teams")
 async def get_available_teams():
-    """🏆 Get list of teams with player data in the system"""
+    """🏆 Get list of teams with player data in the system (solo de las 5 ligas principales)"""
     from src.infrastructure.chromadb.player_store import PlayerVectorStore
+    from src.presentation.team_routes import ALLOWED_LEAGUES, get_team_league
     
-    # Get unique teams from our player database
+    # Get unique teams from our player database (solo de las 5 ligas)
     teams = set()
     
-    # Search for players from major teams
+    # Search for players from major teams de Premier League 2025-2026
     major_teams = [
-        "Real Madrid", "Manchester City", "Barcelona", "Bayern Munich",
-        "Liverpool", "Arsenal", "Paris Saint-Germain", "Inter Milan",
-        "Juventus", "Atletico Madrid"
+        "Manchester City", "Liverpool", "Arsenal", "Chelsea",
+        "Tottenham Hotspur", "Manchester United", "Newcastle United",
+        "Brighton & Hove Albion", "West Ham United", "Aston Villa",
+        "Crystal Palace", "Wolverhampton Wanderers", "Fulham", "Brentford"
     ]
     
     available_teams = []
     for team_name in major_teams:
+        # Solo incluir equipos de las 5 ligas permitidas
+        league = get_team_league(team_name)
+        if league not in ALLOWED_LEAGUES:
+            continue
+            
         players = PlayerVectorStore.search_by_team(team_name, limit=1)
         if players:
             available_teams.append({
