@@ -53,58 +53,35 @@ const isTeamInAllowedLeague = (team: TeamSearchResult): boolean => {
   return isPremierLeagueTeam(team.name);
 };
 
-// Fallback teams if API is offline or for quick selection (solo Premier League)
+// Fallback teams if API is offline or for quick selection (solo Premier League 2025-2026)
+// Logos from football-data.org
 const POPULAR_TEAMS = [
-  {
-    name: "Manchester City",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/65.png",
-  },
-  {
-    name: "Liverpool",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/64.png",
-  },
-  {
-    name: "Arsenal",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/57.png",
-  },
-  {
-    name: "Chelsea",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/61.png",
-  },
-  {
-    name: "Tottenham Hotspur",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/73.png",
-  },
-  {
-    name: "Manchester United",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/66.png",
-  },
-  {
-    name: "Newcastle United",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/67.png",
-  },
-  {
-    name: "Aston Villa",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/58.png",
-  },
-  {
-    name: "Brighton & Hove Albion",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/397.png",
-  },
-  {
-    name: "West Ham United",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/563.png",
-  },
+  // Top 6
+  { name: "Manchester City", league: "Premier League", logo_url: "https://crests.football-data.org/65.png" },
+  { name: "Liverpool", league: "Premier League", logo_url: "https://crests.football-data.org/64.png" },
+  { name: "Arsenal", league: "Premier League", logo_url: "https://crests.football-data.org/57.png" },
+  { name: "Chelsea", league: "Premier League", logo_url: "https://crests.football-data.org/61.png" },
+  { name: "Tottenham Hotspur", league: "Premier League", logo_url: "https://crests.football-data.org/73.png" },
+  { name: "Manchester United", league: "Premier League", logo_url: "https://crests.football-data.org/66.png" },
+  // Rest of Premier League
+  { name: "Newcastle United", league: "Premier League", logo_url: "https://crests.football-data.org/67.png" },
+  { name: "Aston Villa", league: "Premier League", logo_url: "https://crests.football-data.org/58.png" },
+  { name: "Brighton & Hove Albion", league: "Premier League", logo_url: "https://crests.football-data.org/397.png" },
+  { name: "West Ham United", league: "Premier League", logo_url: "https://crests.football-data.org/563.png" },
+  { name: "Crystal Palace", league: "Premier League", logo_url: "https://crests.football-data.org/354.png" },
+  { name: "Brentford", league: "Premier League", logo_url: "https://crests.football-data.org/402.png" },
+  { name: "Fulham", league: "Premier League", logo_url: "https://crests.football-data.org/63.png" },
+  { name: "Wolverhampton Wanderers", league: "Premier League", logo_url: "https://crests.football-data.org/76.png" },
+  { name: "AFC Bournemouth", league: "Premier League", logo_url: "https://crests.football-data.org/1044.png" },
+  { name: "Nottingham Forest", league: "Premier League", logo_url: "https://crests.football-data.org/351.png" },
+  { name: "Everton", league: "Premier League", logo_url: "https://crests.football-data.org/62.png" },
+  { name: "Leicester City", league: "Premier League", logo_url: "https://crests.football-data.org/338.png" },
+  { name: "Ipswich Town", league: "Premier League", logo_url: "https://crests.football-data.org/349.png" },
+  { name: "Southampton", league: "Premier League", logo_url: "https://crests.football-data.org/340.png" },
+  // Aliases with FC suffix (for MongoDB teams)
+  { name: "Chelsea FC", league: "Premier League", logo_url: "https://crests.football-data.org/61.png" },
+  { name: "Arsenal FC", league: "Premier League", logo_url: "https://crests.football-data.org/57.png" },
+  { name: "Liverpool FC", league: "Premier League", logo_url: "https://crests.football-data.org/64.png" },
 ];
 
 interface TeamSelectorProps {
@@ -295,12 +272,27 @@ export const TeamSelector = memo(function TeamSelector({
       .slice(0, 3);
   };
 
+  // Helper to find logo from POPULAR_TEAMS
+  const getTeamLogo = (teamName: string, itemLogo?: string): string | undefined => {
+    if (itemLogo) return itemLogo;
+    const popularTeam = POPULAR_TEAMS.find(t => 
+      t.name === teamName || 
+      teamName.includes(t.name) || 
+      t.name.includes(teamName.replace(' FC', '').replace('FC ', ''))
+    );
+    return popularTeam?.logo_url;
+  };
+
   const renderTeamItem = ({ item }: { item: TeamSearchResult }) => {
     if (item.name === excludeTeam) return null;
 
+    const logoUrl = getTeamLogo(item.name, item.logo_url);
+    // Also pass the logo when selecting the team
+    const itemWithLogo = { ...item, logo_url: logoUrl || "" };
+
     return (
       <TouchableOpacity
-        onPress={() => handleSelectTeam(item.name, item)}
+        onPress={() => handleSelectTeam(item.name, itemWithLogo)}
         style={[
           styles.teamItem,
           {
@@ -319,9 +311,9 @@ export const TeamSelector = memo(function TeamSelector({
               { backgroundColor: theme.colors.surfaceSecondary },
             ]}
           >
-            {item.logo_url ? (
+            {logoUrl ? (
               <Image
-                source={{ uri: item.logo_url }}
+                source={{ uri: logoUrl }}
                 style={styles.teamLogo}
                 resizeMode="contain"
               />
@@ -376,9 +368,16 @@ export const TeamSelector = memo(function TeamSelector({
         >
           {selectedTeam ? (
             <View style={styles.selectedTeam}>
-              {/* Find team data to show logo and league */}
+              {/* Find team data to show logo and league - prioritize POPULAR_TEAMS for logos */}
               {(() => {
+                // First get logo from POPULAR_TEAMS (most reliable)
+                const logoUrl = getTeamLogo(selectedTeam, undefined);
+                // Then get other team data from teams list
                 const teamData = teams.find(t => t.name === selectedTeam);
+                const league = teamData?.league || POPULAR_TEAMS.find(t => 
+                  t.name === selectedTeam || selectedTeam.includes(t.name) || 
+                  t.name.includes(selectedTeam.replace(' FC', '').replace('FC ', ''))
+                )?.league;
                 return (
                   <>
                     <View
@@ -387,9 +386,9 @@ export const TeamSelector = memo(function TeamSelector({
                         { backgroundColor: theme.colors.primary + "20" },
                       ]}
                     >
-                      {teamData?.logo_url ? (
+                      {logoUrl ? (
                         <Image
-                          source={{ uri: teamData.logo_url }}
+                          source={{ uri: logoUrl }}
                           style={styles.teamLogoSmall}
                           resizeMode="contain"
                         />
@@ -401,8 +400,8 @@ export const TeamSelector = memo(function TeamSelector({
                     </View>
                     <View style={{ flex: 1 }}>
                       <ThemedText weight="semibold">{selectedTeam}</ThemedText>
-                      {teamData?.league ? (
-                        <ThemedText variant="muted" size="xs">{teamData.league}</ThemedText>
+                      {league ? (
+                        <ThemedText variant="muted" size="xs">{league}</ThemedText>
                       ) : null}
                     </View>
                   </>
