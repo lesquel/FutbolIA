@@ -5,8 +5,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // API Configuration
+// Use local server for development, remote for production
 const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL || "https://futbolia.onrender.com/api/v1";
+  process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 const TOKEN_KEY = "@futbolia_token";
 
@@ -396,6 +397,58 @@ export const teamsApi = {
   },
 };
 
+// ==================== LEAGUES API ====================
+
+interface StandingsTeam {
+  id: number;
+  name: string;
+  shortName: string;
+  crest: string;
+}
+
+interface StandingsEntry {
+  position: number;
+  team: StandingsTeam;
+  playedGames: number;
+  won: number;
+  draw: number;
+  lost: number;
+  points: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDifference: number;
+}
+
+interface StandingsResponse {
+  standings: StandingsEntry[];
+  league: string;
+  cached?: boolean;
+  mock?: boolean;
+}
+
+export const leaguesApi = {
+  /**
+   * Get league standings
+   * @param league - League code (PL, PD, SA, BL1, FL1)
+   * @returns League standings table
+   */
+  getStandings: async (league: string = "PL") => {
+    return apiRequest<StandingsResponse>(
+      `/leagues/standings?league=${league}`
+    );
+  },
+
+  /**
+   * Get Premier League standings (shortcut)
+   * @returns Premier League 2025-2026 standings
+   */
+  getPremierLeagueStandings: async () => {
+    return apiRequest<StandingsResponse>(
+      "/leagues/standings/premier-league"
+    );
+  },
+};
+
 // Export types
 export type {
   User,
@@ -411,4 +464,7 @@ export type {
   TeamCreate,
   Player,
   PredictionContext,
+  StandingsEntry,
+  StandingsTeam,
+  StandingsResponse,
 };
