@@ -17,6 +17,7 @@ from src.presentation.auth_routes import router as auth_router
 from src.presentation.prediction_routes import router as prediction_router
 from src.presentation.team_routes import router as team_router
 from src.presentation.stats_routes import router as stats_router
+from src.presentation.league_routes import router as league_router
 
 # Initialize logger
 logger = get_logger(__name__)
@@ -129,6 +130,7 @@ app.include_router(auth_router, prefix=API_PREFIX)
 app.include_router(prediction_router, prefix=API_PREFIX)
 app.include_router(team_router, prefix=API_PREFIX)
 app.include_router(stats_router, prefix=API_PREFIX)
+app.include_router(league_router, prefix=API_PREFIX)
 
 
 # Root endpoint

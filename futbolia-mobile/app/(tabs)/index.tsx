@@ -14,11 +14,11 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Calendar, Sparkles } from "lucide-react-native";
+import { Calendar, Sparkles, Trophy } from "lucide-react-native";
 
 import { useTheme } from "@/src/theme";
 import { ThemedView, ThemedText, Card, Button, Icon } from "@/src/components/ui";
-import { MatchCard, DixieChat } from "@/src/components/features";
+import { MatchCard, DixieChat, LeagueTable } from "@/src/components/features";
 import { predictionsApi, Match } from "@/src/services/api";
 
 const { width } = Dimensions.get("window");
@@ -32,6 +32,7 @@ export default function HomeScreen() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showLeagueTable, setShowLeagueTable] = useState(false);
 
   useEffect(() => {
     loadMatches();
@@ -145,6 +146,19 @@ export default function HomeScreen() {
                   fullWidth
                   onPress={() => router.push("/predict")}
                   icon={Sparkles}
+                  iconPosition="left"
+                />
+              </View>
+
+              {/* League Table Button */}
+              <View style={styles.leagueTableButton}>
+                <Button
+                  title="📊 Tabla de Posiciones"
+                  variant="outline"
+                  size="md"
+                  fullWidth
+                  onPress={() => setShowLeagueTable(true)}
+                  icon={Trophy}
                   iconPosition="left"
                 />
               </View>
@@ -275,6 +289,12 @@ export default function HomeScreen() {
           </Card>
         </ScrollView>
       )}
+
+      {/* League Table Modal */}
+      <LeagueTable
+        visible={showLeagueTable}
+        onClose={() => setShowLeagueTable(false)}
+      />
     </ThemedView>
   );
 }
@@ -341,6 +361,9 @@ const styles = StyleSheet.create({
   },
   quickPredictContainer: {
     marginVertical: 16,
+  },
+  leagueTableButton: {
+    marginBottom: 16,
   },
   statsCard: {
     marginTop: 8,
