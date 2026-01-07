@@ -181,20 +181,24 @@ class PredictionUseCase:
         }
     
     @classmethod
-    async def get_available_matches(cls, league_id: int = 39) -> dict:
+    async def get_available_matches(cls) -> dict:
         """
-        Get next 5 upcoming matches from Premier League 2025-2026
+        Get next 5 upcoming matches from top European leagues.
         
-        Solo Premier League temporada 2025-2026.
-        Returns next 5 matches total
+        Fetches matches from: Premier League, La Liga, Serie A, Bundesliga, Ligue 1.
+        Returns next 5 matches total sorted by date.
         """
         from src.infrastructure.external_api.thesportsdb import TheSportsDBClient
         from src.infrastructure.external_api.football_api import FootballAPIClient
         from datetime import datetime, timedelta
         
-        # Solo Premier League 2025-2026
+        # Top 5 European leagues
         TOP_LEAGUES = {
             "Premier League": "PL",
+            "La Liga": "PD",
+            "Serie A": "SA",
+            "Bundesliga": "BL1",
+            "Ligue 1": "FL1",
         }
         
         all_matches = []
@@ -223,12 +227,12 @@ class PredictionUseCase:
                 "4334": ("Ligue 1", ["French Ligue 1", "Ligue 1"]),
             }
             
-            for league_id, (display_name, valid_league_names) in tsdb_league_ids.items():
+            for tsdb_id, (display_name, valid_league_names) in tsdb_league_ids.items():
                 try:
                     async with httpx.AsyncClient(timeout=8.0) as client:
                         response = await client.get(
                             "https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php",
-                            params={"id": league_id}
+                            params={"id": tsdb_id}
                         )
                         
                         if response.status_code == 200:
