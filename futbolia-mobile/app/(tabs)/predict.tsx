@@ -24,7 +24,7 @@ import {
   TeamSelector,
   TeamStatsCard,
   PredictionCard,
-  DixieChat,
+  GoalMindChat,
 } from "@/src/components/features";
 import { predictionsApi, Prediction } from "@/src/services/api";
 
@@ -172,8 +172,8 @@ export default function PredictScreen() {
                 </ThemedText>
               </View>
 
-              {/* Dixie Chat */}
-              <DixieChat
+              {/* GoalMind Chat */}
+              <GoalMindChat
                 isLoading={loading}
                 message={prediction?.result?.reasoning}
                 showGreeting={!prediction && !loading}
@@ -317,7 +317,7 @@ export default function PredictScreen() {
                 <Card variant="outlined" padding="lg" style={styles.emptyCard}>
                   <Icon icon={Sparkles} size={64} variant="muted" />
                   <ThemedText variant="muted" style={styles.emptyText}>
-                    Selecciona dos equipos para ver la predicción de Dixie
+                    Selecciona dos equipos para ver la predicción de GoalMind
                   </ThemedText>
                 </Card>
               )}

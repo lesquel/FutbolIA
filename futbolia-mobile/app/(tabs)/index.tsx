@@ -18,7 +18,7 @@ import { Calendar, Sparkles, Trophy } from "lucide-react-native";
 
 import { useTheme } from "@/src/theme";
 import { ThemedView, ThemedText, Card, Button, Icon } from "@/src/components/ui";
-import { MatchCard, DixieChat, LeagueTable } from "@/src/components/features";
+import { MatchCard, GoalMindChat, LeagueTable } from "@/src/components/features";
 import { predictionsApi, Match } from "@/src/services/api";
 
 const { width } = Dimensions.get("window");
@@ -116,8 +116,8 @@ export default function HomeScreen() {
                 </View>
               </View>
 
-              {/* Dixie Greeting */}
-              <DixieChat showGreeting={true} />
+              {/* GoalMind Greeting */}
+              <GoalMindChat showGreeting={true} />
 
               {/* Featured Match */}
               {featuredMatch && (

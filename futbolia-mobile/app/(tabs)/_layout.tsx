@@ -20,7 +20,7 @@ const HomeHeaderTitle = () => (
       resizeMode="contain"
     />
     <ThemedText size="xl" weight="bold">
-      FutPredicIA
+      GoalMind: El Oráculo del Fútbol
     </ThemedText>
   </View>
 );

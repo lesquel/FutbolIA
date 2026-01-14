@@ -242,12 +242,12 @@ export const TeamSelector = memo(function TeamSelector({
       });
 
       if (addResponse.success) {
-        // 2. Generate players automatically so Dixie has data to work with
+        // 2. Generate players automatically so GoalMind has data to work with
         await teamsApi.generatePlayers(searchQuery, 15, 75);
 
         Alert.alert(
           "Equipo Agregado",
-          `${searchQuery} ha sido agregado con éxito. Dixie ya conoce a sus jugadores.`,
+          `${searchQuery} ha sido agregado con éxito. GoalMind ya conoce a sus jugadores.`,
           [{ text: "¡Genial!", onPress: () => handleSelectTeam(searchQuery) }]
         );
       } else {
@@ -498,7 +498,7 @@ export const TeamSelector = memo(function TeamSelector({
                           size="sm"
                           variant="secondary"
                           style={{ marginBottom: 16 }}
-                        >Dixie buscará los jugadores reales de este equipo y los guardará en la base de datos para futuras consultas.</ThemedText>
+                        >GoalMind buscará los jugadores reales de este equipo y los guardará en la base de datos para futuras consultas.</ThemedText>
                         <Button
                           title={isAdding ? "Generando jugadores..." : `Agregar ${searchQuery} con IA`}
                           onPress={handleAddNewTeam}

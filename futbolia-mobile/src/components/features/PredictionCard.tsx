@@ -1,5 +1,5 @@
 /**
- * PredictionCard - Display Dixie's prediction with analysis and player details
+ * PredictionCard - Display GoalMind's prediction with analysis and player details
  */
 import { memo, useMemo } from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
@@ -151,9 +151,9 @@ export const PredictionCard = memo(function PredictionCard({
 
   return (
     <Card variant="elevated" padding="lg">
-      {/* Header - Dixie's Title */}
+      {/* Header - GoalMind's Title */}
       <View style={styles.header}>
-        <View style={styles.dixieIcon}>
+        <View style={styles.goalMindIcon}>
           <Icon icon={Sparkles} size={32} variant="primary" />
         </View>
         <View style={styles.headerText}>
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
-  dixieIcon: {
+  goalMindIcon: {
     marginRight: 12,
   },
   headerText: {
