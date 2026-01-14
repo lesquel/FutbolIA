@@ -125,9 +125,10 @@ async def get_prediction_history(
 @router.get("/matches")
 async def get_upcoming_matches():
     """
-    ⚽ Get next 5 upcoming matches from Premier League 2025-2026
+    ⚽ Get next 5 upcoming matches from Premier League only (first division)
     
-    Returns only future matches based on current time (webhook-like behavior)
+    Returns only future matches from Premier League based on current time.
+    Used for featured match and upcoming matches sections.
     """
     result = await PredictionUseCase.get_available_matches()
     return result

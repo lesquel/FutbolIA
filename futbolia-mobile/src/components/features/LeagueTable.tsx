@@ -2,7 +2,7 @@
  * LeagueTable - Component to display league standings
  * Shows current Premier League 2025-2026 table
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
   Modal,
@@ -13,11 +13,16 @@ import {
   ActivityIndicator,
   Image,
   RefreshControl,
+  Dimensions,
+  ScrollView,
+  Animated,
 } from "react-native";
 import { X, Trophy, TrendingUp, TrendingDown, Minus } from "lucide-react-native";
 import { useTheme } from "@/src/theme";
 import { ThemedText, Card, Icon } from "@/src/components/ui";
 import { leaguesApi, StandingsEntry } from "@/src/services/api";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 interface LeagueTableProps {
   visible: boolean;
@@ -29,6 +34,10 @@ export function LeagueTable({ visible, onClose }: LeagueTableProps) {
   const [standings, setStandings] = useState<StandingsEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const [contentHeight, setContentHeight] = useState(0);
+  const [scrollViewHeight, setScrollViewHeight] = useState(0);
 
   const fetchStandings = useCallback(async (isRefresh = false) => {
     if (isRefresh) {
@@ -181,13 +190,13 @@ export function LeagueTable({ visible, onClose }: LeagueTableProps) {
       animationType="slide"
       onRequestClose={onClose}
     >
-      <Pressable
-        style={styles.modalOverlay}
-        onPress={onClose}
-      >
+      <View style={styles.modalOverlay}>
         <Pressable
+          style={styles.modalBackdrop}
+          onPress={onClose}
+        />
+        <View
           style={[styles.modalContent, { backgroundColor: theme.colors.background }]}
-          onPress={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <View style={[styles.modalHeader, { borderBottomColor: theme.colors.border }]}>
@@ -212,26 +221,65 @@ export function LeagueTable({ visible, onClose }: LeagueTableProps) {
               </ThemedText>
             </View>
           ) : (
-            <FlatList
-              data={standings}
-              keyExtractor={(item) => `team-${item.position}`}
-              ListHeaderComponent={renderHeader}
-              renderItem={renderTeamRow}
-              ListFooterComponent={renderLegend}
-              showsVerticalScrollIndicator={false}
-              refreshControl={
-                <RefreshControl
-                  refreshing={refreshing}
-                  onRefresh={() => fetchStandings(true)}
-                  tintColor={theme.colors.primary}
-                />
-              }
-              stickyHeaderIndices={[0]}
-              contentContainerStyle={styles.listContent}
-            />
+            <View style={styles.scrollContainer}>
+              <ScrollView
+                ref={scrollViewRef}
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+                scrollEnabled={true}
+                nestedScrollEnabled={true}
+                bounces={true}
+                onScroll={Animated.event(
+                  [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                  { useNativeDriver: false }
+                )}
+                onContentSizeChange={(width, height) => setContentHeight(height)}
+                onLayout={(event) => setScrollViewHeight(event.nativeEvent.layout.height)}
+                scrollEventThrottle={16}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={() => fetchStandings(true)}
+                    tintColor={theme.colors.primary}
+                  />
+                }
+              >
+                {renderHeader()}
+                {standings.map((item, index) => renderTeamRow({ item, index }))}
+                {renderLegend()}
+              </ScrollView>
+              
+              {/* Custom Scrollbar */}
+              {contentHeight > scrollViewHeight && (
+                <View style={styles.scrollbarTrack}>
+                  <Animated.View
+                    style={[
+                      styles.scrollbarThumb,
+                      {
+                        backgroundColor: theme.colors.primary + "80",
+                        height: Math.max(
+                          (scrollViewHeight / contentHeight) * scrollViewHeight,
+                          30
+                        ),
+                        transform: [
+                          {
+                            translateY: scrollY.interpolate({
+                              inputRange: [0, Math.max(contentHeight - scrollViewHeight, 1)],
+                              outputRange: [0, scrollViewHeight - Math.max((scrollViewHeight / contentHeight) * scrollViewHeight, 30)],
+                              extrapolate: "clamp",
+                            }),
+                          },
+                        ],
+                      },
+                    ]}
+                  />
+                </View>
+              )}
+            </View>
           )}
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }
@@ -239,14 +287,46 @@ export function LeagueTable({ visible, onClose }: LeagueTableProps) {
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
     justifyContent: "flex-end",
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
   },
   modalContent: {
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: "90%",
-    minHeight: "70%",
+    maxHeight: SCREEN_HEIGHT * 0.9,
+    minHeight: SCREEN_HEIGHT * 0.7,
+    flexDirection: "column",
+    overflow: "hidden",
+  },
+  scrollContainer: {
+    flex: 1,
+    width: "100%",
+    position: "relative",
+  },
+  scrollView: {
+    flex: 1,
+    width: "100%",
+  },
+  scrollContent: {
+    paddingBottom: 20,
+  },
+  scrollbarTrack: {
+    position: "absolute",
+    right: 2,
+    top: 0,
+    bottom: 0,
+    width: 4,
+    backgroundColor: "rgba(0, 0, 0, 0.1)",
+    borderRadius: 2,
+  },
+  scrollbarThumb: {
+    width: 4,
+    borderRadius: 2,
+    position: "absolute",
+    right: 0,
   },
   modalHeader: {
     flexDirection: "row",

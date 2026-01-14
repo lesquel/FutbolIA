@@ -19,12 +19,14 @@ interface GoalMindChatProps {
   message?: string;
   isLoading?: boolean;
   showGreeting?: boolean;
+  compact?: boolean; // Modo compacto para pantallas pequeñas
 }
 
 export const GoalMindChat = memo(function GoalMindChat({
   message,
   isLoading = false,
   showGreeting = true,
+  compact = false,
 }: GoalMindChatProps) {
   const { theme, isDark } = useTheme();
   const { t } = useTranslation();
@@ -62,6 +64,27 @@ export const GoalMindChat = memo(function GoalMindChat({
 
   const greeting = t("dixie.greeting");
 
+  // Modo compacto: una sola línea horizontal
+  if (compact) {
+    return (
+      <Animated.View style={[styles.compactContainer, { opacity: fadeAnim }]}>
+        <View style={[styles.compactCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+          <Image
+            source={require("@/assets/images/GoalMind.png")}
+            style={[styles.compactAvatar, { borderColor: theme.colors.primary }]}
+          />
+          <View style={styles.compactInfo}>
+            <ThemedText weight="semibold" size="sm">GoalMind</ThemedText>
+            <ThemedText variant="muted" size="xs" numberOfLines={1}>
+              {isLoading ? t("dixie.analyzing") : (message || greeting)}
+            </ThemedText>
+          </View>
+          <View style={[styles.compactOnline, { backgroundColor: theme.colors.success }]} />
+        </View>
+      </Animated.View>
+    );
+  }
+
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
       <Card variant="outlined" padding="md">
@@ -81,10 +104,10 @@ export const GoalMindChat = memo(function GoalMindChat({
           />
 
           <View style={styles.headerInfo}>
-            <ThemedText weight="bold" size="lg">
+            <ThemedText weight="bold" size="lg" numberOfLines={1}>
               GoalMind
             </ThemedText>
-            <ThemedText variant="primary" size="xs">
+            <ThemedText variant="primary" size="xs" numberOfLines={1}>
               Analista Deportivo IA
             </ThemedText>
           </View>
@@ -128,7 +151,12 @@ export const GoalMindChat = memo(function GoalMindChat({
                   <Icon icon={Trophy} size={16} variant="primary" />
                 </View>
               )}
-              <ThemedText variant="secondary" size="sm" style={styles.chatText}>
+              <ThemedText 
+                variant="secondary" 
+                size="sm" 
+                style={styles.chatText}
+                numberOfLines={undefined}
+              >
                 {message
                   ? displayedText
                   : showGreeting
@@ -202,5 +230,31 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontStyle: "italic",
+  },
+  // Estilos compactos
+  compactContainer: {
+    marginBottom: 8,
+  },
+  compactCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 10,
+    borderWidth: 1,
+    padding: 8,
+    gap: 8,
+  },
+  compactAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1.5,
+  },
+  compactInfo: {
+    flex: 1,
+  },
+  compactOnline: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
 });

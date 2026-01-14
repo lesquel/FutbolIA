@@ -183,48 +183,76 @@ class PredictionUseCase:
     @classmethod
     async def get_available_matches(cls) -> dict:
         """
-        Get next 5 upcoming matches from top European leagues.
+        Get next 5 upcoming matches from Premier League only.
         
-        Fetches matches from: Premier League, La Liga, Serie A, Bundesliga, Ligue 1.
-        Returns next 5 matches total sorted by date.
+        Fetches matches exclusively from Premier League (first division).
+        Returns next 5 matches sorted by date.
         """
         from src.infrastructure.external_api.thesportsdb import TheSportsDBClient
         from src.infrastructure.external_api.football_api import FootballAPIClient
         from datetime import datetime, timedelta
         
-        # Top 5 European leagues
+        # Solo Premier League
         TOP_LEAGUES = {
             "Premier League": "PL",
-            "La Liga": "PD",
-            "Serie A": "SA",
-            "Bundesliga": "BL1",
-            "Ligue 1": "FL1",
         }
         
         all_matches = []
         current_date = datetime.now()
         
-        # Helper function to parse dates
-        def parse_match_date(date_str: str) -> Optional[datetime]:
+        # Helper function to parse dates with time
+        def parse_match_date(date_str: str, time_str: str = None) -> Optional[datetime]:
+            """Parse match date and time, returning a datetime object"""
             if not date_str:
                 return None
             try:
+                # Si ya tiene formato ISO completo con hora (ej: "2025-01-16T20:00:00Z")
                 if "T" in date_str:
-                    return datetime.fromisoformat(date_str.replace("Z", "").split("+")[0])
-                return datetime.strptime(date_str, "%Y-%m-%d")
-            except Exception:
+                    # Remover Z y cualquier offset de zona horaria
+                    clean_date = date_str.replace("Z", "").split("+")[0]
+                    try:
+                        dt = datetime.fromisoformat(clean_date)
+                        return dt
+                    except:
+                        # Si falla, intentar parsear manualmente
+                        date_part, time_part = clean_date.split("T")
+                        year, month, day = map(int, date_part.split("-"))
+                        hour, minute = map(int, time_part.split(":")[:2])
+                        return datetime(year, month, day, hour, minute)
+                
+                # Si solo tiene fecha, combinar con hora si está disponible
+                date_part = datetime.strptime(date_str, "%Y-%m-%d")
+                if time_str:
+                    try:
+                        # Parsear hora (formato HH:MM o HH:MM:SS)
+                        time_parts = time_str.split(":")
+                        hour = int(time_parts[0])
+                        minute = int(time_parts[1]) if len(time_parts) > 1 else 0
+                        return date_part.replace(hour=hour, minute=minute)
+                    except:
+                        pass
+                # Si no hay hora, usar mediodía como default (mejor que medianoche)
+                return date_part.replace(hour=12, minute=0)
+            except Exception as e:
+                print(f"⚠️ Error parsing date: {date_str}, time: {time_str}, error: {e}")
                 return None
+        
+        # Helper para crear un ID único del partido (evitar duplicados)
+        def get_match_key(match: dict) -> str:
+            """Generate unique key for a match to detect duplicates"""
+            home = match.get("home_team", {}).get("name", "").lower().strip()
+            away = match.get("away_team", {}).get("name", "").lower().strip()
+            date = match.get("date", "")[:10]  # Solo la fecha (YYYY-MM-DD)
+            return f"{home}_{away}_{date}"
+        
+        seen_matches = set()  # Para eliminar duplicados
         
         # Try to get matches from TheSportsDB first (FREE, no API key)
         try:
-            # TheSportsDB league IDs for top 5 leagues
+            # TheSportsDB league ID solo para Premier League
             # ID: (display_name, expected_strLeague_values)
             tsdb_league_ids = {
                 "4328": ("Premier League", ["English Premier League", "Premier League"]),
-                "4335": ("La Liga", ["Spanish La Liga", "La Liga"]),
-                "4332": ("Serie A", ["Italian Serie A", "Serie A"]),
-                "4331": ("Bundesliga", ["German Bundesliga", "Bundesliga"]),
-                "4334": ("Ligue 1", ["French Ligue 1", "Ligue 1"]),
             }
             
             for tsdb_id, (display_name, valid_league_names) in tsdb_league_ids.items():
@@ -238,28 +266,40 @@ class PredictionUseCase:
                         if response.status_code == 200:
                             data = response.json()
                             events = data.get("events") or []
+                            print(f"📊 TheSportsDB returned {len(events)} events for {display_name}")
                             
-                            for event in events[:10]:  # Revisar más eventos para filtrar
+                            events_checked = 0
+                            events_filtered_league = 0
+                            events_filtered_past = 0
+                            events_added = 0
+                            
+                            for event in events[:20]:  # Revisar más eventos para tener opciones
+                                events_checked += 1
+                                
                                 # Validar que el partido sea realmente de la liga esperada
                                 event_league = event.get("strLeague", "")
                                 if not any(valid in event_league for valid in valid_league_names):
                                     # Saltear partidos que no son de la liga correcta
+                                    events_filtered_league += 1
                                     continue
                                 
-                                event_date = parse_match_date(event.get("dateEvent", ""))
+                                # Parsear fecha y hora correctamente
+                                date_str = event.get("dateEvent", "")
+                                time_str = event.get("strTime", "00:00:00")
                                 
-                                # Only include future matches (within next 30 days)
-                                if event_date and event_date >= current_date:
-                                    # Combinar fecha y hora en formato ISO 8601 completo (UTC)
-                                    date_str = event.get("dateEvent", "")
-                                    time_str = event.get("strTime", "00:00:00")
-                                    # Asegurar formato correcto de hora
-                                    if time_str and len(time_str) == 5:  # "19:00"
-                                        time_str = f"{time_str}:00"
+                                # Asegurar formato correcto de hora
+                                if time_str and len(time_str) == 5:  # "19:00"
+                                    time_str = f"{time_str}:00"
+                                
+                                # Parsear fecha completa con hora
+                                event_datetime = parse_match_date(date_str, time_str)
+                                
+                                # Solo incluir partidos FUTUROS (solo verificar que sea futuro, no necesariamente 1 hora)
+                                if event_datetime and event_datetime > current_date:
                                     # Crear datetime completo en formato ISO con zona UTC
                                     datetime_iso = f"{date_str}T{time_str}Z" if date_str else ""
                                     
-                                    all_matches.append({
+                                    match_data = {
                                         "id": f"tsdb_{event.get('idEvent', '')}",
                                         "home_team": {
                                             "name": event.get("strHomeTeam", ""),
@@ -274,7 +314,20 @@ class PredictionUseCase:
                                         "status": "scheduled",
                                         "league": display_name,  # Usar nombre display normalizado
                                         "venue": event.get("strVenue", ""),
-                                    })
+                                    }
+                                    
+                                    # Verificar duplicados antes de agregar
+                                    match_key = get_match_key(match_data)
+                                    if match_key not in seen_matches:
+                                        seen_matches.add(match_key)
+                                        all_matches.append(match_data)
+                                        events_added += 1
+                                else:
+                                    events_filtered_past += 1
+                            
+                            print(f"✅ TheSportsDB: {events_checked} checked, {events_filtered_league} filtered (league), {events_filtered_past} filtered (past), {events_added} added")
+                        else:
+                            print(f"⚠️ TheSportsDB returned status {response.status_code}")
                 except Exception as e:
                     print(f"⚠️ Error getting {display_name} matches from TheSportsDB: {e}")
                     continue
@@ -287,11 +340,11 @@ class PredictionUseCase:
                 for league_name, league_code in TOP_LEAGUES.items():
                     try:
                         matches = await asyncio.wait_for(
-                            FootballAPIClient.get_upcoming_fixtures(league_code, limit=5),
+                            FootballAPIClient.get_upcoming_fixtures(league_code, limit=10),
                             timeout=3.0
                         )
                         
-                        for match in matches[:5]:
+                        for match in matches:
                             match_dict = match.to_dict()
                             match_dict["league"] = league_name
                             # Ensure logo_url key consistency
@@ -299,7 +352,14 @@ class PredictionUseCase:
                                 match_dict["home_team"]["logo_url"] = match_dict["home_team"].get("logo_url", "")
                             if "away_team" in match_dict:
                                 match_dict["away_team"]["logo_url"] = match_dict["away_team"].get("logo_url", "")
-                            all_matches.append(match_dict)
+                            
+                            # Verificar que sea futuro y no duplicado
+                            match_date = parse_match_date(match_dict.get("date", ""))
+                            if match_date and match_date > current_date:
+                                match_key = get_match_key(match_dict)
+                                if match_key not in seen_matches:
+                                    seen_matches.add(match_key)
+                                    all_matches.append(match_dict)
                     except (asyncio.TimeoutError, Exception) as e:
                         print(f"⚠️ Error getting {league_name} from Football-Data.org: {e}")
                         continue
@@ -307,27 +367,41 @@ class PredictionUseCase:
                 print(f"⚠️ Football-Data.org failed: {e}")
         
         # Sort by date and get only the next 5 matches
-        all_matches.sort(key=lambda x: x.get("date", "9999-12-31"))
-        # Filtrar solo partidos futuros (no pasados)
-        future_matches = [
-            m for m in all_matches 
-            if parse_match_date(m.get("date", "")) and 
-            parse_match_date(m.get("date", "")) >= current_date
-        ]
-        # Retornar solo los próximos 5 partidos
+        # Filtrar solo partidos futuros y solo Premier League
+        future_matches = []
+        for m in all_matches:
+            match_date = parse_match_date(m.get("date", ""))
+            league = m.get("league", "").lower()
+            
+            # Verificar que sea futuro y Premier League
+            if (match_date and 
+                match_date > current_date and
+                league in ["premier league", "english premier league"]):
+                future_matches.append(m)
+        
+        # Ordenar por fecha (más cercanos primero)
+        future_matches.sort(key=lambda x: parse_match_date(x.get("date", "")) or datetime.max)
+        
+        # Retornar solo los próximos 5 partidos únicos
         all_matches = future_matches[:5]
+        
+        # Debug: mostrar información sobre los partidos obtenidos
+        print(f"📊 Total matches after filtering: {len(future_matches)} (returning {len(all_matches)})")
+        if future_matches:
+            print(f"📅 First match date: {future_matches[0].get('date', 'N/A')}")
+            print(f"📅 Last match date: {future_matches[-1].get('date', 'N/A')}")
         
         # If we still don't have matches, generate realistic mock data
         if not all_matches:
-            print("⚠️ No matches from APIs, using mock data with realistic dates")
+            print(f"⚠️ No matches from APIs (checked {len(seen_matches)} unique matches), using mock data with realistic dates (Premier League only)")
             
-            # Generate dates for next week
+            # Generate dates for next week - Solo Premier League
             mock_matches = [
-                ("Real Madrid", "Barcelona", "La Liga"),
                 ("Manchester City", "Liverpool", "Premier League"),
-                ("Bayern Munich", "Borussia Dortmund", "Bundesliga"),
-                ("Inter Milan", "Juventus", "Serie A"),
-                ("Paris Saint-Germain", "Marseille", "Ligue 1"),
+                ("Arsenal", "Chelsea", "Premier League"),
+                ("Tottenham Hotspur", "Manchester United", "Premier League"),
+                ("Newcastle United", "Brighton & Hove Albion", "Premier League"),
+                ("Aston Villa", "West Ham United", "Premier League"),
             ]
             
             for i, (home, away, league) in enumerate(mock_matches):

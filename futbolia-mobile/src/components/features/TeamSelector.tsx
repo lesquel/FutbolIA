@@ -54,35 +54,71 @@ const isTeamInAllowedLeague = (team: TeamSearchResult): boolean => {
 };
 
 // Fallback teams if API is offline or for quick selection (solo Premier League 2025-2026)
-// Logos from football-data.org
+// Logos from football-data.org - Usando nombres oficiales con FC
 const POPULAR_TEAMS = [
   // Top 6
   { name: "Manchester City", league: "Premier League", logo_url: "https://crests.football-data.org/65.png" },
-  { name: "Liverpool", league: "Premier League", logo_url: "https://crests.football-data.org/64.png" },
-  { name: "Arsenal", league: "Premier League", logo_url: "https://crests.football-data.org/57.png" },
-  { name: "Chelsea", league: "Premier League", logo_url: "https://crests.football-data.org/61.png" },
-  { name: "Tottenham Hotspur", league: "Premier League", logo_url: "https://crests.football-data.org/73.png" },
-  { name: "Manchester United", league: "Premier League", logo_url: "https://crests.football-data.org/66.png" },
-  // Rest of Premier League
-  { name: "Newcastle United", league: "Premier League", logo_url: "https://crests.football-data.org/67.png" },
-  { name: "Aston Villa", league: "Premier League", logo_url: "https://crests.football-data.org/58.png" },
-  { name: "Brighton & Hove Albion", league: "Premier League", logo_url: "https://crests.football-data.org/397.png" },
-  { name: "West Ham United", league: "Premier League", logo_url: "https://crests.football-data.org/563.png" },
-  { name: "Crystal Palace", league: "Premier League", logo_url: "https://crests.football-data.org/354.png" },
-  { name: "Brentford", league: "Premier League", logo_url: "https://crests.football-data.org/402.png" },
-  { name: "Fulham", league: "Premier League", logo_url: "https://crests.football-data.org/63.png" },
-  { name: "Wolverhampton Wanderers", league: "Premier League", logo_url: "https://crests.football-data.org/76.png" },
-  { name: "AFC Bournemouth", league: "Premier League", logo_url: "https://crests.football-data.org/1044.png" },
-  { name: "Nottingham Forest", league: "Premier League", logo_url: "https://crests.football-data.org/351.png" },
-  { name: "Everton", league: "Premier League", logo_url: "https://crests.football-data.org/62.png" },
-  { name: "Leicester City", league: "Premier League", logo_url: "https://crests.football-data.org/338.png" },
-  { name: "Ipswich Town", league: "Premier League", logo_url: "https://crests.football-data.org/349.png" },
-  { name: "Southampton", league: "Premier League", logo_url: "https://crests.football-data.org/340.png" },
-  // Aliases with FC suffix (for MongoDB teams)
-  { name: "Chelsea FC", league: "Premier League", logo_url: "https://crests.football-data.org/61.png" },
-  { name: "Arsenal FC", league: "Premier League", logo_url: "https://crests.football-data.org/57.png" },
   { name: "Liverpool FC", league: "Premier League", logo_url: "https://crests.football-data.org/64.png" },
+  { name: "Arsenal FC", league: "Premier League", logo_url: "https://crests.football-data.org/57.png" },
+  { name: "Chelsea FC", league: "Premier League", logo_url: "https://crests.football-data.org/61.png" },
+  { name: "Tottenham Hotspur FC", league: "Premier League", logo_url: "https://crests.football-data.org/73.png" },
+  { name: "Manchester United FC", league: "Premier League", logo_url: "https://crests.football-data.org/66.png" },
+  // Rest of Premier League
+  { name: "Newcastle United FC", league: "Premier League", logo_url: "https://crests.football-data.org/67.png" },
+  { name: "Aston Villa FC", league: "Premier League", logo_url: "https://crests.football-data.org/58.png" },
+  { name: "Brighton & Hove Albion FC", league: "Premier League", logo_url: "https://crests.football-data.org/397.png" },
+  { name: "West Ham United FC", league: "Premier League", logo_url: "https://crests.football-data.org/563.png" },
+  { name: "Crystal Palace FC", league: "Premier League", logo_url: "https://crests.football-data.org/354.png" },
+  { name: "Brentford FC", league: "Premier League", logo_url: "https://crests.football-data.org/402.png" },
+  { name: "Fulham FC", league: "Premier League", logo_url: "https://crests.football-data.org/63.png" },
+  { name: "Wolverhampton Wanderers FC", league: "Premier League", logo_url: "https://crests.football-data.org/76.png" },
+  { name: "AFC Bournemouth", league: "Premier League", logo_url: "https://crests.football-data.org/1044.png" },
+  { name: "Nottingham Forest FC", league: "Premier League", logo_url: "https://crests.football-data.org/351.png" },
+  { name: "Everton FC", league: "Premier League", logo_url: "https://crests.football-data.org/62.png" },
+  { name: "Leicester City FC", league: "Premier League", logo_url: "https://crests.football-data.org/338.png" },
+  { name: "Ipswich Town FC", league: "Premier League", logo_url: "https://crests.football-data.org/349.png" },
+  { name: "Southampton FC", league: "Premier League", logo_url: "https://crests.football-data.org/340.png" },
 ];
+
+/**
+ * Normaliza el nombre del equipo para comparación (elimina FC, AFC, espacios extra)
+ */
+const normalizeTeamName = (name: string): string => {
+  return name
+    .toLowerCase()
+    .replace(/\s*(fc|afc)\s*$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
+/**
+ * Elimina equipos duplicados basándose en el nombre normalizado
+ * Prioriza equipos con logo_url y con "FC" en el nombre
+ */
+const removeDuplicateTeams = (teams: TeamSearchResult[]): TeamSearchResult[] => {
+  const seen = new Map<string, TeamSearchResult>();
+  
+  for (const team of teams) {
+    const normalized = normalizeTeamName(team.name);
+    const existing = seen.get(normalized);
+    
+    if (!existing) {
+      seen.set(normalized, team);
+    } else {
+      // Priorizar: 1) Con logo, 2) Con "FC" en el nombre, 3) Con has_players
+      const shouldReplace = 
+        (!existing.logo_url && team.logo_url) ||
+        (!existing.name.includes("FC") && team.name.includes("FC")) ||
+        (!existing.has_players && team.has_players);
+      
+      if (shouldReplace) {
+        seen.set(normalized, team);
+      }
+    }
+  }
+  
+  return Array.from(seen.values());
+};
 
 interface TeamSelectorProps {
   label: string;
@@ -112,19 +148,18 @@ export const TeamSelector = memo(function TeamSelector({
   useEffect(() => {
     const loadInitialTeams = async () => {
       try {
-        // Set fallback teams immediately for instant UI
-        setTeams(
-          POPULAR_TEAMS.map((t) => ({
-            id: t.name.toLowerCase().replaceAll(/\s+/g, "_"),
-            name: t.name,
-            short_name: t.name.substring(0, 3).toUpperCase(),
-            league: t.league,
-            logo_url: t.logo_url,
-            country: "",
-            has_players: true,
-            player_count: 11,
-          }))
-        );
+        // Set fallback teams immediately for instant UI (ya sin duplicados)
+        const fallbackTeams = POPULAR_TEAMS.map((t) => ({
+          id: t.name.toLowerCase().replaceAll(/\s+/g, "_"),
+          name: t.name,
+          short_name: t.name.substring(0, 3).toUpperCase(),
+          league: t.league,
+          logo_url: t.logo_url,
+          country: "",
+          has_players: true,
+          player_count: 11,
+        }));
+        setTeams(fallbackTeams);
         
         // Then try to load from API (non-blocking)
         const response = await teamsApi.getTeamsWithPlayers();
@@ -133,10 +168,12 @@ export const TeamSelector = memo(function TeamSelector({
           response.data?.teams &&
           response.data.teams.length > 0
         ) {
-          // Filtrar solo equipos de las 5 ligas principales
+          // Filtrar solo equipos de las 5 ligas principales y eliminar duplicados
           const filteredTeams = response.data.teams.filter(isTeamInAllowedLeague);
           if (filteredTeams.length > 0) {
-            setTeams(filteredTeams);
+            // Combinar con POPULAR_TEAMS para asegurar logos y eliminar duplicados
+            const combinedTeams = [...fallbackTeams, ...filteredTeams];
+            setTeams(removeDuplicateTeams(combinedTeams));
           }
         }
       } catch (error) {
@@ -168,11 +205,25 @@ export const TeamSelector = memo(function TeamSelector({
       if (!searchQuery.trim()) {
         // Reset to initial teams if search is empty
         setHasSearched(false);
+        const fallbackTeams = POPULAR_TEAMS.map((t) => ({
+          id: t.name.toLowerCase().replaceAll(/\s+/g, "_"),
+          name: t.name,
+          short_name: t.name.substring(0, 3).toUpperCase(),
+          league: t.league,
+          logo_url: t.logo_url,
+          country: "",
+          has_players: true,
+          player_count: 11,
+        }));
+        
         const response = await teamsApi.getTeamsWithPlayers();
         if (response.success && response.data?.teams) {
-          // Filtrar solo equipos de las 5 ligas principales
+          // Filtrar solo equipos de las 5 ligas principales y eliminar duplicados
           const filteredTeams = response.data.teams.filter(isTeamInAllowedLeague);
-          setTeams(filteredTeams);
+          const combinedTeams = [...fallbackTeams, ...filteredTeams];
+          setTeams(removeDuplicateTeams(combinedTeams));
+        } else {
+          setTeams(fallbackTeams);
         }
         return;
       }
@@ -189,9 +240,9 @@ export const TeamSelector = memo(function TeamSelector({
         ]) as any;
         
         if (response.success && response.data?.teams) {
-          // Filtrar solo equipos de las 5 ligas principales
+          // Filtrar solo equipos de las 5 ligas principales y eliminar duplicados
           const filteredTeams = response.data.teams.filter(isTeamInAllowedLeague);
-          setTeams(filteredTeams);
+          setTeams(removeDuplicateTeams(filteredTeams));
         } else {
           // Show error but keep previous results
           Alert.alert(
