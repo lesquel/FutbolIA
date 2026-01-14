@@ -20,28 +20,28 @@ import "../global.css";
 // i18n initialization
 import "@/src/i18n/i18n";
 
-// Silenciar warnings específicos de React Native Web
+// Silenciar warnings específicos de React Native
+const warningsToIgnore = [
+  "props.pointerEvents is deprecated",
+  "Cannot record touch end without a touch start",
+  "useNativeDriver is not supported",
+  "paddingTop was given a value",
+  "SafeAreaView has been deprecated",
+];
+
 if (Platform.OS === "web") {
-  // Silenciar warnings de pointerEvents y touch events
+  // Silenciar warnings en Web
   const originalWarn = console.warn;
   console.warn = (...args: any[]) => {
     const message = args[0]?.toString() || "";
-    if (
-      message.includes("props.pointerEvents is deprecated") ||
-      message.includes("Cannot record touch end without a touch start") ||
-      message.includes("useNativeDriver is not supported")
-    ) {
+    if (warningsToIgnore.some(w => message.includes(w))) {
       return; // Silenciar estos warnings
     }
     originalWarn.apply(console, args);
   };
 } else {
   // Para plataformas nativas, usar LogBox
-  LogBox.ignoreLogs([
-    "props.pointerEvents is deprecated",
-    "Cannot record touch end without a touch start",
-    "useNativeDriver is not supported",
-  ]);
+  LogBox.ignoreLogs(warningsToIgnore);
 }
 
 // Theme provider
