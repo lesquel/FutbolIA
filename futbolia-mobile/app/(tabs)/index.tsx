@@ -233,60 +233,6 @@ export default function HomeScreen() {
               ))}
             </View>
           )}
-
-          {/* Stats Card */}
-          <Card variant="outlined" padding="md" style={styles.statsCard}>
-            <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <ThemedText
-                  size="2xl"
-                  weight="bold"
-                  style={{ color: theme.colors.primary }}
-                >
-                  {matches.length}
-                </ThemedText>
-                <ThemedText variant="muted" size="xs">
-                  Partidos Disponibles
-                </ThemedText>
-              </View>
-              <View
-                style={[
-                  styles.statDivider,
-                  { backgroundColor: theme.colors.border },
-                ]}
-              />
-              <View style={styles.statItem}>
-                <ThemedText
-                  size="2xl"
-                  weight="bold"
-                  style={{ color: theme.colors.accentGold }}
-                >
-                  10
-                </ThemedText>
-                <ThemedText variant="muted" size="xs">
-                  Equipos con Datos
-                </ThemedText>
-              </View>
-              <View
-                style={[
-                  styles.statDivider,
-                  { backgroundColor: theme.colors.border },
-                ]}
-              />
-              <View style={styles.statItem}>
-                <ThemedText
-                  size="2xl"
-                  weight="bold"
-                  style={{ color: theme.colors.secondary }}
-                >
-                  45+
-                </ThemedText>
-                <ThemedText variant="muted" size="xs">
-                  Jugadores FIFA
-                </ThemedText>
-              </View>
-            </View>
-          </Card>
         </ScrollView>
       )}
 
@@ -364,21 +310,5 @@ const styles = StyleSheet.create({
   },
   leagueTableButton: {
     marginBottom: 16,
-  },
-  statsCard: {
-    marginTop: 8,
-  },
-  statsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-around",
-  },
-  statItem: {
-    alignItems: "center",
-    flex: 1,
-  },
-  statDivider: {
-    width: 1,
-    height: 40,
   },
 });
