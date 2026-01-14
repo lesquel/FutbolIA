@@ -1,37 +1,35 @@
 /**
- * FutbolIA - Home Screen
- * Main dashboard with upcoming matches and quick prediction
+ * GoalMind - Home Screen (Compacto)
+ * Dashboard principal sin scroll - todo visible en una pantalla
  */
 import { useState, useEffect } from "react";
 import {
-  ScrollView,
   View,
   StyleSheet,
-  RefreshControl,
   Dimensions,
   Image,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Calendar, Sparkles, Trophy } from "lucide-react-native";
+import { Sparkles, Trophy, ChevronRight } from "lucide-react-native";
 
 import { useTheme } from "@/src/theme";
-import { ThemedView, ThemedText, Card, Button, Icon } from "@/src/components/ui";
-import { MatchCard, GoalMindChat, LeagueTable } from "@/src/components/features";
+import { ThemedView, ThemedText, Card, Button, Icon, TeamBadge } from "@/src/components/ui";
+import { GoalMindChat, LeagueTable } from "@/src/components/features";
 import { predictionsApi, Match } from "@/src/services/api";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 const isTablet = width >= 768;
 
 export default function HomeScreen() {
-  const { theme, isDark } = useTheme();
+  const { theme } = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
 
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [showLeagueTable, setShowLeagueTable] = useState(false);
 
   useEffect(() => {
@@ -48,17 +46,10 @@ export default function HomeScreen() {
       console.log("Error loading matches:", error);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadMatches();
-  };
-
   const handleMatchPress = (match: Match) => {
-    // Navigate to prediction screen with pre-selected teams
     router.push({
       pathname: "/predict",
       params: {
@@ -69,172 +60,153 @@ export default function HomeScreen() {
   };
 
   const featuredMatch = matches[0];
-  const otherMatches = matches.slice(1, 4);
+  // Mostrar los siguientes 5 partidos
+  const otherMatches = matches.slice(1, 6);
+
+  /**
+   * Formatea la fecha del partido a zona horaria de Ecuador (UTC-5) en formato compacto
+   */
+  const formatMatchDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "";
+      return date.toLocaleDateString("es-EC", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "America/Guayaquil",
+      });
+    } catch {
+      return "";
+    }
+  };
+
+  if (loading) {
+    return (
+      <ThemedView variant="background" style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      </ThemedView>
+    );
+  }
 
   return (
     <ThemedView variant="background" style={styles.container}>
-      {loading && !refreshing ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <ThemedText variant="secondary" style={{ marginTop: 12 }}>
-            {t("common.loading") || "Cargando..."}
-          </ThemedText>
-        </View>
-      ) : (
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={theme.colors.primary}
-            />
-          }
-        >
-          {/* Responsive Layout Container */}
-          <View style={[styles.content, isTablet && styles.contentTablet]}>
-            {/* Left Column (or full width on mobile) */}
-            <View
-              style={[styles.mainColumn, isTablet && styles.mainColumnTablet]}
-            >
-              {/* Welcome Header */}
-              <View style={styles.header}>
-                <View style={styles.logoContainer}>
+      <View style={[styles.content, isTablet && styles.contentTablet]}>
+        {/* Columna Principal */}
+        <View style={[styles.mainColumn, isTablet && styles.mainColumnTablet]}>
+          {/* Header Compacto */}
+          <View style={styles.header}>
                   <Image
                     source={require("../../assets/images/logo.png")}
-                    style={styles.logoImage}
+                    style={[styles.logoImage, isTablet && { width: 80, height: 80 }]}
                     resizeMode="contain"
                   />
-                  <View>
-                    <ThemedText size="3xl" weight="bold">
-                      {t("home.welcome")}
-                    </ThemedText>
-                    <ThemedText variant="secondary" size="lg">
-                      {t("home.subtitle")}
-                    </ThemedText>
-                  </View>
-                </View>
-              </View>
-
-              {/* GoalMind Greeting */}
-              <GoalMindChat showGreeting={true} />
-
-              {/* Featured Match */}
-              {featuredMatch && (
-                <View style={styles.section}>
-                  <ThemedText
-                    size="lg"
-                    weight="semibold"
-                    style={styles.sectionTitle}
-                  >
-                    ⚽ {t("home.featuredMatch")}
-                  </ThemedText>
-                  <MatchCard
-                    match={featuredMatch}
-                    onPress={() => handleMatchPress(featuredMatch)}
-                    featured={true}
-                  />
-                </View>
-              )}
-
-              {/* Quick Predict Button */}
-              <View style={styles.quickPredictContainer}>
-                <Button
-                  title={t("home.quickPredict")}
-                  variant="primary"
-                  size="lg"
-                  fullWidth
-                  onPress={() => router.push("/predict")}
-                  icon={Sparkles}
-                  iconPosition="left"
-                />
-              </View>
-
-              {/* League Table Button */}
-              <View style={styles.leagueTableButton}>
-                <Button
-                  title="📊 Tabla de Posiciones"
-                  variant="outline"
-                  size="md"
-                  fullWidth
-                  onPress={() => setShowLeagueTable(true)}
-                  icon={Trophy}
-                  iconPosition="left"
-                />
-              </View>
+            <View style={styles.headerText}>
+              <ThemedText size="xl" weight="bold">{t("home.welcome")}</ThemedText>
+              <ThemedText variant="secondary" size="sm">{t("home.subtitle")}</ThemedText>
             </View>
-
-            {/* Right Column (only on tablet) */}
-            {isTablet && (
-              <View style={styles.sideColumn}>
-                {/* Upcoming Matches */}
-                <View style={styles.section}>
-                  <View style={styles.sectionTitleRow}>
-                    <Icon icon={Calendar} size={20} variant="primary" />
-                    <ThemedText
-                      size="lg"
-                      weight="semibold"
-                      style={styles.sectionTitle}
-                    >
-                      {t("home.upcomingMatches")}
-                    </ThemedText>
-                  </View>
-
-                  {otherMatches.map((match) => (
-                    <MatchCard
-                      key={match.id}
-                      match={match}
-                      onPress={() => handleMatchPress(match)}
-                    />
-                  ))}
-
-                  {otherMatches.length === 0 && (
-                    <Card padding="md">
-                      <ThemedText
-                        variant="muted"
-                        style={{ textAlign: "center" }}
-                      >
-                        {t("common.noResults")}
-                      </ThemedText>
-                    </Card>
-                  )}
-                </View>
-              </View>
-            )}
           </View>
 
-          {/* Upcoming Matches (Mobile only) */}
-          {!isTablet && otherMatches.length > 0 && (
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <View style={styles.sectionTitleRow}>
-                  <Icon icon={Calendar} size={20} variant="primary" />
-                  <ThemedText size="lg" weight="semibold">
-                    {t("home.upcomingMatches")}
-                  </ThemedText>
-                </View>
-                <ThemedText
-                  variant="primary"
-                  size="sm"
-                  onPress={() => {
-                    /* Navigate to all matches */
-                  }}
-                >
-                  {t("home.viewAll")} →
+          {/* GoalMind Compacto */}
+          <GoalMindChat showGreeting={true} compact={true} />
+
+          {/* Partido Destacado Compacto */}
+          {featuredMatch && (
+            <TouchableOpacity 
+              style={[styles.featuredMatch, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+              onPress={() => handleMatchPress(featuredMatch)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.matchHeader}>
+                <ThemedText variant="muted" size="xs">{featuredMatch.league}</ThemedText>
+                <ThemedText variant="muted" size="xs">
+                  {new Date(featuredMatch.date).toLocaleDateString("es-EC", { 
+                    weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+                    timeZone: "America/Guayaquil"
+                  })}
                 </ThemedText>
               </View>
-
-              {otherMatches.map((match) => (
-                <MatchCard
-                  key={match.id}
-                  match={match}
-                  onPress={() => handleMatchPress(match)}
-                />
-              ))}
-            </View>
+              <View style={styles.matchTeams}>
+                <TeamBadge name={featuredMatch.home_team.name} logoUrl={featuredMatch.home_team.logo_url} size="md" />
+                <ThemedText variant="primary" weight="bold" size="lg">VS</ThemedText>
+                <TeamBadge name={featuredMatch.away_team.name} logoUrl={featuredMatch.away_team.logo_url} size="md" />
+              </View>
+              <View style={[styles.predictBadge, { backgroundColor: theme.colors.primary + "20" }]}>
+                <Icon icon={Sparkles} size={14} variant="primary" />
+                <ThemedText variant="primary" size="xs" weight="semibold">Predecir</ThemedText>
+              </View>
+            </TouchableOpacity>
           )}
-        </ScrollView>
-      )}
+
+          {/* Botones de Acción */}
+          <View style={styles.actionButtons}>
+            <Button
+              title={t("home.quickPredict")}
+              variant="primary"
+              size="md"
+              fullWidth
+              onPress={() => router.push("/predict")}
+              icon={Sparkles}
+            />
+            <Button
+              title="Tabla de Posiciones"
+              variant="outline"
+              size="sm"
+              fullWidth
+              onPress={() => setShowLeagueTable(true)}
+              icon={Trophy}
+            />
+          </View>
+        </View>
+
+        {/* Columna Lateral - Próximos Partidos */}
+        <View style={[styles.sideColumn, isTablet && styles.sideColumnTablet]}>
+          <View style={styles.sideHeader}>
+            <ThemedText size="sm" weight="semibold">Próximos</ThemedText>
+            <TouchableOpacity onPress={() => router.push("/predict")}>
+              <ThemedText variant="primary" size="xs">Ver más</ThemedText>
+            </TouchableOpacity>
+          </View>
+          
+          {otherMatches.map((match) => (
+            <TouchableOpacity
+              key={match.id}
+              style={[styles.miniMatch, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+              onPress={() => handleMatchPress(match)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.miniMatchInfo}>
+                <View style={styles.miniMatchHeader}>
+                  <ThemedText variant="muted" size="xs">{match.league}</ThemedText>
+                  <ThemedText variant="primary" size="xs">{formatMatchDate(match.date)}</ThemedText>
+                </View>
+                <View style={styles.miniMatchTeams}>
+                  <ThemedText size="sm" weight="medium" numberOfLines={1} style={{ flex: 1 }}>
+                    {match.home_team.name.replace(" FC", "")}
+                  </ThemedText>
+                  <ThemedText variant="primary" size="xs" weight="bold">vs</ThemedText>
+                  <ThemedText size="sm" weight="medium" numberOfLines={1} style={{ flex: 1, textAlign: "right" }}>
+                    {match.away_team.name.replace(" FC", "")}
+                  </ThemedText>
+                </View>
+              </View>
+              <Icon icon={ChevronRight} size={16} variant="muted" />
+            </TouchableOpacity>
+          ))}
+
+          {otherMatches.length === 0 && (
+            <Card padding="sm">
+              <ThemedText variant="muted" size="xs" style={{ textAlign: "center" }}>
+                No hay más partidos
+              </ThemedText>
+            </Card>
+          )}
+        </View>
+      </View>
 
       {/* League Table Modal */}
       <LeagueTable
@@ -254,16 +226,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 32,
-  },
   content: {
     flex: 1,
+    padding: 12,
+    flexDirection: "column",
   },
   contentTablet: {
     flexDirection: "row",
-    gap: 24,
+    gap: 16,
   },
   mainColumn: {
     flex: 1,
@@ -272,43 +242,80 @@ const styles = StyleSheet.create({
     flex: 0.6,
   },
   sideColumn: {
+    marginTop: 8,
+  },
+  sideColumnTablet: {
     flex: 0.4,
+    marginTop: 0,
   },
   header: {
-    marginBottom: 24,
-  },
-  logoContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
+    gap: 10,
+    marginBottom: 8,
   },
-  logoImage: {
-    width: 60,
-    height: 60,
-  },
-  section: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    marginBottom: 12,
+  headerText: {
     flex: 1,
   },
-  sectionTitleRow: {
+  logoImage: {
+    width: 40,
+    height: 40,
+  },
+  featuredMatch: {
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 12,
+    marginBottom: 10,
+  },
+  matchHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  matchTeams: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    marginBottom: 12,
+    justifyContent: "space-around",
+    marginBottom: 8,
   },
-  sectionHeader: {
+  predictBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  actionButtons: {
+    gap: 8,
+    marginBottom: 8,
+  },
+  sideHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 8,
   },
-  quickPredictContainer: {
-    marginVertical: 16,
+  miniMatch: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 8,
+    marginBottom: 4,
   },
-  leagueTableButton: {
-    marginBottom: 16,
+  miniMatchInfo: {
+    flex: 1,
+  },
+  miniMatchHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 2,
+  },
+  miniMatchTeams: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
 });

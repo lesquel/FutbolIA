@@ -5,25 +5,37 @@
 import React from "react";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Link, Tabs } from "expo-router";
-import { Pressable, Image, View } from "react-native";
+import { Pressable, Image, View, Platform, Dimensions } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "@/src/theme";
 import { ThemedText, Icon } from "@/src/components/ui";
 import { Sparkles, BarChart3, Settings, ClipboardList } from "lucide-react-native";
 
-const HomeHeaderTitle = () => (
-  <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-    <Image
-      source={require("../../assets/images/logo.png")}
-      style={{ width: 32, height: 32 }}
-      resizeMode="contain"
-    />
-    <ThemedText size="xl" weight="bold">
-      GoalMind: El Oráculo del Fútbol
-    </ThemedText>
-  </View>
-);
+const HomeHeaderTitle = () => {
+  const { width } = Dimensions.get("window");
+  const isSmallScreen = width < 360;
+  
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1, maxWidth: "85%" }}>
+      <Image
+        source={require("../../assets/images/logo.png")}
+        style={{ width: isSmallScreen ? 24 : 32, height: isSmallScreen ? 24 : 32 }}
+        resizeMode="contain"
+      />
+      <ThemedText 
+        size={isSmallScreen ? "lg" : "xl"} 
+        weight="bold"
+        numberOfLines={1}
+        ellipsizeMode="tail"
+        style={{ flexShrink: 1 }}
+      >
+        GoalMind: El Oráculo del Fútbol
+      </ThemedText>
+    </View>
+  );
+};
 
 const HomeHeaderRight = () => {
   const { theme } = useTheme();
@@ -63,6 +75,13 @@ function TabBarIcon(
 export default function TabLayout() {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
+
+  // Calcular padding más robusto para Android
+  // En Android, los botones del sistema suelen tener ~16-24px de altura
+  const bottomPadding = Platform.OS === "android" 
+    ? Math.max(insets.bottom || 0, 24) // Mínimo 24px en Android para botones del sistema
+    : Math.max(insets.bottom || 0, 8);
 
   return (
     <Tabs
@@ -72,9 +91,13 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: theme.colors.tabBar,
           borderTopColor: theme.colors.border,
-          paddingBottom: 8,
+          paddingBottom: bottomPadding,
           paddingTop: 8,
-          height: 65,
+          height: 65 + bottomPadding,
+          ...(Platform.OS === "android" && {
+            elevation: 8, // Sombra en Android
+            marginBottom: 0,
+          }),
         },
         tabBarLabelStyle: {
           fontSize: 11,
@@ -82,6 +105,8 @@ export default function TabLayout() {
         },
         headerStyle: {
           backgroundColor: theme.colors.surface,
+          paddingTop: Platform.OS === "android" ? Math.max(insets.top || 0, 16) : insets.top || 0,
+          height: Platform.OS === "android" ? 56 + Math.max(insets.top || 0, 16) : 56 + (insets.top || 0),
         },
         headerTintColor: theme.colors.text,
         headerTitleStyle: {
