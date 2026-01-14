@@ -105,8 +105,7 @@ export default function TabLayout() {
         },
         headerStyle: {
           backgroundColor: theme.colors.surface,
-          paddingTop: Platform.OS === "android" ? Math.max(insets.top || 0, 16) : insets.top || 0,
-          height: Platform.OS === "android" ? 56 + Math.max(insets.top || 0, 16) : 56 + (insets.top || 0),
+          // Note: paddingTop is not supported in headerStyle, using SafeAreaProvider instead
         },
         headerTintColor: theme.colors.text,
         headerTitleStyle: {

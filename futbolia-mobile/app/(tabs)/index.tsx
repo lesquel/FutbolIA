@@ -1,6 +1,6 @@
 /**
- * GoalMind - Home Screen (Compacto)
- * Dashboard principal sin scroll - todo visible en una pantalla
+ * GoalMind - Home Screen
+ * Dashboard principal con scroll para móvil, layout de dos columnas para tablet
  */
 import { useState, useEffect } from "react";
 import {
@@ -10,6 +10,8 @@ import {
   Image,
   ActivityIndicator,
   TouchableOpacity,
+  ScrollView,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -20,7 +22,7 @@ import { ThemedView, ThemedText, Card, Button, Icon, TeamBadge } from "@/src/com
 import { GoalMindChat, LeagueTable } from "@/src/components/features";
 import { predictionsApi, Match } from "@/src/services/api";
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 const isTablet = width >= 768;
 
 export default function HomeScreen() {
@@ -93,28 +95,35 @@ export default function HomeScreen() {
     );
   }
 
+  // En móvil usamos ScrollView, en tablet layout de dos columnas sin scroll
+  const ContentWrapper = isTablet ? View : ScrollView;
+  const contentWrapperProps = isTablet ? {} : { showsVerticalScrollIndicator: false };
+
   return (
     <ThemedView variant="background" style={styles.container}>
-      <View style={[styles.content, isTablet && styles.contentTablet]}>
+      <ContentWrapper 
+        style={[styles.content, isTablet && styles.contentTablet]} 
+        {...contentWrapperProps}
+      >
         {/* Columna Principal */}
         <View style={[styles.mainColumn, isTablet && styles.mainColumnTablet]}>
-          {/* Header Compacto */}
+          {/* Header */}
           <View style={styles.header}>
-                  <Image
-                    source={require("../../assets/images/logo.png")}
-                    style={[styles.logoImage, isTablet && { width: 80, height: 80 }]}
-                    resizeMode="contain"
-                  />
+            <Image
+              source={require("../../assets/images/GoalMind.png")}
+              style={[styles.logoImage, isTablet && { width: 60, height: 60 }]}
+              resizeMode="contain"
+            />
             <View style={styles.headerText}>
-              <ThemedText size="xl" weight="bold">{t("home.welcome")}</ThemedText>
-              <ThemedText variant="secondary" size="sm">{t("home.subtitle")}</ThemedText>
+              <ThemedText size="lg" weight="bold">{t("home.welcome")}</ThemedText>
+              <ThemedText variant="secondary" size="xs">{t("home.subtitle")}</ThemedText>
             </View>
           </View>
 
           {/* GoalMind Compacto */}
           <GoalMindChat showGreeting={true} compact={true} />
 
-          {/* Partido Destacado Compacto */}
+          {/* Partido Destacado */}
           {featuredMatch && (
             <TouchableOpacity 
               style={[styles.featuredMatch, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
@@ -147,7 +156,7 @@ export default function HomeScreen() {
             <Button
               title={t("home.quickPredict")}
               variant="primary"
-              size="md"
+              size="sm"
               fullWidth
               onPress={() => router.push("/predict")}
               icon={Sparkles}
@@ -163,10 +172,10 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Columna Lateral - Próximos Partidos */}
+        {/* Sección Próximos Partidos */}
         <View style={[styles.sideColumn, isTablet && styles.sideColumnTablet]}>
           <View style={styles.sideHeader}>
-            <ThemedText size="sm" weight="semibold">Próximos</ThemedText>
+            <ThemedText size="sm" weight="semibold">Próximos Partidos</ThemedText>
             <TouchableOpacity onPress={() => router.push("/predict")}>
               <ThemedText variant="primary" size="xs">Ver más</ThemedText>
             </TouchableOpacity>
@@ -206,7 +215,7 @@ export default function HomeScreen() {
             </Card>
           )}
         </View>
-      </View>
+      </ContentWrapper>
 
       {/* League Table Modal */}
       <LeagueTable

@@ -246,7 +246,11 @@ export function LeagueTable({ visible, onClose }: LeagueTableProps) {
                 }
               >
                 {renderHeader()}
-                {standings.map((item, index) => renderTeamRow({ item, index }))}
+                {standings.map((item, index) => (
+                <View key={`team-${item.position}-${item.team.name}`}>
+                  {renderTeamRow({ item, index })}
+                </View>
+              ))}
                 {renderLegend()}
               </ScrollView>
               
