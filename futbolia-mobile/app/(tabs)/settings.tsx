@@ -286,7 +286,7 @@ export default function SettingsScreen() {
             <View style={styles.settingRow}>
               <Icon icon={Trophy} size={22} variant="primary" />
               <View style={styles.settingInfo}>
-                <ThemedText weight="medium">FutbolIA</ThemedText>
+                <ThemedText weight="medium">GoalMind: El Oráculo del Fútbol</ThemedText>
                 <ThemedText variant="muted" size="sm">
                   Tu oráculo deportivo con IA
                 </ThemedText>
@@ -312,7 +312,7 @@ export default function SettingsScreen() {
             <View style={styles.settingRow}>
               <Icon icon={Brain} size={22} variant="secondary" />
               <View style={styles.settingInfo}>
-                <ThemedText weight="medium">Dixie AI</ThemedText>
+                <ThemedText weight="medium">GoalMind AI</ThemedText>
                 <ThemedText variant="muted" size="sm">
                   Powered by DeepSeek
                 </ThemedText>

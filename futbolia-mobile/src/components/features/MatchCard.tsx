@@ -110,7 +110,7 @@ export function MatchCard({
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <Icon icon={Sparkles} size={16} variant="primary" />
               <ThemedText variant="primary" size="sm" weight="semibold">
-                Toca para predecir con Dixie
+                Toca para predecir con GoalMind
               </ThemedText>
             </View>
           </View>

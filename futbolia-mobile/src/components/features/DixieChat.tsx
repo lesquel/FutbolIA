@@ -1,5 +1,5 @@
 /**
- * DixieChat - The AI assistant chat component
+ * GoalMindChat - The AI assistant chat component
  */
 import { useState, useRef, useEffect, memo } from "react";
 import {
@@ -15,17 +15,17 @@ import { useTheme } from "@/src/theme";
 import { useTranslation } from "@/src/i18n/i18n";
 import { ThemedText, Card, Icon } from "@/src/components/ui";
 
-interface DixieChatProps {
+interface GoalMindChatProps {
   message?: string;
   isLoading?: boolean;
   showGreeting?: boolean;
 }
 
-export const DixieChat = memo(function DixieChat({
+export const GoalMindChat = memo(function GoalMindChat({
   message,
   isLoading = false,
   showGreeting = true,
-}: DixieChatProps) {
+}: GoalMindChatProps) {
   const { theme, isDark } = useTheme();
   const { t } = useTranslation();
 
@@ -65,10 +65,10 @@ export const DixieChat = memo(function DixieChat({
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
       <Card variant="outlined" padding="md">
-        {/* Dixie Avatar */}
+        {/* GoalMind Avatar */}
         <View style={styles.header}>
           <Image
-            source={require("@/assets/images/Dixie.png")}
+            source={require("@/assets/images/GoalMind.png")}
             style={[
               styles.avatar,
               {
@@ -82,7 +82,7 @@ export const DixieChat = memo(function DixieChat({
 
           <View style={styles.headerInfo}>
             <ThemedText weight="bold" size="lg">
-              Dixie
+              GoalMind
             </ThemedText>
             <ThemedText variant="primary" size="xs">
               Analista Deportivo IA

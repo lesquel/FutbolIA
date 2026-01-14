@@ -81,7 +81,7 @@ export default function LoginScreen() {
               resizeMode="contain"
             />
             <ThemedText size="3xl" weight="bold">
-              FutPredicIA
+              GoalMind: El Oráculo del Fútbol
             </ThemedText>
             <ThemedText variant="secondary" size="lg" style={styles.subtitle}>
               {t("auth.loginSubtitle")}
@@ -218,14 +218,14 @@ export default function LoginScreen() {
             </ThemedText>
           </TouchableOpacity>
 
-          {/* Dixie Message */}
+          {/* GoalMind Message */}
           <View
             style={[
-              styles.dixieBox,
+              styles.goalMindBox,
               { backgroundColor: theme.colors.primary + "15" },
             ]}
           >
-            <ThemedText variant="secondary" size="sm" style={styles.dixieText}>
+            <ThemedText variant="secondary" size="sm" style={styles.goalMindText}>
               {t("auth.dixieWelcome")}
             </ThemedText>
           </View>
@@ -319,14 +319,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 24,
   },
-  dixieBox: {
+  goalMindBox: {
     flexDirection: "row",
     alignItems: "center",
     padding: 16,
     borderRadius: 12,
     gap: 12,
   },
-  dixieText: {
+  goalMindText: {
     flex: 1,
   },
 });

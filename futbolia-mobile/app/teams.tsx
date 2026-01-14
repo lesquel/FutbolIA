@@ -787,7 +787,7 @@ export default function TeamsScreen() {
                   size="sm"
                   style={{ marginTop: 16, textAlign: "center" }}
                 >
-                  Este equipo se agregará a la base de datos de FutbolIA para
+                  Este equipo se agregará a la base de datos de GoalMind para
                   futuras predicciones.
                 </ThemedText>
               </>
