@@ -10,10 +10,91 @@ from src.domain.entities import Team, PlayerAttributes
 from src.infrastructure.db.team_repository import TeamRepository
 from src.infrastructure.chromadb.player_store import PlayerVectorStore
 from src.infrastructure.external_api.football_api import FootballAPIClient
+from src.infrastructure.external_api.api_selector import UnifiedAPIClient
 from src.presentation.auth_routes import get_current_user, get_optional_user
+from src.core.cache import api_cache
+import asyncio
 
 
 router = APIRouter(prefix="/teams", tags=["Teams"])
+
+
+# ==================== League Mapping ====================
+# Solo Premier League 2025-2026
+ALLOWED_LEAGUES = {
+    "Premier League",
+    "English Premier League",  # Nombre usado por TheSportsDB
+}
+
+# Mapeo de equipos de Premier League 2025-2026 (todos los 20 equipos + variantes)
+LEAGUE_MAPPING = {
+    # Premier League 2025-2026 - Equipos actuales
+    "Manchester City": "Premier League",
+    "Liverpool": "Premier League",
+    "Arsenal": "Premier League",
+    "Chelsea": "Premier League",
+    "Chelsea FC": "Premier League",
+    "Tottenham": "Premier League",
+    "Tottenham Hotspur": "Premier League",
+    "Tottenham Hotspur FC": "Premier League",
+    "Manchester United": "Premier League",
+    "Manchester United FC": "Premier League",
+    "Newcastle United": "Premier League",
+    "Newcastle United FC": "Premier League",
+    "Newcastle": "Premier League",
+    "Brighton": "Premier League",
+    "Brighton & Hove Albion": "Premier League",
+    "Brighton & Hove Albion FC": "Premier League",
+    "West Ham": "Premier League",
+    "West Ham United": "Premier League",
+    "West Ham United FC": "Premier League",
+    "Aston Villa": "Premier League",
+    "Aston Villa FC": "Premier League",
+    "Crystal Palace": "Premier League",
+    "Crystal Palace FC": "Premier League",
+    "Wolverhampton Wanderers": "Premier League",
+    "Wolverhampton Wanderers FC": "Premier League",
+    "Wolves": "Premier League",
+    "Fulham": "Premier League",
+    "Fulham FC": "Premier League",
+    "Brentford": "Premier League",
+    "Brentford FC": "Premier League",
+    "Nottingham Forest": "Premier League",
+    "Nottingham Forest FC": "Premier League",
+    "Everton": "Premier League",
+    "Everton FC": "Premier League",
+    "Bournemouth": "Premier League",
+    "AFC Bournemouth": "Premier League",
+    "Sheffield United": "Premier League",
+    "Sheffield United FC": "Premier League",
+    "Burnley": "Premier League",
+    "Burnley FC": "Premier League",
+    "Luton Town": "Premier League",
+    "Luton Town FC": "Premier League",
+    "Leicester City": "Premier League",
+    "Leicester City FC": "Premier League",
+    "Southampton": "Premier League",
+    "Southampton FC": "Premier League",
+    "Ipswich Town": "Premier League",
+    "Ipswich Town FC": "Premier League",
+    "Leeds United": "Premier League",
+    "Leeds United FC": "Premier League",
+    "Sunderland": "Premier League",
+    "Sunderland AFC": "Premier League",
+}
+
+
+def is_team_in_allowed_league(team_name: str, team_league: str = "") -> bool:
+    """Verifica si un equipo pertenece a una de las 5 ligas permitidas"""
+    if team_league and team_league in ALLOWED_LEAGUES:
+        return True
+    mapped_league = LEAGUE_MAPPING.get(team_name, "")
+    return mapped_league in ALLOWED_LEAGUES
+
+
+def get_team_league(team_name: str) -> str:
+    """Obtener la liga de un equipo usando el mapeo"""
+    return LEAGUE_MAPPING.get(team_name, "")
 
 
 # ==================== Request/Response Models ====================
@@ -85,65 +166,106 @@ async def search_teams(
     local_teams = await TeamRepository.search(q, limit=limit)
     results["local"] = [_team_to_response(t, has_players=False) for t in local_teams]
     
-    # Search in ChromaDB for teams with player data
+    # Search in ChromaDB for teams with player data (Premier League 2025-2026)
     major_teams = [
-        "Real Madrid", "Manchester City", "Barcelona", "Bayern Munich",
-        "Liverpool", "Arsenal", "Paris Saint-Germain", "Inter Milan",
-        "Juventus", "Atletico Madrid", "Chelsea", "Tottenham",
-        "Napoli", "AC Milan", "Borussia Dortmund", "RB Leipzig"
+        "Manchester City", "Liverpool", "Arsenal", "Chelsea",
+        "Tottenham Hotspur", "Manchester United", "Newcastle United",
+        "Brighton & Hove Albion", "West Ham United", "Aston Villa",
+        "Crystal Palace", "Wolverhampton Wanderers", "Fulham", "Brentford",
+        "Nottingham Forest", "Everton", "AFC Bournemouth", "Leicester City",
+        "Southampton", "Ipswich Town", "Leeds United", "Sunderland"
     ]
     
     for team_name in major_teams:
         if q.lower() in team_name.lower():
+            # Solo incluir equipos de las 5 ligas permitidas
+            league = get_team_league(team_name)
+            if league not in ALLOWED_LEAGUES:
+                continue
+                
             players = PlayerVectorStore.search_by_team(team_name, limit=1)
             if players:
-                player_count = len(PlayerVectorStore.search_by_team(team_name, limit=20))
+                # Estimate player count to avoid slow full search
+                player_count = 11  # Default estimate for major teams
                 results["with_players"].append({
                     "id": f"chroma_{team_name.lower().replace(' ', '_')}",
                     "name": team_name,
                     "short_name": team_name[:3].upper(),
                     "logo_url": "",
                     "country": "",
-                    "league": "",
+                    "league": league,  # ✅ Incluir liga
                     "has_players": True,
                     "player_count": player_count
                 })
     
-    # Search in Football-Data.org API
+    # Search in external APIs (Unified client with fallback) - with timeout
     if search_api:
-        api_team = await FootballAPIClient.get_team_by_name(q)
-        if api_team:
-            results["api"].append({
-                "id": api_team.id,
-                "name": api_team.name,
-                "short_name": api_team.short_name,
-                "logo_url": api_team.logo_url,
-                "country": api_team.country or "",
-                "league": api_team.league or "",
-                "has_players": False,
-                "player_count": 0,
-                "source": "football-data.org"
-            })
+        try:
+            # Try unified client with 2 second timeout to avoid blocking
+            api_team = await asyncio.wait_for(
+                UnifiedAPIClient.get_team_by_name(q),
+                timeout=2.0
+            )
+            if api_team:
+                print(f"🔍 API returned team: {api_team.name} (ID: {api_team.id}) for search '{q}'")
+                # Verificar que el nombre del equipo coincida con la búsqueda
+                if q.lower() not in api_team.name.lower() and api_team.name.lower() not in q.lower():
+                    print(f"⚠️ API returned wrong team '{api_team.name}' for search '{q}' - skipping")
+                else:
+                    # ✅ Si la liga está vacía, intentar obtenerla del mapeo
+                    league = api_team.league or get_team_league(api_team.name)
+                    # Solo incluir equipos de las 5 ligas permitidas
+                    if league in ALLOWED_LEAGUES or is_team_in_allowed_league(api_team.name, league):
+                        results["api"].append({
+                            "id": api_team.id,
+                            "name": api_team.name,
+                            "short_name": api_team.short_name,
+                            "logo_url": api_team.logo_url,
+                            "country": api_team.country or "",
+                            "league": league,  # ✅ Usar liga extraída o mapeada
+                            "has_players": False,
+                            "player_count": 0,
+                            "source": "external_api"
+                        })
+        except (asyncio.TimeoutError, Exception) as e:
+            # Silently fail - we already have local results
+            print(f"⚠️ External API search timeout/error for '{q}': {e}")
     
-    # Merge and deduplicate results
+    # Merge and deduplicate results (solo equipos de las 5 ligas)
     all_teams = []
     seen_names = set()
     
-    # Prioritize teams with players
+    # Función para verificar si un equipo está en las ligas permitidas
+    def is_allowed_team(team_dict: dict) -> bool:
+        team_league = team_dict.get("league", "")
+        team_name = team_dict.get("name", "")
+        # Verificar por liga directa
+        if team_league and team_league in ALLOWED_LEAGUES:
+            return True
+        # Verificar por mapeo de nombre (incluyendo variantes con "FC", "AFC")
+        mapped_league = get_team_league(team_name)
+        if mapped_league in ALLOWED_LEAGUES:
+            return True
+        # Verificar sin sufijo FC/AFC
+        clean_name = team_name.replace(" FC", "").replace(" AFC", "").strip()
+        mapped_league = get_team_league(clean_name)
+        return mapped_league in ALLOWED_LEAGUES
+    
+    # Prioritize teams with players (solo de las 5 ligas)
     for team in results["with_players"]:
-        if team["name"].lower() not in seen_names:
+        if team["name"].lower() not in seen_names and is_allowed_team(team):
             seen_names.add(team["name"].lower())
             all_teams.append(team)
     
-    # Then local teams
+    # Then local teams (solo de las 5 ligas)
     for team in results["local"]:
-        if team["name"].lower() not in seen_names:
+        if team["name"].lower() not in seen_names and is_allowed_team(team):
             seen_names.add(team["name"].lower())
             all_teams.append(team)
     
-    # Finally API teams
+    # Finally API teams (solo de las 5 ligas)
     for team in results["api"]:
-        if team["name"].lower() not in seen_names:
+        if team["name"].lower() not in seen_names and is_allowed_team(team):
             seen_names.add(team["name"].lower())
             all_teams.append(team)
     
@@ -160,57 +282,94 @@ async def search_teams(
 async def get_teams_with_players():
     """
     🏆 Get all teams that have player data in the system
-    Combines teams from MongoDB and ChromaDB
+    Optimized with caching to avoid slow ChromaDB queries
     """
+    cache_key = "teams_with_players_list"
+    
+    # Check cache first (5 minute cache)
+    cached_teams = await api_cache.get(cache_key)
+    if cached_teams is not None:
+        return {
+            "success": True,
+            "data": {
+                "teams": cached_teams,
+                "total": len(cached_teams)
+            }
+        }
+    
     teams = []
     seen_names = set()
     
-    # 1. Get teams from MongoDB that have players
-    mongo_teams = await TeamRepository.get_teams_with_players()
-    for team in mongo_teams:
-        if team.name.lower() not in seen_names:
-            seen_names.add(team.name.lower())
-            # Get actual player count from ChromaDB
-            player_count = len(PlayerVectorStore.search_by_team(team.name, limit=30))
-            teams.append({
-                "id": team.id,
-                "name": team.name,
-                "short_name": team.short_name,
-                "logo_url": team.logo_url,
-                "country": team.country,
-                "league": team.league,
-                "has_players": True,
-                "player_count": player_count,
-                "source": "mongodb"
-            })
-    
-    # 2. Also check major European teams in ChromaDB (seed data)
-    major_teams = [
-        "Real Madrid", "Manchester City", "Barcelona", "Bayern Munich",
-        "Liverpool", "Arsenal", "Paris Saint-Germain", "Inter Milan",
-        "Juventus", "Atletico Madrid"
-    ]
-    
-    for team_name in major_teams:
-        if team_name.lower() not in seen_names:
-            players = PlayerVectorStore.search_by_team(team_name, limit=1)
-            if players:
-                player_count = len(PlayerVectorStore.search_by_team(team_name, limit=20))
-                seen_names.add(team_name.lower())
+    try:
+        # 1. Get teams from MongoDB that have players (fast)
+        mongo_teams = await TeamRepository.get_teams_with_players()
+        for team in mongo_teams:
+            if team.name.lower() not in seen_names:
+                seen_names.add(team.name.lower())
+                # Use stored player_count if available, otherwise estimate
+                # Avoid slow ChromaDB query here
+                player_count = getattr(team, 'player_count', 11) or 11
+                # Obtener liga del equipo (de la DB o del mapeo)
+                league = team.league or get_team_league(team.name)
+                # Solo incluir si es de Premier League
+                if league not in ALLOWED_LEAGUES:
+                    continue
                 teams.append({
-                    "id": f"chroma_{team_name.lower().replace(' ', '_')}",
-                    "name": team_name,
-                    "short_name": team_name[:3].upper(),
-                    "logo_url": "",
-                    "country": "",
-                    "league": "",
+                    "id": team.id,
+                    "name": team.name,
+                    "short_name": team.short_name,
+                    "logo_url": team.logo_url or "",
+                    "country": team.country or "",
+                    "league": league,  # Usar liga mapeada
                     "has_players": True,
                     "player_count": player_count,
-                    "source": "chromadb"
+                    "source": "mongodb"
                 })
-    
-    # Sort by name
-    teams.sort(key=lambda t: t["name"])
+        
+        # 2. Also check major European teams in ChromaDB (seed data)
+        # Only check if we have few teams to avoid slow queries
+        if len(teams) < 10:
+            major_teams = [
+                "Manchester City", "Liverpool", "Arsenal", "Chelsea",
+                "Tottenham Hotspur", "Manchester United", "Newcastle United",
+                "Brighton & Hove Albion", "West Ham United", "Aston Villa"
+            ]
+            
+            for team_name in major_teams:
+                if team_name.lower() not in seen_names:
+                    # Solo incluir equipos de las 5 ligas permitidas
+                    league = get_team_league(team_name)
+                    if league not in ALLOWED_LEAGUES:
+                        continue
+                        
+                    # Quick check - only search for 1 player to see if team exists
+                    players = PlayerVectorStore.search_by_team(team_name, limit=1)
+                    if players:
+                        # Estimate player count (avoid full search)
+                        player_count = 11  # Default estimate
+                        seen_names.add(team_name.lower())
+                        teams.append({
+                            "id": f"chroma_{team_name.lower().replace(' ', '_')}",
+                            "name": team_name,
+                            "short_name": team_name[:3].upper(),
+                            "logo_url": "",
+                            "country": "",
+                            "league": league,  # ✅ Incluir liga
+                            "has_players": True,
+                            "player_count": player_count,
+                            "source": "chromadb"
+                        })
+        
+        # Sort by name
+        teams.sort(key=lambda t: t["name"])
+        
+        # Cache for 5 minutes
+        await api_cache.set(cache_key, teams, ttl=300)
+        
+    except Exception as e:
+        print(f"⚠️ Error loading teams with players: {e}")
+        # Return empty list on error instead of failing
+        teams = []
     
     return {
         "success": True,
@@ -224,12 +383,18 @@ async def get_teams_with_players():
 @router.get("/all")
 async def get_all_teams():
     """
-    📋 Get ALL teams stored in MongoDB
+    📋 Get ALL teams stored in MongoDB (solo de las 5 ligas permitidas)
     """
     all_teams = await TeamRepository.get_all(limit=500)
     
     teams_list = []
     for team in all_teams:
+        # Solo incluir equipos de las 5 ligas permitidas
+        if team.league and team.league not in ALLOWED_LEAGUES:
+            # Verificar también por nombre si la liga no está definida
+            if not is_team_in_allowed_league(team.name, team.league):
+                continue
+                
         # Get player count from ChromaDB
         player_count = len(PlayerVectorStore.search_by_team(team.name, limit=30))
         teams_list.append({
@@ -425,16 +590,59 @@ async def bulk_add_teams(
 
 
 @router.get("/{team_name}/players")
-async def get_team_players(team_name: str):
+async def get_team_players(
+    team_name: str,
+    force_update: bool = Query(False, description="Force update players from API")
+):
     """
     👥 Get all players for a team - generates with AI if not found and SAVES to DB
     
     Flow:
-    1. Check ChromaDB first (fast, local)
-    2. If not found, generate with AI (DeepSeek)
-    3. SAVE generated players to ChromaDB for future queries
-    4. SAVE team to MongoDB for persistence
+    1. If force_update=True, fetch fresh players from API first
+    2. Check ChromaDB (fast, local)
+    3. If not found, generate with AI (DeepSeek)
+    4. SAVE generated players to ChromaDB for future queries
+    5. SAVE team to MongoDB for persistence
+    
+    ✅ NEW: Also returns last 5 matches for the team
+    ✅ NEW: Option to force update players from external APIs
     """
+    # If force_update, try to get fresh players from API first
+    if force_update:
+        try:
+            from src.infrastructure.external_api.api_selector import UnifiedAPIClient
+            team_with_squad = await UnifiedAPIClient.get_team_with_squad(team_name)
+            
+            if team_with_squad and team_with_squad.get("players"):
+                # Convert API players to our format
+                api_players = team_with_squad.get("players", [])
+                if api_players:
+                    from src.domain.entities import PlayerAttributes
+                    players = []
+                    for i, p_data in enumerate(api_players):
+                        player = PlayerAttributes(
+                            player_id=f"api_{team_name.lower().replace(' ', '_')}_{i}_{p_data.get('name', 'unknown').lower().replace(' ', '_')}",
+                            name=p_data.get("name", "Unknown"),
+                            team=team_name,
+                            position=p_data.get("position", "CM"),
+                            overall_rating=p_data.get("overall_rating", p_data.get("overall", 75)),
+                            pace=p_data.get("pace", 70),
+                            shooting=p_data.get("shooting", 65),
+                            passing=p_data.get("passing", 70),
+                            dribbling=p_data.get("dribbling", 68),
+                            defending=p_data.get("defending", 50),
+                            physical=p_data.get("physical", 70),
+                        )
+                        players.append(player)
+                    
+                    # Update ChromaDB with fresh players
+                    if players:
+                        PlayerVectorStore.add_players_batch(players)
+                        print(f"✅ Updated {len(players)} players for '{team_name}' from API")
+        except Exception as e:
+            print(f"⚠️ Error updating players from API for {team_name}: {e}")
+            # Continue with ChromaDB lookup
+    
     # First check ChromaDB
     players = PlayerVectorStore.search_by_team(team_name, limit=30)
     
@@ -504,6 +712,43 @@ async def get_team_players(team_name: str):
     else:
         team_stats = None
     
+    # ✅ NEW: Get last 5 matches for the team
+    last_matches = []
+    try:
+        # Try to get team ID from MongoDB or API
+        team = await TeamRepository.find_by_name(team_name)
+        team_id = None
+        
+        if team and team.id.startswith("tsdb_"):
+            team_id = team.id.replace("tsdb_", "")
+        else:
+            # Try to get from TheSportsDB
+            from src.infrastructure.external_api.thesportsdb import TheSportsDBClient
+            team_data = await TheSportsDBClient.search_team(team_name)
+            if team_data:
+                team_id = team_data.get("idTeam")
+        
+        if team_id:
+            from src.infrastructure.external_api.thesportsdb import TheSportsDBClient
+            matches_raw = await TheSportsDBClient.get_last_matches(team_id, limit=5)
+            
+            # Format matches
+            for match in matches_raw:
+                last_matches.append({
+                    "id": match.get("idEvent", ""),
+                    "date": match.get("dateEvent", ""),
+                    "home_team": match.get("strHomeTeam", ""),
+                    "away_team": match.get("strAwayTeam", ""),
+                    "home_score": match.get("intHomeScore"),
+                    "away_score": match.get("intAwayScore"),
+                    "result": match.get("strResult", ""),
+                    "league": match.get("strLeague", ""),
+                    "venue": match.get("strVenue", ""),
+                })
+    except Exception as e:
+        print(f"⚠️ Error getting last matches for {team_name}: {e}")
+        # Continue without matches if API fails
+    
     return {
         "success": True,
         "data": {
@@ -511,6 +756,7 @@ async def get_team_players(team_name: str):
             "players": [p.to_dict() for p in players],
             "count": len(players),
             "stats": team_stats,
+            "last_matches": last_matches,  # ✅ Últimos 5 partidos
         }
     }
 
@@ -602,13 +848,15 @@ async def generate_players_for_team(
 
 def _team_to_response(team: Team, has_players: bool = False, player_count: int = 0) -> dict:
     """Convert Team entity to response dict"""
+    # Obtener liga del equipo (de la entidad o del mapeo)
+    league = team.league or get_team_league(team.name)
     return {
         "id": team.id,
         "name": team.name,
         "short_name": team.short_name,
         "logo_url": team.logo_url,
         "country": team.country or "",
-        "league": team.league or "",
+        "league": league,
         "has_players": has_players,
         "player_count": player_count
     }

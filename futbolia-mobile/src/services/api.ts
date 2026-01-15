@@ -5,8 +5,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // API Configuration
+// Use local server for development, remote for production
 const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL || "https://futbolia.onrender.com/api/v1";
+  process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 const TOKEN_KEY = "@futbolia_token";
 
@@ -139,7 +140,6 @@ const apiRequest = async <T>(
     }
 
     const url = `${API_BASE_URL}${endpoint}`;
-    console.log(`🚀 API Request: ${url}`);
 
     const response = await fetch(url, {
       ...options,
@@ -157,12 +157,6 @@ const apiRequest = async <T>(
 
     return data;
   } catch (error: any) {
-    console.error("🚀 API Error Details:", {
-      message: error.message,
-      url: `${API_BASE_URL}${endpoint}`,
-      stack: error.stack,
-    });
-
     return {
       success: false,
       error: `Error de conexión: ${error.message}. Verifique que el servidor en ${API_BASE_URL} sea accesible.`,
@@ -242,19 +236,13 @@ export const predictionsApi = {
     );
   },
 
-  getHistory: async (limit: number = 20) => {
-    return apiRequest<{ predictions: Prediction[]; stats: PredictionStats }>(
-      `/predictions/history?limit=${limit}`
-    );
-  },
-
   getPredictionDetail: async (id: string) => {
     return apiRequest<Prediction>(`/predictions/${id}`);
   },
 
-  getUpcomingMatches: async (leagueId: number = 39) => {
+  getUpcomingMatches: async () => {
     return apiRequest<{ matches: Match[] }>(
-      `/predictions/matches?league_id=${leagueId}`
+      `/predictions/matches`
     );
   },
 
@@ -268,6 +256,17 @@ export const predictionsApi = {
   getAvailableTeams: async () => {
     return apiRequest<{ teams: { name: string; player_count: number }[] }>(
       "/predictions/teams"
+    );
+  },
+
+  /**
+   * Get user's prediction history with statistics
+   * @param limit - Maximum number of predictions to return (default: 20)
+   * @returns User's predictions and stats
+   */
+  getHistory: async (limit: number = 20) => {
+    return apiRequest<{ predictions: Prediction[]; stats: PredictionStats }>(
+      `/predictions/history?limit=${limit}`
     );
   },
 };
@@ -398,6 +397,90 @@ export const teamsApi = {
   },
 };
 
+// ==================== LEAGUES API ====================
+
+interface StandingsTeam {
+  id: number;
+  name: string;
+  shortName: string;
+  crest: string;
+}
+
+interface StandingsEntry {
+  position: number;
+  team: StandingsTeam;
+  playedGames: number;
+  won: number;
+  draw: number;
+  lost: number;
+  points: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDifference: number;
+}
+
+interface StandingsResponse {
+  standings: StandingsEntry[];
+  league: string;
+  cached?: boolean;
+  mock?: boolean;
+}
+
+export const leaguesApi = {
+  /**
+   * Get league standings
+   * @param league - League code (PL, PD, SA, BL1, FL1)
+   * @returns League standings table
+   */
+  getStandings: async (league: string = "PL") => {
+    return apiRequest<StandingsResponse>(
+      `/leagues/standings?league=${league}`
+    );
+  },
+
+  /**
+   * Get Premier League standings (shortcut)
+   * @returns Premier League 2025-2026 standings
+   */
+  getPremierLeagueStandings: async () => {
+    return apiRequest<StandingsResponse>(
+      "/leagues/standings/premier-league"
+    );
+  },
+
+  /**
+   * Get team clustering analysis
+   * @param league - League code (PL, PD, SA, BL1, FL1)
+   * @param nClusters - Number of clusters (2-10)
+   * @param method - Linkage method (ward, complete, average, single)
+   * @returns Clustering results with dendrogram data
+   */
+  getClustering: async (
+    league: string = "PL",
+    nClusters: number = 4,
+    method: string = "ward"
+  ) => {
+    return apiRequest<any>(
+      `/leagues/clustering?league=${league}&n_clusters=${nClusters}&method=${method}`
+    );
+  },
+
+  /**
+   * Get Premier League clustering (shortcut)
+   * @param nClusters - Number of clusters (2-10)
+   * @param method - Linkage method
+   * @returns Premier League clustering results
+   */
+  getPremierLeagueClustering: async (
+    nClusters: number = 4,
+    method: string = "ward"
+  ) => {
+    return apiRequest<any>(
+      `/leagues/clustering/premier-league?n_clusters=${nClusters}&method=${method}`
+    );
+  },
+};
+
 // Export types
 export type {
   User,
@@ -413,4 +496,7 @@ export type {
   TeamCreate,
   Player,
   PredictionContext,
+  StandingsEntry,
+  StandingsTeam,
+  StandingsResponse,
 };

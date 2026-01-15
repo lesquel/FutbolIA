@@ -35,7 +35,10 @@ export function ConfidenceRing({
   return (
     <View style={styles.container}>
       <Svg width={size} height={size}>
-        <G rotation="-90" originX={size / 2} originY={size / 2}>
+        <G 
+          rotation="-90" 
+          origin={`${size / 2},${size / 2}`}
+        >
           {/* Background circle */}
           <Circle
             cx={size / 2}

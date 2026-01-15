@@ -1,6 +1,7 @@
 /**
  * Button - Themed button component with variants
  */
+import React from "react";
 import {
   TouchableOpacity,
   TouchableOpacityProps,
@@ -10,14 +11,23 @@ import {
 import { useTheme } from "@/src/theme";
 import { ThemedText } from "./ThemedText";
 
+import { LucideIcon } from "lucide-react-native";
+import { Icon } from "./Icon";
+
 interface ButtonProps extends TouchableOpacityProps {
   title: string;
   variant?: "primary" | "secondary" | "outline" | "ghost";
   size?: "sm" | "md" | "lg";
   loading?: boolean;
-  icon?: React.ReactNode;
+  icon?: LucideIcon | React.ReactNode;
   iconPosition?: "left" | "right";
   fullWidth?: boolean;
+}
+
+// Helper to check if it's a Lucide icon component
+// Lucide icons are function components, so if it's a function, treat it as Lucide icon
+const isLucideIcon = (icon: any): icon is LucideIcon => {
+  return icon && typeof icon === "function";
 }
 
 export function Button({
@@ -119,7 +129,13 @@ export function Button({
         <ActivityIndicator color={getTextColor()} size="small" />
       ) : (
         <>
-          {icon && iconPosition === "left" && icon}
+          {icon && iconPosition === "left" && (
+            isLucideIcon(icon) ? (
+              <Icon icon={icon} size={getFontSize()} color={getTextColor()} />
+            ) : React.isValidElement(icon) ? (
+              icon
+            ) : null
+          )}
           <ThemedText
             style={{
               color: getTextColor(),
@@ -129,7 +145,13 @@ export function Button({
           >
             {title}
           </ThemedText>
-          {icon && iconPosition === "right" && icon}
+          {icon && iconPosition === "right" && (
+            isLucideIcon(icon) ? (
+              <Icon icon={icon} size={getFontSize()} color={getTextColor()} />
+            ) : React.isValidElement(icon) ? (
+              icon
+            ) : null
+          )}
         </>
       )}
     </TouchableOpacity>

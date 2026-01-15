@@ -45,12 +45,12 @@
     "registerButton": "Create Account",
     "termsText": "By registering you accept our terms of service and privacy policy",
     "createAccount": "Create Account",
-    "registerSubtitle": "Join the FutbolIA community",
+    "registerSubtitle": "Join the GoalMind community",
     "haveAccount": "Already have an account?",
     "loginNow": "Sign in",
     "registerNow": "Register",
     "continueAsGuest": "Continue as guest",
-    "dixieWelcome": "Hi! I'm Dixie, your prediction assistant. Create an account to save your history.",
+    "dixieWelcome": "Hi! I'm GoalMind, your prediction assistant. Create an account to save your history.",
     "benefits": "Account Benefits",
     "benefit1": "Save your prediction history",
     "benefit2": "Personalized favorite teams",
@@ -66,7 +66,7 @@
     "profile": "Profile"
   },
   "home": {
-    "welcome": "Welcome to FutbolIA!",
+    "welcome": "Welcome to GoalMind!",
     "subtitle": "Your AI-powered sports oracle",
     "upcomingMatches": "Upcoming Matches",
     "featuredMatch": "Featured Match",
@@ -75,8 +75,8 @@
     "viewAll": "View all"
   },
   "prediction": {
-    "title": "Dixie's Prediction",
-    "generating": "Dixie is analyzing the match...",
+    "title": "GoalMind's Prediction",
+    "generating": "GoalMind is analyzing the match...",
     "winner": "Predicted Winner",
     "score": "Predicted Score",
     "confidence": "Tactical Confidence",
@@ -121,7 +121,7 @@
     "title": "My Profile",
     "notLoggedIn": "You're not logged in",
     "loginPrompt": "Sign in to view your profile and save predictions",
-    "member": "FutbolIA Member",
+    "member": "GoalMind Member",
     "statistics": "Statistics",
     "totalPredictions": "Predictions",
     "accuracy": "Accuracy",
@@ -158,7 +158,7 @@
     "atleticoMadrid": "Atletico Madrid"
   },
   "dixie": {
-    "greeting": "Hello! I'm Dixie, your elite sports analyst 🏆",
+    "greeting": "Hello! I'm GoalMind, your elite sports analyst",
     "analyzing": "Analyzing the matchup...",
     "ready": "Ready to predict!",
     "thinking": "Processing tactical data..."

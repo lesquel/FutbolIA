@@ -62,13 +62,13 @@ async def test_international():
     print(f"Confianza: {result.confidence}%")
     print(f"Analisis: {result.reasoning[:200]}...")
     
-    # ========== TEST 2: LIGA COLOMBIANA ==========
+    # ========== TEST 2: LIGA ECUATORIANA ==========
     print("\n" + "=" * 70)
-    print("LIGA COLOMBIANA: Atletico Nacional vs Millonarios")
+    print("LIGA ECUATORIANA: Atletico Nacional vs Millonarios")
     print("=" * 70)
     
-    nacional_raw = await DixieAI.generate_team_players("Atletico Nacional Colombia")
-    millos_raw = await DixieAI.generate_team_players("Millonarios Colombia")
+    nacional_raw = await DixieAI.generate_team_players("Atletico Nacional Ecuador")
+    millos_raw = await DixieAI.generate_team_players("Millonarios Ecuador")
     
     print(f"\nAtletico Nacional: {len(nacional_raw)} jugadores")
     for p in nacional_raw[:5]:
@@ -78,8 +78,8 @@ async def test_international():
     for p in millos_raw[:5]:
         print(f"   - {p.get('name')} ({p.get('position')}) OVR:{p.get('overall_rating', p.get('overall', '?'))}")
     
-    nacional = Team(id="co_nacional", name="Atletico Nacional", short_name="NAL", country="Colombia")
-    millos = Team(id="co_millos", name="Millonarios", short_name="MIL", country="Colombia")
+    nacional = Team(id="ec_nacional", name="Atletico Nacional", short_name="NAL", country="Ecuador")
+    millos = Team(id="ec_millos", name="Millonarios", short_name="MIL", country="Ecuador")
     
     result2 = await DixieAI.predict_match(nacional, millos, convert_players(nacional_raw), convert_players(millos_raw))
     
@@ -173,7 +173,7 @@ async def test_international():
     print("RESUMEN DE PREDICCIONES")
     print("=" * 70)
     print(f"1. Argentina: Boca vs River -> {result.winner} ({result.predicted_score}) {result.confidence}%")
-    print(f"2. Colombia: Nacional vs Millos -> {result2.winner} ({result2.predicted_score}) {result2.confidence}%")
+    print(f"2. Ecuador: Nacional vs Millos -> {result2.winner} ({result2.predicted_score}) {result2.confidence}%")
     print(f"3. Brasil: Flamengo vs Palmeiras -> {result3.winner} ({result3.predicted_score}) {result3.confidence}%")
     print(f"4. Champions: Madrid vs City -> {result4.winner} ({result4.predicted_score}) {result4.confidence}%")
     print(f"5. Mexico: America vs Chivas -> {result5.winner} ({result5.predicted_score}) {result5.confidence}%")

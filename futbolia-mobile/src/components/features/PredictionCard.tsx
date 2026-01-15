@@ -1,7 +1,18 @@
 /**
- * PredictionCard - Display Dixie's prediction with analysis and player details
+ * PredictionCard - Display GoalMind's prediction with analysis and player details
  */
+import { memo, useMemo } from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
+import {
+  Sparkles,
+  BarChart3,
+  Target,
+  Star,
+  Brain,
+  Home,
+  Bus,
+  Trophy,
+} from "lucide-react-native";
 import { useTheme } from "@/src/theme";
 import { useTranslation } from "@/src/i18n/i18n";
 import {
@@ -10,6 +21,7 @@ import {
   ConfidenceRing,
   TeamBadge,
   Button,
+  Icon,
 } from "@/src/components/ui";
 import { Prediction, Player } from "@/src/services/api";
 
@@ -28,8 +40,8 @@ const getPositionColor = (position: string, theme: any) => {
   return "#e74c3c"; // Red for attackers
 };
 
-// Player Row Component
-const PlayerRow = ({ player, theme }: { player: Player; theme: any }) => (
+// Player Row Component - Memoized for performance
+const PlayerRow = memo(({ player, theme }: { player: Player; theme: any }) => (
   <View style={styles.playerRow}>
     <View
       style={[
@@ -59,24 +71,36 @@ const PlayerRow = ({ player, theme }: { player: Player; theme: any }) => (
       </ThemedText>
     </View>
   </View>
-);
+));
+PlayerRow.displayName = "PlayerRow";
 
-// Team Squad Section
-const TeamSquadSection = ({
+// Team Squad Section - Memoized for performance
+const TeamSquadSection = memo(({
   teamName,
   players,
   theme,
-  emoji,
+  icon: IconComponent,
 }: {
   teamName: string;
   players: Player[];
   theme: any;
-  emoji: string;
-}) => (
-  <View style={styles.squadSection}>
-    <ThemedText size="md" weight="semibold" style={styles.squadTitle}>
-      {emoji} {teamName}
-    </ThemedText>
+  icon: any;
+}) => {
+  const avgOvr = useMemo(() => {
+    if (players.length === 0) return 0;
+    return Math.round(
+      players.reduce((a, p) => a + p.overall_rating, 0) / players.length
+    );
+  }, [players]);
+
+  return (
+    <View style={styles.squadSection}>
+      <View style={styles.squadTitleRow}>
+        <Icon icon={IconComponent} size={20} variant="primary" />
+        <ThemedText size="md" weight="semibold" style={styles.squadTitle}>
+          {teamName}
+        </ThemedText>
+      </View>
     <View
       style={[
         styles.squadBox,
@@ -95,20 +119,20 @@ const TeamSquadSection = ({
         </ThemedText>
       )}
     </View>
-    {players.length > 0 && (
-      <View style={styles.statsRow}>
-        <ThemedText variant="muted" size="xs">
-          📊 Promedio OVR:{" "}
-          {Math.round(
-            players.reduce((a, p) => a + p.overall_rating, 0) / players.length
-          )}
-        </ThemedText>
-      </View>
-    )}
-  </View>
-);
+      {players.length > 0 && (
+        <View style={styles.statsRow}>
+          <Icon icon={BarChart3} size={14} variant="muted" />
+          <ThemedText variant="muted" size="xs" style={styles.statsText}>
+            Promedio OVR: {avgOvr}
+          </ThemedText>
+        </View>
+      )}
+    </View>
+  );
+});
+TeamSquadSection.displayName = "TeamSquadSection";
 
-export function PredictionCard({
+export const PredictionCard = memo(function PredictionCard({
   prediction,
   onSave,
   onShare,
@@ -127,10 +151,10 @@ export function PredictionCard({
 
   return (
     <Card variant="elevated" padding="lg">
-      {/* Header - Dixie's Title */}
+      {/* Header - GoalMind's Title */}
       <View style={styles.header}>
-        <View style={styles.dixieIcon}>
-          <ThemedText size="2xl">🔮</ThemedText>
+        <View style={styles.goalMindIcon}>
+          <Icon icon={Sparkles} size={32} variant="primary" />
         </View>
         <View style={styles.headerText}>
           <ThemedText size="xl" weight="bold">
@@ -182,8 +206,9 @@ export function PredictionCard({
           },
         ]}
       >
-        <ThemedText variant="primary" weight="bold">
-          🏆 {t("prediction.winner")}: {result.winner}
+        <Icon icon={Trophy} size={20} variant="primary" />
+        <ThemedText variant="primary" weight="bold" style={styles.winnerText}>
+          {t("prediction.winner")}: {result.winner}
         </ThemedText>
       </View>
 
@@ -198,9 +223,12 @@ export function PredictionCard({
 
       {/* Tactical Analysis */}
       <View style={styles.analysisSection}>
-        <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
-          📊 {t("prediction.analysis")}
-        </ThemedText>
+        <View style={styles.sectionTitleRow}>
+          <Icon icon={BarChart3} size={20} variant="primary" />
+          <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
+            {t("prediction.analysis")}
+          </ThemedText>
+        </View>
         <View
           style={[
             styles.analysisBox,
@@ -216,9 +244,12 @@ export function PredictionCard({
       {/* Key Factors */}
       {result.key_factors && result.key_factors.length > 0 && (
         <View style={styles.factorsSection}>
-          <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
-            🎯 {t("prediction.keyFactors")}
-          </ThemedText>
+          <View style={styles.sectionTitleRow}>
+            <Icon icon={Target} size={20} variant="primary" />
+            <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
+              {t("prediction.keyFactors")}
+            </ThemedText>
+          </View>
           {result.key_factors.map((factor, index) => (
             <View
               key={index}
@@ -238,9 +269,12 @@ export function PredictionCard({
       {/* Star Players */}
       <View style={styles.starsSection}>
         <View style={styles.starPlayer}>
-          <ThemedText variant="muted" size="xs">
-            ⭐ {t("prediction.starPlayerHome")}
-          </ThemedText>
+          <View style={styles.starPlayerHeader}>
+            <Icon icon={Star} size={16} variant="warning" />
+            <ThemedText variant="muted" size="xs">
+              {t("prediction.starPlayerHome")}
+            </ThemedText>
+          </View>
           <ThemedText weight="semibold">
             {result.star_player_home || "N/A"}
           </ThemedText>
@@ -251,9 +285,12 @@ export function PredictionCard({
         />
 
         <View style={styles.starPlayer}>
-          <ThemedText variant="muted" size="xs">
-            ⭐ {t("prediction.starPlayerAway")}
-          </ThemedText>
+          <View style={styles.starPlayerHeader}>
+            <Icon icon={Star} size={16} variant="warning" />
+            <ThemedText variant="muted" size="xs">
+              {t("prediction.starPlayerAway")}
+            </ThemedText>
+          </View>
           <ThemedText weight="semibold">
             {result.star_player_away || "N/A"}
           </ThemedText>
@@ -272,13 +309,13 @@ export function PredictionCard({
               teamName={match.home_team.name}
               players={prediction.context.home_players || []}
               theme={theme}
-              emoji="🏠"
+              icon={Home}
             />
             <TeamSquadSection
               teamName={match.away_team.name}
               players={prediction.context.away_players || []}
               theme={theme}
-              emoji="🚌"
+              icon={Bus}
             />
           </View>
         </View>
@@ -287,9 +324,12 @@ export function PredictionCard({
       {/* Tactical Insight */}
       {result.tactical_insight && (
         <View style={styles.insightSection}>
-          <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
-            🧠 Insight Táctico
-          </ThemedText>
+          <View style={styles.sectionTitleRow}>
+            <Icon icon={Brain} size={20} variant="primary" />
+            <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
+              Insight Táctico
+            </ThemedText>
+          </View>
           <View
             style={[
               styles.analysisBox,
@@ -326,7 +366,7 @@ export function PredictionCard({
       </View>
     </Card>
   );
-}
+});
 
 const styles = StyleSheet.create({
   header: {
@@ -334,7 +374,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
-  dixieIcon: {
+  goalMindIcon: {
     marginRight: 12,
   },
   headerText: {
@@ -351,12 +391,45 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   winnerBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 12,
     borderWidth: 1,
-    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 20,
+  },
+  winnerText: {
+    marginLeft: 4,
+  },
+  sectionTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 12,
+  },
+  squadTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 8,
+  },
+  statsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 8,
+  },
+  statsText: {
+    marginLeft: 4,
+  },
+  starPlayerHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginBottom: 4,
   },
   confidenceSection: {
     alignItems: "center",

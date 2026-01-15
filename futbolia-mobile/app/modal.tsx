@@ -1,12 +1,13 @@
 /**
- * FutbolIA - Info Modal
- * About the app and Dixie AI
+ * GoalMind - Info Modal
+ * About the app and GoalMind AI
  */
 import { StatusBar } from "expo-status-bar";
 import { Platform, StyleSheet, ScrollView, View } from "react-native";
+import { Wrench, Trophy, Sparkles, Settings } from "lucide-react-native";
 
 import { useTheme } from "@/src/theme";
-import { ThemedView, ThemedText, Card } from "@/src/components/ui";
+import { ThemedView, ThemedText, Card, Icon } from "@/src/components/ui";
 
 export default function ModalScreen() {
   const { theme } = useTheme();
@@ -16,25 +17,25 @@ export default function ModalScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         {/* Header */}
         <View style={styles.header}>
-          <ThemedText size="3xl">🏆</ThemedText>
+          <Icon icon={Trophy} size={64} variant="primary" />
           <ThemedText size="2xl" weight="bold" style={styles.title}>
-            FutbolIA
+            GoalMind: El Oráculo del Fútbol
           </ThemedText>
           <ThemedText variant="secondary">
             Tu oráculo deportivo con IA
           </ThemedText>
         </View>
 
-        {/* About Dixie */}
+        {/* About GoalMind */}
         <Card variant="outlined" padding="lg" style={styles.card}>
           <View style={styles.cardHeader}>
-            <ThemedText size="2xl">🔮</ThemedText>
+            <Icon icon={Sparkles} size={28} variant="primary" />
             <ThemedText size="lg" weight="bold">
-              Conoce a Dixie
+              Conoce a GoalMind
             </ThemedText>
           </View>
           <ThemedText variant="secondary" style={styles.description}>
-            Dixie es una IA analista deportiva de élite que combina estadísticas
+            GoalMind es una IA analista deportiva de élite que combina estadísticas
             en tiempo real con atributos de jugadores (tipo FIFA) para predecir
             resultados de partidos de fútbol.
           </ThemedText>
@@ -42,9 +43,12 @@ export default function ModalScreen() {
 
         {/* How it works */}
         <Card variant="outlined" padding="lg" style={styles.card}>
-          <ThemedText size="lg" weight="bold" style={styles.cardTitle}>
-            ⚙️ ¿Cómo funciona?
-          </ThemedText>
+          <View style={styles.cardTitleRow}>
+            <Icon icon={Settings} size={20} variant="primary" />
+            <ThemedText size="lg" weight="bold" style={styles.cardTitle}>
+              ¿Cómo funciona?
+            </ThemedText>
+          </View>
 
           <View style={styles.step}>
             <View
@@ -91,7 +95,7 @@ export default function ModalScreen() {
               </ThemedText>
             </View>
             <ThemedText variant="secondary" style={styles.stepText}>
-              Dixie (DeepSeek) analiza tácticas y genera la predicción
+              GoalMind (DeepSeek) analiza tácticas y genera la predicción
             </ThemedText>
           </View>
 
@@ -114,9 +118,12 @@ export default function ModalScreen() {
 
         {/* Tech Stack */}
         <Card variant="outlined" padding="lg" style={styles.card}>
-          <ThemedText size="lg" weight="bold" style={styles.cardTitle}>
-            🛠️ Tecnologías
-          </ThemedText>
+          <View style={styles.cardTitleRow}>
+            <Icon icon={Wrench} size={20} variant="primary" />
+            <ThemedText size="lg" weight="bold" style={styles.cardTitle}>
+              Tecnologías
+            </ThemedText>
+          </View>
 
           <View style={styles.techList}>
             <ThemedText variant="secondary">
@@ -126,7 +133,7 @@ export default function ModalScreen() {
               • FastAPI + Python (Backend)
             </ThemedText>
             <ThemedText variant="secondary">
-              • DeepSeek V3 (LLM - "Dixie")
+              • DeepSeek V3 (LLM - "GoalMind")
             </ThemedText>
             <ThemedText variant="secondary">
               • ChromaDB (Vector Database - RAG)
@@ -180,8 +187,14 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 12,
   },
-  cardTitle: {
+  cardTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
     marginBottom: 16,
+  },
+  cardTitle: {
+    flex: 1,
   },
   description: {
     lineHeight: 22,

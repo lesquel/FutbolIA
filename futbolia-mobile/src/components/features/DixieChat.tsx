@@ -1,29 +1,33 @@
 /**
- * DixieChat - The AI assistant chat component
+ * GoalMindChat - The AI assistant chat component
  */
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, memo } from "react";
 import {
   View,
   ScrollView,
   StyleSheet,
   Animated,
   ActivityIndicator,
+  Image,
 } from "react-native";
+import { Sparkles, Trophy } from "lucide-react-native";
 import { useTheme } from "@/src/theme";
 import { useTranslation } from "@/src/i18n/i18n";
-import { ThemedText, Card } from "@/src/components/ui";
+import { ThemedText, Card, Icon } from "@/src/components/ui";
 
-interface DixieChatProps {
+interface GoalMindChatProps {
   message?: string;
   isLoading?: boolean;
   showGreeting?: boolean;
+  compact?: boolean; // Modo compacto para pantallas pequeñas
 }
 
-export function DixieChat({
+export const GoalMindChat = memo(function GoalMindChat({
   message,
   isLoading = false,
   showGreeting = true,
-}: DixieChatProps) {
+  compact = false,
+}: GoalMindChatProps) {
   const { theme, isDark } = useTheme();
   const { t } = useTranslation();
 
@@ -36,7 +40,7 @@ export function DixieChat({
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 500,
-      useNativeDriver: true,
+      useNativeDriver: false, // false for web compatibility
     }).start();
   }, []);
 
@@ -60,12 +64,34 @@ export function DixieChat({
 
   const greeting = t("dixie.greeting");
 
+  // Modo compacto: una sola línea horizontal
+  if (compact) {
+    return (
+      <Animated.View style={[styles.compactContainer, { opacity: fadeAnim }]}>
+        <View style={[styles.compactCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+          <Image
+            source={require("@/assets/images/GoalMind.png")}
+            style={[styles.compactAvatar, { borderColor: theme.colors.primary }]}
+          />
+          <View style={styles.compactInfo}>
+            <ThemedText weight="semibold" size="sm">GoalMind</ThemedText>
+            <ThemedText variant="muted" size="xs" numberOfLines={1}>
+              {isLoading ? t("dixie.analyzing") : (message || greeting)}
+            </ThemedText>
+          </View>
+          <View style={[styles.compactOnline, { backgroundColor: theme.colors.success }]} />
+        </View>
+      </Animated.View>
+    );
+  }
+
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
       <Card variant="outlined" padding="md">
-        {/* Dixie Avatar */}
+        {/* GoalMind Avatar */}
         <View style={styles.header}>
-          <View
+          <Image
+            source={require("@/assets/images/GoalMind.png")}
             style={[
               styles.avatar,
               {
@@ -75,15 +101,13 @@ export function DixieChat({
                 borderColor: theme.colors.primary,
               },
             ]}
-          >
-            <ThemedText size="2xl">🔮</ThemedText>
-          </View>
+          />
 
           <View style={styles.headerInfo}>
-            <ThemedText weight="bold" size="lg">
-              Dixie
+            <ThemedText weight="bold" size="lg" numberOfLines={1}>
+              GoalMind
             </ThemedText>
-            <ThemedText variant="primary" size="xs">
+            <ThemedText variant="primary" size="xs" numberOfLines={1}>
               Analista Deportivo IA
             </ThemedText>
           </View>
@@ -121,22 +145,34 @@ export function DixieChat({
               </ThemedText>
             </View>
           ) : (
-            <ThemedText variant="secondary" size="sm" style={styles.chatText}>
-              {message
-                ? displayedText
-                : showGreeting
-                ? greeting
-                : t("dixie.ready")}
-              {message && displayedText.length < message.length && (
-                <ThemedText variant="primary">▋</ThemedText>
+            <View style={styles.chatContent}>
+              {showGreeting && !message && (
+                <View style={styles.greetingIcon}>
+                  <Icon icon={Trophy} size={16} variant="primary" />
+                </View>
               )}
-            </ThemedText>
+              <ThemedText 
+                variant="secondary" 
+                size="sm" 
+                style={styles.chatText}
+                numberOfLines={undefined}
+              >
+                {message
+                  ? displayedText
+                  : showGreeting
+                  ? greeting
+                  : t("dixie.ready")}
+                {message && displayedText.length < message.length && (
+                  <ThemedText variant="primary">▋</ThemedText>
+                )}
+              </ThemedText>
+            </View>
           )}
         </View>
       </Card>
     </Animated.View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -175,8 +211,17 @@ const styles = StyleSheet.create({
     padding: 16,
     minHeight: 60,
   },
+  chatContent: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+  },
+  greetingIcon: {
+    marginTop: 2,
+  },
   chatText: {
     lineHeight: 22,
+    flex: 1,
   },
   loadingContainer: {
     flexDirection: "row",
@@ -185,5 +230,31 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontStyle: "italic",
+  },
+  // Estilos compactos
+  compactContainer: {
+    marginBottom: 8,
+  },
+  compactCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 10,
+    borderWidth: 1,
+    padding: 8,
+    gap: 8,
+  },
+  compactAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1.5,
+  },
+  compactInfo: {
+    flex: 1,
+  },
+  compactOnline: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
 });

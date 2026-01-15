@@ -17,6 +17,7 @@ from src.presentation.auth_routes import router as auth_router
 from src.presentation.prediction_routes import router as prediction_router
 from src.presentation.team_routes import router as team_router
 from src.presentation.stats_routes import router as stats_router
+from src.presentation.league_routes import router as league_router
 
 # Initialize logger
 logger = get_logger(__name__)
@@ -94,12 +95,23 @@ app.add_middleware(
 # We handle this by checking if "*" is in the origins list
 is_all_origins = "*" in settings.CORS_ORIGINS
 
+# In development, allow all origins if "*" is specified
+if is_all_origins:
+    cors_origins = ["*"]
+else:
+    cors_origins = settings.CORS_ORIGINS
+
+log_info("CORS configuration", 
+         origins=cors_origins[:3] if len(cors_origins) > 3 else cors_origins,
+         allow_all=is_all_origins)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=cors_origins,
     allow_credentials=not is_all_origins,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Request Logging Middleware
@@ -118,6 +130,7 @@ app.include_router(auth_router, prefix=API_PREFIX)
 app.include_router(prediction_router, prefix=API_PREFIX)
 app.include_router(team_router, prefix=API_PREFIX)
 app.include_router(stats_router, prefix=API_PREFIX)
+app.include_router(league_router, prefix=API_PREFIX)
 
 
 # Root endpoint
@@ -139,9 +152,19 @@ async def root():
     }
 
 
+# Health check endpoints (both root and under API prefix)
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
+    """Health check endpoint (root)"""
+    return {
+        "status": "healthy",
+        "database": "connected",
+        "vectorstore": f"{PlayerVectorStore.count()} players",
+    }
+
+@app.get(f"{API_PREFIX}/health")
+async def health_check_api():
+    """Health check endpoint (under API prefix)"""
     return {
         "status": "healthy",
         "database": "connected",

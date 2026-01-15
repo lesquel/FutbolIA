@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "FutPredicIA",
+    "name": "GoalMind: El Oráculo del Fútbol",
     "slug": "futpredicia-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/logo.png",
+    "icon": "./assets/images/GoalMind.png",
     "scheme": "futboliamobile",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/logo.png",
+      "image": "./assets/images/GoalMind.png",
       "resizeMode": "contain",
       "backgroundColor": "#020617"
     },
@@ -19,7 +19,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/logo.png",
+        "foregroundImage": "./assets/images/GoalMind.png",
         "backgroundColor": "#020617"
       },
       "package": "com.futbolia.app",
@@ -30,7 +30,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/logo.png"
+      "favicon": "./assets/images/GoalMind.png"
     },
     "plugins": ["expo-router"],
     "experiments": {

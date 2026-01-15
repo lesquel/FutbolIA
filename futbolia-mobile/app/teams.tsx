@@ -21,17 +21,13 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "@/src/theme";
 import { useAuth, FavoriteTeam } from "@/src/context";
-import { ThemedView, ThemedText, Button } from "@/src/components/ui";
+import { ThemedView, ThemedText, Button, Icon } from "@/src/components/ui";
 import { teamsApi, TeamSearchResult } from "@/src/services/api";
+import { Check, Heart, Plus, Search, X, Globe, ArrowLeft, Shield } from "lucide-react-native";
 
-// Available leagues with their teams (free tier Football-Data.org)
+// Solo Premier League 2025-2026
 const LEAGUES = [
-  { id: "PL", name: "Premier League", country: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", countryName: "England" },
-  { id: "PD", name: "La Liga", country: "🇪🇸", countryName: "Spain" },
-  { id: "SA", name: "Serie A", country: "🇮🇹", countryName: "Italy" },
-  { id: "BL1", name: "Bundesliga", country: "🇩🇪", countryName: "Germany" },
-  { id: "FL1", name: "Ligue 1", country: "🇫🇷", countryName: "France" },
-  { id: "CL", name: "Champions League", country: "🇪🇺", countryName: "Europe" },
+  { id: "PL", name: "Premier League", countryCode: "ENG", countryName: "England" },
 ];
 
 // Popular teams data (hardcoded for offline access + quick loading)
@@ -379,7 +375,7 @@ export default function TeamsScreen() {
       addFavoriteTeam(teamToAdd);
 
       Alert.alert(
-        "✅ Equipo Agregado",
+        "Equipo Agregado",
         `${teamToAdd.name} ha sido agregado a la base de datos y a tus favoritos.`,
         [{ text: "OK" }]
       );
@@ -388,7 +384,7 @@ export default function TeamsScreen() {
       if (error.message?.includes("already exists")) {
         addFavoriteTeam(teamToAdd);
         Alert.alert(
-          "⚽ Equipo Encontrado",
+          "Equipo Encontrado",
           `${teamToAdd.name} ya existía, se agregó a tus favoritos.`
         );
       } else {
@@ -459,11 +455,15 @@ export default function TeamsScreen() {
     return theme.colors.border;
   };
 
-  // Helper to get favorite icon
-  const getFavoriteIcon = (isFavorite: boolean, fromApi: boolean): string => {
-    if (isFavorite) return "❤️";
-    if (fromApi) return "➕";
-    return "🤍";
+  // Helper to get favorite icon component
+  const renderFavoriteIcon = (isFavorite: boolean, fromApi: boolean) => {
+    if (isFavorite) {
+      return <Icon icon={Heart} size={16} color="#fff" />;
+    }
+    if (fromApi) {
+      return <Icon icon={Plus} size={16} variant="muted" />;
+    }
+    return <Icon icon={Heart} size={16} variant="muted" />;
   };
 
   const renderTeamCard = ({ item: team }: { item: FavoriteTeam }) => {
@@ -489,9 +489,12 @@ export default function TeamsScreen() {
           <View
             style={[styles.apiBadge, { backgroundColor: theme.colors.accent }]}
           >
-            <ThemedText size="xs" style={{ color: "#fff" }}>
-              🌐 API
-            </ThemedText>
+            <View style={styles.apiBadgeContent}>
+              <Icon icon={Globe} size={10} color="#fff" />
+              <ThemedText size="xs" style={{ color: "#fff", marginLeft: 2 }}>
+                API
+              </ThemedText>
+            </View>
           </View>
         )}
 
@@ -508,11 +511,11 @@ export default function TeamsScreen() {
               resizeMode="contain"
             />
           ) : (
-            <ThemedText size="xl">⚽</ThemedText>
+            <Icon icon={Shield} size={28} variant="muted" />
           )}
         </View>
         <View style={styles.teamInfo}>
-          <ThemedText weight="semibold" numberOfLines={1}>
+          <ThemedText weight="semibold" numberOfLines={1} style={styles.teamName}>
             {team.name}
           </ThemedText>
           <ThemedText variant="muted" size="xs" numberOfLines={1}>
@@ -529,11 +532,7 @@ export default function TeamsScreen() {
             },
           ]}
         >
-          <ThemedText
-            style={{ color: isFavorite ? "#fff" : theme.colors.textMuted }}
-          >
-            {getFavoriteIcon(isFavorite, fromApi)}
-          </ThemedText>
+          {renderFavoriteIcon(isFavorite, fromApi)}
         </View>
       </TouchableOpacity>
     );
@@ -547,7 +546,7 @@ export default function TeamsScreen() {
           onPress={() => router.back()}
           style={styles.backButton}
         >
-          <ThemedText size="xl">←</ThemedText>
+          <Icon icon={ArrowLeft} size={24} variant="secondary" />
         </TouchableOpacity>
         <ThemedText size="xl" weight="bold">
           {t("teams.title")}
@@ -566,7 +565,7 @@ export default function TeamsScreen() {
             },
           ]}
         >
-          <ThemedText style={styles.searchIcon}>🔍</ThemedText>
+          <Icon icon={Search} size={18} variant="muted" />
           <TextInput
             style={[styles.searchInput, { color: theme.colors.text }]}
             placeholder={t("teams.searchPlaceholder")}
@@ -577,7 +576,7 @@ export default function TeamsScreen() {
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery("")}>
-              <ThemedText variant="muted">✕</ThemedText>
+              <Icon icon={X} size={18} variant="muted" />
             </TouchableOpacity>
           )}
         </View>
@@ -606,15 +605,22 @@ export default function TeamsScreen() {
           ]}
           onPress={() => setSelectedLeague(null)}
         >
-          <ThemedText
-            size="sm"
-            weight={selectedLeague === null ? "semibold" : "normal"}
-            style={{
-              color: selectedLeague === null ? "#fff" : theme.colors.text,
-            }}
-          >
-            🌍 {t("teams.allLeagues")}
-          </ThemedText>
+          <View style={styles.leagueChipContent}>
+            <Icon 
+              icon={Globe} 
+              size={14} 
+              color={selectedLeague === null ? "#fff" : theme.colors.text} 
+            />
+            <ThemedText
+              size="sm"
+              weight={selectedLeague === null ? "semibold" : "normal"}
+              style={{
+                color: selectedLeague === null ? "#fff" : theme.colors.text,
+              }}
+            >
+              {t("teams.allLeagues")}
+            </ThemedText>
+          </View>
         </TouchableOpacity>
 
         {LEAGUES.map((league) => (
@@ -643,7 +649,7 @@ export default function TeamsScreen() {
                   selectedLeague === league.id ? "#fff" : theme.colors.text,
               }}
             >
-              {league.country} {league.name}
+              {league.countryCode} · {league.name}
             </ThemedText>
           </TouchableOpacity>
         ))}
@@ -657,9 +663,12 @@ export default function TeamsScreen() {
             { backgroundColor: theme.colors.primary + "15" },
           ]}
         >
-          <ThemedText size="sm">
-            ❤️ {favoriteTeams.length} {t("teams.favoriteCount")}
-          </ThemedText>
+          <View style={styles.favoritesBarContent}>
+            <Icon icon={Heart} size={14} variant="primary" />
+            <ThemedText size="sm" variant="primary">
+              {favoriteTeams.length} {t("teams.favoriteCount")}
+            </ThemedText>
+          </View>
         </View>
       )}
 
@@ -684,7 +693,7 @@ export default function TeamsScreen() {
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <ThemedText size="3xl">🔍</ThemedText>
+            <Icon icon={Search} size={48} variant="muted" />
             <ThemedText variant="secondary" style={styles.emptyText}>
               {searchQuery.length > 0
                 ? "No se encontraron equipos. ¡Prueba con otro nombre!"
@@ -713,11 +722,13 @@ export default function TeamsScreen() {
           ]}
         >
           <Button
-            title={`✓ ${t("teams.done")} (${favoriteTeams.length})`}
+            title={`${t("teams.done")} (${favoriteTeams.length})`}
             variant="primary"
             size="lg"
             fullWidth
             onPress={() => router.back()}
+            icon={Check}
+            iconPosition="left"
           />
         </View>
       )}
@@ -736,9 +747,12 @@ export default function TeamsScreen() {
               { backgroundColor: theme.colors.surface },
             ]}
           >
-            <ThemedText size="xl" weight="bold" style={{ marginBottom: 12 }}>
-              ➕ Agregar Equipo
-            </ThemedText>
+            <View style={styles.modalHeader}>
+              <Icon icon={Plus} size={24} variant="primary" />
+              <ThemedText size="xl" weight="bold" style={{ marginLeft: 8 }}>
+                Agregar Equipo
+              </ThemedText>
+            </View>
 
             {teamToAdd && (
               <>
@@ -755,7 +769,7 @@ export default function TeamsScreen() {
                       resizeMode="contain"
                     />
                   ) : (
-                    <ThemedText size="3xl">⚽</ThemedText>
+                    <Icon icon={Shield} size={40} variant="muted" />
                   )}
                   <View style={{ marginLeft: 16, flex: 1 }}>
                     <ThemedText weight="bold" size="lg">
@@ -773,7 +787,7 @@ export default function TeamsScreen() {
                   size="sm"
                   style={{ marginTop: 16, textAlign: "center" }}
                 >
-                  Este equipo se agregará a la base de datos de FutbolIA para
+                  Este equipo se agregará a la base de datos de GoalMind para
                   futuras predicciones.
                 </ThemedText>
               </>
@@ -805,9 +819,12 @@ export default function TeamsScreen() {
                 {isAddingTeam ? (
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
-                  <ThemedText style={{ color: "#fff" }} weight="semibold">
-                    Agregar ⚽
-                  </ThemedText>
+                  <View style={styles.modalButtonContent}>
+                    <Icon icon={Plus} size={16} color="#fff" />
+                    <ThemedText style={{ color: "#fff", marginLeft: 6 }} weight="semibold">
+                      Agregar
+                    </ThemedText>
+                  </View>
                 )}
               </TouchableOpacity>
             </View>
@@ -844,9 +861,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
-  },
-  searchIcon: {
-    marginRight: 8,
+    gap: 8,
   },
   searchInput: {
     flex: 1,
@@ -865,10 +880,20 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
   },
+  leagueChipContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
   favoritesBar: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     marginTop: 12,
+  },
+  favoritesBarContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
   loadingContainer: {
     flex: 1,
@@ -877,38 +902,46 @@ const styles = StyleSheet.create({
   },
   teamsList: {
     padding: 12,
+    paddingBottom: 100,
   },
   teamsRow: {
     justifyContent: "space-between",
+    gap: 12,
   },
   teamCard: {
-    width: "48%",
-    padding: 12,
-    borderRadius: 12,
+    flex: 1,
+    maxWidth: "48%",
+    minWidth: 150,
+    padding: 16,
+    borderRadius: 16,
     borderWidth: 1,
     marginBottom: 12,
     alignItems: "center",
   },
   teamLogo: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 8,
+    marginBottom: 12,
   },
   teamLogoImage: {
-    width: 40,
-    height: 40,
+    width: 48,
+    height: 48,
   },
   teamInfo: {
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 12,
+    width: "100%",
+  },
+  teamName: {
+    textAlign: "center",
   },
   favoriteIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -919,10 +952,14 @@ const styles = StyleSheet.create({
     paddingTop: 60,
   },
   emptyText: {
-    marginTop: 12,
+    marginTop: 16,
     textAlign: "center",
   },
   doneButtonContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     padding: 16,
     paddingBottom: 32,
   },
@@ -936,12 +973,16 @@ const styles = StyleSheet.create({
   },
   apiBadge: {
     position: "absolute",
-    top: 4,
-    right: 4,
+    top: 6,
+    right: 6,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 8,
     zIndex: 1,
+  },
+  apiBadgeContent: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   modalOverlay: {
     flex: 1,
@@ -956,6 +997,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 24,
     alignItems: "center",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
   },
   modalTeamPreview: {
     flexDirection: "row",
@@ -976,5 +1022,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+  },
+  modalButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
   },
 });

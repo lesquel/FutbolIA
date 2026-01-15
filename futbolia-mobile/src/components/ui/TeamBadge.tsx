@@ -1,9 +1,9 @@
 /**
  * TeamBadge - Display team information with logo/icon
- * Fixed: Removed text nodes from View components (React Native Web compatibility)
+ * Fixed: Added proper image loading states and error handling
  */
-import React from "react";
-import { View, Image, StyleSheet } from "react-native";
+import React, { useState, useCallback, memo } from "react";
+import { View, Image, StyleSheet, ActivityIndicator } from "react-native";
 import { useTheme } from "@/src/theme";
 import { ThemedText } from "./ThemedText";
 
@@ -15,7 +15,7 @@ interface TeamBadgeProps {
   showForm?: boolean;
 }
 
-export function TeamBadge({
+export const TeamBadge = memo(function TeamBadge({
   name,
   logoUrl,
   form,
@@ -23,6 +23,8 @@ export function TeamBadge({
   showForm = false,
 }: TeamBadgeProps) {
   const { theme } = useTheme();
+  const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
   const getSizes = () => {
     switch (size) {
@@ -38,7 +40,7 @@ export function TeamBadge({
   const sizes = getSizes();
 
   // Get initials if no logo - ensure it's always a valid string
-  const getInitials = (): string => {
+  const getInitials = useCallback((): string => {
     if (!name || typeof name !== "string") return "?";
     return (
       name
@@ -48,7 +50,7 @@ export function TeamBadge({
         .join("")
         .slice(0, 3) || "?"
     );
-  };
+  }, [name]);
 
   // Form indicator colors
   const getFormColor = (result: string) => {
@@ -67,6 +69,19 @@ export function TeamBadge({
   // Parse form string safely
   const formResults = form ? form.split("").filter((r) => r.trim()) : [];
 
+  // Validate logo URL
+  const hasValidLogo = logoUrl && logoUrl.startsWith("http") && !imageError;
+
+  const handleImageLoad = useCallback(() => {
+    setImageLoading(false);
+    setImageError(false);
+  }, []);
+
+  const handleImageError = useCallback(() => {
+    setImageLoading(false);
+    setImageError(true);
+  }, []);
+
   return (
     <View style={styles.container}>
       <View
@@ -80,12 +95,26 @@ export function TeamBadge({
           },
         ]}
       >
-        {logoUrl ? (
-          <Image
-            source={{ uri: logoUrl }}
-            style={{ width: sizes.logo - 10, height: sizes.logo - 10 }}
-            resizeMode="contain"
-          />
+        {hasValidLogo ? (
+          <>
+            {imageLoading && (
+              <ActivityIndicator
+                size="small"
+                color={theme.colors.primary}
+                style={StyleSheet.absoluteFill}
+              />
+            )}
+            <Image
+              source={{ uri: logoUrl, cache: "force-cache" }}
+              style={[
+                { width: sizes.logo - 10, height: sizes.logo - 10 },
+                imageLoading && { opacity: 0 },
+              ]}
+              resizeMode="contain"
+              onLoad={handleImageLoad}
+              onError={handleImageError}
+            />
+          </>
         ) : (
           <ThemedText weight="bold" style={{ fontSize: sizes.logo / 3 }}>
             {getInitials()}
@@ -115,7 +144,7 @@ export function TeamBadge({
       )}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
