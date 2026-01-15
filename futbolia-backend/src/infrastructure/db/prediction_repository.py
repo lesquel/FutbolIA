@@ -60,6 +60,10 @@ class PredictionRepository:
     @classmethod
     async def find_by_id(cls, prediction_id: str) -> Optional[Prediction]:
         """Find prediction by ID"""
+        # Validate ObjectId format
+        if not ObjectId.is_valid(prediction_id):
+            return None
+            
         collection = cls._get_collection()
         doc = await collection.find_one({"_id": ObjectId(prediction_id)})
         

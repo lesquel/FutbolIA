@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { ClipboardList, BarChart3, Trophy } from "lucide-react-native";
 
 import { useTheme } from "@/src/theme";
 import {
@@ -21,6 +22,7 @@ import {
   Card,
   Button,
   TeamBadge,
+  Icon,
 } from "@/src/components/ui";
 import {
   predictionsApi,
@@ -126,9 +128,12 @@ export default function HistoryScreen() {
             },
           ]}
         >
-          <ThemedText variant="primary" size="sm" weight="semibold">
-            🏆 {item.result?.winner || "Sin resultado"}
-          </ThemedText>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <Icon icon={Trophy} size={16} variant="primary" />
+            <ThemedText variant="primary" size="sm" weight="semibold">
+              {item.result?.winner || "Sin resultado"}
+            </ThemedText>
+          </View>
           <ThemedText variant="muted" size="xs">
             {item.result?.confidence || 0}% confianza
           </ThemedText>
@@ -193,9 +198,12 @@ export default function HistoryScreen() {
 
         {/* Predictions List */}
         <View style={styles.listHeader}>
-          <ThemedText size="lg" weight="semibold">
-            📋 {t("history.title")}
-          </ThemedText>
+          <View style={styles.listHeaderRow}>
+            <Icon icon={ClipboardList} size={20} variant="primary" />
+            <ThemedText size="lg" weight="semibold">
+              {t("history.title")}
+            </ThemedText>
+          </View>
         </View>
 
         {predictions.length > 0 ? (
@@ -206,9 +214,7 @@ export default function HistoryScreen() {
           ))
         ) : (
           <Card variant="outlined" padding="lg" style={styles.emptyCard}>
-            <ThemedText size="3xl" style={styles.emptyIcon}>
-              📊
-            </ThemedText>
+            <Icon icon={BarChart3} size={64} variant="muted" />
             <ThemedText variant="muted" style={styles.emptyText}>
               {t("history.noPredictions")}
             </ThemedText>
@@ -241,6 +247,11 @@ const styles = StyleSheet.create({
   },
   listHeader: {
     marginBottom: 16,
+  },
+  listHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   predictionCard: {
     marginBottom: 12,

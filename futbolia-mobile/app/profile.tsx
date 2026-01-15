@@ -15,13 +15,14 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "@/src/theme";
-import { useAuth, FavoriteTeam } from "@/src/context";
-import { ThemedView, ThemedText, Card, Button } from "@/src/components/ui";
+import { useAuth } from "@/src/context";
+import { ThemedView, ThemedText, Card, Button, Icon } from "@/src/components/ui";
+import { BarChart3, Trophy, Settings } from "lucide-react-native";
 
 export default function ProfileScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const { user, isAuthenticated, favoriteTeams, removeFavoriteTeam, logout } =
+  const { user, isAuthenticated, logout } =
     useAuth();
   const router = useRouter();
 
@@ -52,22 +53,6 @@ export default function ProfileScreen() {
     ]);
   };
 
-  const handleRemoveTeam = (team: FavoriteTeam) => {
-    Alert.alert(
-      t("profile.removeTeamTitle"),
-      t("profile.removeTeamMessage", { team: team.name }),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("common.remove"),
-          style: "destructive",
-          onPress: () => {
-            void removeFavoriteTeam(team.id);
-          },
-        },
-      ]
-    );
-  };
 
   // If not authenticated, show login prompt
   if (!isAuthenticated) {
@@ -131,9 +116,12 @@ export default function ProfileScreen() {
 
         {/* Stats Section */}
         <View style={styles.section}>
-          <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
-            📊 {t("profile.statistics")}
-          </ThemedText>
+          <View style={styles.statsTitleRow}>
+            <Icon icon={BarChart3} size={18} variant="primary" />
+            <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
+              {t("profile.statistics")}
+            </ThemedText>
+          </View>
 
           <View style={styles.statsGrid}>
             <Card variant="outlined" padding="md" style={styles.statCard}>
@@ -176,9 +164,7 @@ export default function ProfileScreen() {
             </Card>
 
             <Card variant="outlined" padding="md" style={styles.statCard}>
-              <ThemedText size="xl" weight="bold">
-                🏆
-              </ThemedText>
+              <Icon icon={Trophy} size={32} variant="primary" />
               <ThemedText variant="secondary" size="sm" numberOfLines={1}>
                 {stats.favoriteLeague}
               </ThemedText>
@@ -186,88 +172,15 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Favorite Teams Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <ThemedText size="lg" weight="semibold">
-              ❤️ {t("profile.favoriteTeams")}
-            </ThemedText>
-            <TouchableOpacity onPress={() => router.push("/teams")}>
-              <ThemedText variant="primary" size="sm">
-                + {t("profile.addTeam")}
-              </ThemedText>
-            </TouchableOpacity>
-          </View>
-
-          {favoriteTeams.length > 0 ? (
-            <View style={styles.teamsList}>
-              {favoriteTeams.map((team) => (
-                <Card
-                  key={team.id}
-                  variant="default"
-                  padding="sm"
-                  style={styles.teamCard}
-                >
-                  <View style={styles.teamRow}>
-                    <View
-                      style={[
-                        styles.teamLogo,
-                        { backgroundColor: theme.colors.surfaceSecondary },
-                      ]}
-                    >
-                      {team.logoUrl ? (
-                        <Image
-                          source={{ uri: team.logoUrl }}
-                          style={styles.teamLogoImage}
-                          resizeMode="contain"
-                        />
-                      ) : (
-                        <ThemedText size="lg">⚽</ThemedText>
-                      )}
-                    </View>
-                    <View style={styles.teamInfo}>
-                      <ThemedText weight="semibold">{team.name}</ThemedText>
-                      {team.league && (
-                        <ThemedText variant="muted" size="sm">
-                          {team.league}
-                        </ThemedText>
-                      )}
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => handleRemoveTeam(team)}
-                      style={styles.removeButton}
-                    >
-                      <ThemedText style={{ color: theme.colors.error }}>
-                        ✕
-                      </ThemedText>
-                    </TouchableOpacity>
-                  </View>
-                </Card>
-              ))}
-            </View>
-          ) : (
-            <Card variant="outlined" padding="lg">
-              <View style={styles.emptyTeams}>
-                <ThemedText size="3xl">⚽</ThemedText>
-                <ThemedText variant="secondary" style={styles.emptyText}>
-                  {t("profile.noFavoriteTeams")}
-                </ThemedText>
-                <Button
-                  title={t("profile.searchTeams")}
-                  variant="outline"
-                  size="sm"
-                  onPress={() => router.push("/teams")}
-                />
-              </View>
-            </Card>
-          )}
-        </View>
 
         {/* Account Actions */}
         <View style={styles.section}>
-          <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
-            ⚙️ {t("profile.account")}
-          </ThemedText>
+          <View style={styles.statsTitleRow}>
+            <Icon icon={Settings} size={18} variant="primary" />
+            <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
+              {t("profile.account")}
+            </ThemedText>
+          </View>
 
           <Card variant="default" padding="none">
             <TouchableOpacity
@@ -291,7 +204,7 @@ export default function ProfileScreen() {
               style={styles.actionRow}
               onPress={() => router.push("/settings")}
             >
-              <ThemedText>⚙️</ThemedText>
+              <Icon icon={Settings} size={20} variant="primary" />
               <ThemedText style={styles.actionText}>
                 {t("profile.settings")}
               </ThemedText>
@@ -371,6 +284,13 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionTitle: {
+    marginBottom: 12,
+    flex: 1,
+  },
+  statsTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
     marginBottom: 12,
   },
   sectionHeader: {

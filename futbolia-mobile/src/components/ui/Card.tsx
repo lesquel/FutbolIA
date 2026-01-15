@@ -1,7 +1,7 @@
 /**
  * Card - Themed card component for content containers
  */
-import { View, ViewProps, StyleSheet } from "react-native";
+import { View, ViewProps, StyleSheet, Platform } from "react-native";
 import { useTheme } from "@/src/theme";
 
 interface CardProps extends ViewProps {
@@ -34,13 +34,22 @@ export function Card({
   const getVariantStyles = () => {
     switch (variant) {
       case "elevated":
-        return {
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: isDark ? 0.3 : 0.1,
-          shadowRadius: 12,
-          elevation: 8,
-        };
+        // Use boxShadow for web, shadow* props for native
+        const shadowStyle = Platform.select({
+          web: {
+            boxShadow: isDark
+              ? "0 4px 12px rgba(0, 0, 0, 0.3)"
+              : "0 4px 12px rgba(0, 0, 0, 0.1)",
+          },
+          default: {
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: isDark ? 0.3 : 0.1,
+            shadowRadius: 12,
+            elevation: 8,
+          },
+        });
+        return shadowStyle || {};
       case "outlined":
         return {
           borderWidth: 1,
