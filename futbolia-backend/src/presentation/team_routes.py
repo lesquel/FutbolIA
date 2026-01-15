@@ -164,7 +164,16 @@ async def search_teams(
     
     # Search in local database
     local_teams = await TeamRepository.search(q, limit=limit)
-    results["local"] = [_team_to_response(t, has_players=False) for t in local_teams]
+    
+    # ✅ Usar el valor real de has_players y player_count del equipo
+    results["local"] = [
+        _team_to_response(
+            t, 
+            has_players=getattr(t, 'has_players', False), 
+            player_count=getattr(t, 'player_count', 0)
+        ) 
+        for t in local_teams
+    ]
     
     # Search in ChromaDB for teams with player data (Premier League 2025-2026)
     major_teams = [
@@ -201,10 +210,10 @@ async def search_teams(
     # Search in external APIs (Unified client with fallback) - with timeout
     if search_api:
         try:
-            # Try unified client with 2 second timeout to avoid blocking
+            # Try unified client with 5 second timeout to avoid blocking
             api_team = await asyncio.wait_for(
                 UnifiedAPIClient.get_team_by_name(q),
-                timeout=2.0
+                timeout=5.0
             )
             if api_team:
                 print(f"🔍 API returned team: {api_team.name} (ID: {api_team.id}) for search '{q}'")
@@ -251,17 +260,20 @@ async def search_teams(
         mapped_league = get_team_league(clean_name)
         return mapped_league in ALLOWED_LEAGUES
     
-    # Prioritize teams with players (solo de las 5 ligas)
+    # Prioritize teams with players (solo de las 5 ligas para equipos sin jugadores locales)
     for team in results["with_players"]:
         if team["name"].lower() not in seen_names and is_allowed_team(team):
             seen_names.add(team["name"].lower())
             all_teams.append(team)
     
-    # Then local teams (solo de las 5 ligas)
+    # Then local teams - SIEMPRE incluir equipos locales con jugadores (cualquier liga)
     for team in results["local"]:
-        if team["name"].lower() not in seen_names and is_allowed_team(team):
-            seen_names.add(team["name"].lower())
-            all_teams.append(team)
+        if team["name"].lower() not in seen_names:
+            # Equipos locales con jugadores siempre se muestran
+            # Equipos locales sin jugadores solo si están en ligas permitidas
+            if team.get("has_players", False) or is_allowed_team(team):
+                seen_names.add(team["name"].lower())
+                all_teams.append(team)
     
     # Finally API teams (solo de las 5 ligas)
     for team in results["api"]:
@@ -279,12 +291,17 @@ async def search_teams(
 
 
 @router.get("/with-players")
-async def get_teams_with_players():
+async def get_teams_with_players(
+    include_all: bool = Query(default=False, description="Include teams from all leagues, not just Premier League")
+):
     """
     🏆 Get all teams that have player data in the system
     Optimized with caching to avoid slow ChromaDB queries
+    
+    - By default: only Premier League teams
+    - With include_all=true: all teams with players (for clustering)
     """
-    cache_key = "teams_with_players_list"
+    cache_key = f"teams_with_players_list_{'all' if include_all else 'premier'}"
     
     # Check cache first (5 minute cache)
     cached_teams = await api_cache.get(cache_key)
@@ -311,9 +328,11 @@ async def get_teams_with_players():
                 player_count = getattr(team, 'player_count', 11) or 11
                 # Obtener liga del equipo (de la DB o del mapeo)
                 league = team.league or get_team_league(team.name)
-                # Solo incluir si es de Premier League
-                if league not in ALLOWED_LEAGUES:
+                
+                # Filtrar por liga solo si no se pide todos
+                if not include_all and league not in ALLOWED_LEAGUES:
                     continue
+                    
                 teams.append({
                     "id": team.id,
                     "name": team.name,
@@ -339,7 +358,7 @@ async def get_teams_with_players():
                 if team_name.lower() not in seen_names:
                     # Solo incluir equipos de las 5 ligas permitidas
                     league = get_team_league(team_name)
-                    if league not in ALLOWED_LEAGUES:
+                    if not include_all and league not in ALLOWED_LEAGUES:
                         continue
                         
                     # Quick check - only search for 1 player to see if team exists
@@ -466,7 +485,10 @@ async def add_team(
             PlayerVectorStore.add_players_batch(players)
             players_added = len(players)
             await TeamRepository.update_player_status(team_data.name, players_added)
-    
+            # Invalidar ambas cachés de equipos con jugadores
+            await api_cache.delete("teams_with_players_list_premier")
+            await api_cache.delete("teams_with_players_list_all")
+
     return {
         "success": True,
         "data": {
@@ -475,6 +497,9 @@ async def add_team(
                 "name": saved_team.name,
                 "short_name": saved_team.short_name,
                 "logo_url": saved_team.logo_url,
+                "league": saved_team.league or team_data.league or "",
+                "has_players": players_added > 0,
+                "player_count": players_added
             },
             "players_added": players_added
         },
@@ -834,15 +859,103 @@ async def generate_players_for_team(
     PlayerVectorStore.add_players_batch(players)
     await TeamRepository.update_player_status(team_name, len(players))
     
+    # Invalidar ambas cachés de equipos con jugadores para que la UI se actualice
+    await api_cache.delete("teams_with_players_list_premier")
+    await api_cache.delete("teams_with_players_list_all")
+    print(f"✅ Cache invalidado para teams_with_players_list_premier y _all")
+
     return {
         "success": True,
         "data": {
             "team": team_name,
             "players_generated": len(players),
             "avg_rating": sum(p.overall_rating for p in players) // len(players),
-            "players": [p.to_dict() for p in players[:5]]
+            "players": [p.to_dict() for p in players],
+            "has_players": True,
+            "player_count": len(players)
         },
         "message": f"Se generaron {len(players)} jugadores reales para '{team_name}'"
+    }
+
+
+@router.get("/custom-teams-for-clustering")
+async def get_custom_teams_for_clustering():
+    """
+    🔬 Obtener equipos custom con estadísticas para clustering
+    
+    Retorna equipos agregados por usuarios con estadísticas derivadas
+    de los atributos promedio de sus jugadores.
+    """
+    try:
+        # Obtener equipos de MongoDB que tienen jugadores
+        mongo_teams = await TeamRepository.get_teams_with_players()
+        
+        custom_teams = []
+        for team in mongo_teams:
+            # Obtener jugadores del equipo
+            players = PlayerVectorStore.search_by_team(team.name, limit=30)
+            
+            if not players or len(players) < 5:
+                continue
+            
+            # Calcular estadísticas promedio del equipo
+            avg_overall = sum(p.get("overall_rating", 70) for p in players) / len(players)
+            avg_pace = sum(p.get("pace", 70) for p in players) / len(players)
+            avg_shooting = sum(p.get("shooting", 60) for p in players) / len(players)
+            avg_passing = sum(p.get("passing", 70) for p in players) / len(players)
+            avg_defending = sum(p.get("defending", 60) for p in players) / len(players)
+            avg_physical = sum(p.get("physical", 70) for p in players) / len(players)
+            
+            # Crear estadísticas simuladas basadas en atributos
+            # Esto permite comparar con equipos de la liga
+            team_stats = {
+                "name": team.name,
+                "short_name": team.short_name or team.name[:3].upper(),
+                "league": team.league or "Custom",
+                "player_count": len(players),
+                "avg_overall": round(avg_overall, 1),
+                "stats": {
+                    # Estadísticas derivadas de atributos de jugadores
+                    "attack_rating": round((avg_shooting + avg_pace + avg_passing) / 3, 1),
+                    "defense_rating": round((avg_defending + avg_physical) / 2, 1),
+                    "overall_team_rating": round(avg_overall, 1),
+                    # Para clustering comparativo con equipos de liga
+                    "estimated_ppg": round(1.0 + (avg_overall - 65) / 20, 2),  # 1.0 a 2.5
+                    "estimated_gf_pg": round(1.0 + (avg_shooting - 60) / 25, 2),  # Goles por partido
+                    "estimated_ga_pg": round(1.8 - (avg_defending - 60) / 30, 2),  # Goles en contra
+                }
+            }
+            custom_teams.append(team_stats)
+        
+        return {
+            "success": True,
+            "data": {
+                "teams": custom_teams,
+                "total": len(custom_teams)
+            }
+        }
+    except Exception as e:
+        print(f"⚠️ Error obteniendo equipos custom: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "data": {"teams": [], "total": 0}
+        }
+
+
+@router.post("/refresh-cache")
+async def refresh_teams_cache():
+    """
+    🔄 Forzar actualización del caché de equipos
+    
+    Útil después de agregar nuevos equipos o jugadores.
+    """
+    await api_cache.delete("teams_with_players_list_premier")
+    await api_cache.delete("teams_with_players_list_all")
+    print("✅ Caché de equipos invalidado manualmente (premier y all)")
+    return {
+        "success": True,
+        "message": "Caché de equipos actualizado correctamente"
     }
 
 

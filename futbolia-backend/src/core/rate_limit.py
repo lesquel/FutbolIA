@@ -33,10 +33,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         
         # Endpoint-specific limits (requests per minute)
         self.endpoint_limits = {
-            "/api/v1/predictions/predict": 10,  # AI predictions are expensive
-            "/api/v1/teams/generate-players": 5,  # AI generation
-            "/api/v1/auth/register": 5,  # Prevent spam registrations
-            "/api/v1/auth/login": 10,  # Prevent brute force
+            "/api/v1/predictions/predict": 50,  # AI predictions are expensive
+            "/api/v1/teams/generate-players": 50,  # AI generation
+            "/api/v1/auth/register": 20,  # Prevent spam registrations
+            "/api/v1/auth/login": 30,  # Prevent brute force
         }
         
         # Whitelist (no rate limiting)

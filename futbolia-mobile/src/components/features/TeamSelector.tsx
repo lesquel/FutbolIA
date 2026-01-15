@@ -142,7 +142,42 @@ export const TeamSelector = memo(function TeamSelector({
   const [loading, setLoading] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0); // Para forzar refresco
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Función para recargar equipos desde la API
+  const reloadTeams = useCallback(async () => {
+    const fallbackTeams = POPULAR_TEAMS.map((t) => ({
+      id: t.name.toLowerCase().replaceAll(/\s+/g, "_"),
+      name: t.name,
+      short_name: t.name.substring(0, 3).toUpperCase(),
+      league: t.league,
+      logo_url: t.logo_url,
+      country: "",
+      has_players: true,
+      player_count: 11,
+    }));
+    
+    try {
+      // Forzar que no use caché en el backend
+      const response = await teamsApi.getTeamsWithPlayers();
+      if (
+        response.success &&
+        response.data?.teams &&
+        response.data.teams.length > 0
+      ) {
+        // Incluir TODOS los equipos (include_all=true equivalente)
+        const combinedTeams = [...fallbackTeams, ...response.data.teams];
+        setTeams(removeDuplicateTeams(combinedTeams));
+        console.log("✅ Teams reloaded:", response.data.teams.length, "from API");
+      } else {
+        setTeams(fallbackTeams);
+      }
+    } catch (error) {
+      console.log("Error reloading teams:", error);
+      setTeams(fallbackTeams);
+    }
+  }, []);
 
   // Initial load of popular teams or teams with players
   useEffect(() => {
@@ -168,13 +203,9 @@ export const TeamSelector = memo(function TeamSelector({
           response.data?.teams &&
           response.data.teams.length > 0
         ) {
-          // Filtrar solo equipos de las 5 ligas principales y eliminar duplicados
-          const filteredTeams = response.data.teams.filter(isTeamInAllowedLeague);
-          if (filteredTeams.length > 0) {
-            // Combinar con POPULAR_TEAMS para asegurar logos y eliminar duplicados
-            const combinedTeams = [...fallbackTeams, ...filteredTeams];
-            setTeams(removeDuplicateTeams(combinedTeams));
-          }
+          // Incluir TODOS los equipos, no filtrar por liga
+          const combinedTeams = [...fallbackTeams, ...response.data.teams];
+          setTeams(removeDuplicateTeams(combinedTeams));
         }
       } catch (error) {
         console.log("Error loading initial teams:", error);
@@ -184,6 +215,14 @@ export const TeamSelector = memo(function TeamSelector({
 
     loadInitialTeams();
   }, []);
+
+  // Recargar equipos cuando se abre el modal
+  useEffect(() => {
+    if (modalVisible) {
+      console.log("🔄 Modal abierto, recargando equipos...");
+      reloadTeams();
+    }
+  }, [modalVisible, reloadTeams]);
 
   // Cleanup debounce timer on unmount to prevent memory leaks
   useEffect(() => {
@@ -205,26 +244,7 @@ export const TeamSelector = memo(function TeamSelector({
       if (!searchQuery.trim()) {
         // Reset to initial teams if search is empty
         setHasSearched(false);
-        const fallbackTeams = POPULAR_TEAMS.map((t) => ({
-          id: t.name.toLowerCase().replaceAll(/\s+/g, "_"),
-          name: t.name,
-          short_name: t.name.substring(0, 3).toUpperCase(),
-          league: t.league,
-          logo_url: t.logo_url,
-          country: "",
-          has_players: true,
-          player_count: 11,
-        }));
-        
-        const response = await teamsApi.getTeamsWithPlayers();
-        if (response.success && response.data?.teams) {
-          // Filtrar solo equipos de las 5 ligas principales y eliminar duplicados
-          const filteredTeams = response.data.teams.filter(isTeamInAllowedLeague);
-          const combinedTeams = [...fallbackTeams, ...filteredTeams];
-          setTeams(removeDuplicateTeams(combinedTeams));
-        } else {
-          setTeams(fallbackTeams);
-        }
+        await reloadTeams();
         return;
       }
 
@@ -240,9 +260,8 @@ export const TeamSelector = memo(function TeamSelector({
         ]) as any;
         
         if (response.success && response.data?.teams) {
-          // Filtrar solo equipos de las 5 ligas principales y eliminar duplicados
-          const filteredTeams = response.data.teams.filter(isTeamInAllowedLeague);
-          setTeams(removeDuplicateTeams(filteredTeams));
+          // Ya NO filtramos por liga - permitir todos los equipos
+          setTeams(removeDuplicateTeams(response.data.teams));
         } else {
           // Show error but keep previous results
           Alert.alert(
@@ -262,7 +281,7 @@ export const TeamSelector = memo(function TeamSelector({
         setLoading(false);
       }
     }, 500); // 500ms debounce
-  }, [searchQuery]);
+  }, [searchQuery, reloadTeams]);
 
   // Reset search when modal closes
   const handleCloseModal = () => {
@@ -294,12 +313,37 @@ export const TeamSelector = memo(function TeamSelector({
 
       if (addResponse.success) {
         // 2. Generate players automatically so GoalMind has data to work with
-        await teamsApi.generatePlayers(searchQuery, 15, 75);
+        const generateResponse = await teamsApi.generatePlayers(searchQuery, 15, 75);
+        
+        // 3. Refrescar caché del backend
+        await teamsApi.refreshCache();
+        
+        // 4. Refrescar la lista de equipos inmediatamente
+        console.log("✅ Equipo agregado, refrescando lista...");
+        await reloadTeams();
+        setRefreshKey(prev => prev + 1); // Forzar re-render
 
+        const playersGenerated = generateResponse.success ? generateResponse.data?.players_generated || 15 : 0;
+        
         Alert.alert(
-          "Equipo Agregado",
-          `${searchQuery} ha sido agregado con éxito. GoalMind ya conoce a sus jugadores.`,
-          [{ text: "¡Genial!", onPress: () => handleSelectTeam(searchQuery) }]
+          "✅ Equipo Agregado",
+          `${searchQuery} ha sido agregado con ${playersGenerated} jugadores. GoalMind ya conoce a sus jugadores.`,
+          [{ 
+            text: "¡Genial!", 
+            onPress: () => {
+              // Seleccionar el equipo recién agregado
+              handleSelectTeam(searchQuery, {
+                id: `new_${searchQuery.toLowerCase().replace(/\s+/g, "_")}`,
+                name: searchQuery,
+                short_name: searchQuery.substring(0, 3).toUpperCase(),
+                logo_url: "",
+                country: "",
+                league: "",
+                has_players: true,
+                player_count: playersGenerated,
+              });
+            }
+          }]
         );
       } else {
         Alert.alert(
@@ -308,6 +352,7 @@ export const TeamSelector = memo(function TeamSelector({
         );
       }
     } catch (error) {
+      console.error("Error adding team:", error);
       Alert.alert("Error", "Error de conexión al agregar equipo");
     } finally {
       setIsAdding(false);

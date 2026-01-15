@@ -224,8 +224,8 @@ EXPO_PUBLIC_DEFAULT_THEME=dark
 
 ## 📱 Capturas de Pantalla
 
-| Home                   | Predict                | History      | Settings         |
-| ---------------------- | ---------------------- | ------------ | ---------------- |
+| Home                       | Predict                       | History             | Settings                 |
+| -------------------------- | ----------------------------- | ------------------- | ------------------------ |
 | Home - Partidos destacados | Predict - Selector de equipos | History - Historial | Settings - Configuración |
 
 ---
@@ -299,3 +299,5 @@ Este proyecto fue creado para **Casa Abierta ULEAM 2025** - Minería de Datos - 
 🏆 _Tu oráculo deportivo de élite_
 
 </div>
+
+uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
