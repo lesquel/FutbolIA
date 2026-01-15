@@ -241,9 +241,7 @@ export const predictionsApi = {
   },
 
   getUpcomingMatches: async () => {
-    return apiRequest<{ matches: Match[] }>(
-      `/predictions/matches`
-    );
+    return apiRequest<{ matches: Match[] }>(`/predictions/matches`);
   },
 
   compareTeams: async (teamA: string, teamB: string) => {
@@ -329,9 +327,12 @@ export const teamsApi = {
 
   // Refrescar caché de equipos (llamar después de agregar equipos)
   refreshCache: async () => {
-    return apiRequest<{ success: boolean; message: string }>("/teams/refresh-cache", {
-      method: "POST",
-    });
+    return apiRequest<{ success: boolean; message: string }>(
+      "/teams/refresh-cache",
+      {
+        method: "POST",
+      }
+    );
   },
 
   // Add a new team
@@ -440,9 +441,7 @@ export const leaguesApi = {
    * @returns League standings table
    */
   getStandings: async (league: string = "PL") => {
-    return apiRequest<StandingsResponse>(
-      `/leagues/standings?league=${league}`
-    );
+    return apiRequest<StandingsResponse>(`/leagues/standings?league=${league}`);
   },
 
   /**
@@ -450,9 +449,7 @@ export const leaguesApi = {
    * @returns Premier League 2025-2026 standings
    */
   getPremierLeagueStandings: async () => {
-    return apiRequest<StandingsResponse>(
-      "/leagues/standings/premier-league"
-    );
+    return apiRequest<StandingsResponse>("/leagues/standings/premier-league");
   },
 
   /**
