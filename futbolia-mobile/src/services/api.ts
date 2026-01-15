@@ -447,6 +447,38 @@ export const leaguesApi = {
       "/leagues/standings/premier-league"
     );
   },
+
+  /**
+   * Get team clustering analysis
+   * @param league - League code (PL, PD, SA, BL1, FL1)
+   * @param nClusters - Number of clusters (2-10)
+   * @param method - Linkage method (ward, complete, average, single)
+   * @returns Clustering results with dendrogram data
+   */
+  getClustering: async (
+    league: string = "PL",
+    nClusters: number = 4,
+    method: string = "ward"
+  ) => {
+    return apiRequest<any>(
+      `/leagues/clustering?league=${league}&n_clusters=${nClusters}&method=${method}`
+    );
+  },
+
+  /**
+   * Get Premier League clustering (shortcut)
+   * @param nClusters - Number of clusters (2-10)
+   * @param method - Linkage method
+   * @returns Premier League clustering results
+   */
+  getPremierLeagueClustering: async (
+    nClusters: number = 4,
+    method: string = "ward"
+  ) => {
+    return apiRequest<any>(
+      `/leagues/clustering/premier-league?n_clusters=${nClusters}&method=${method}`
+    );
+  },
 };
 
 // Export types

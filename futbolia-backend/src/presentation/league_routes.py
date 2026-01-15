@@ -8,6 +8,7 @@ from typing import List, Optional
 from src.core.logger import log_info, log_error
 from src.core.cache import api_cache
 from src.infrastructure.external_api.football_api import FootballAPIClient
+from src.infrastructure.clustering.team_clustering import TeamClustering
 
 
 router = APIRouter(prefix="/leagues", tags=["Leagues"])
@@ -111,4 +112,102 @@ async def get_premier_league_standings():
     Shortcut endpoint for Premier League standings.
     """
     return await get_standings(league="PL")
+
+
+@router.get("/clustering")
+async def get_team_clustering(
+    league: str = Query(default="PL", description="League code (PL, PD, SA, BL1, FL1)"),
+    n_clusters: int = Query(default=4, ge=2, le=10, description="Number of clusters (2-10)"),
+    method: str = Query(default="ward", description="Linkage method (ward, complete, average, single)")
+):
+    """
+    🔬 Análisis de Clustering de Equipos
+    
+    Realiza clustering jerárquico de equipos basado en estadísticas de la tabla de posiciones.
+    Utiliza técnicas de minería de datos para agrupar equipos con características similares.
+    
+    El clustering se basa en:
+    - Puntos por partido jugado
+    - Diferencia de goles por partido
+    - Goles a favor/contra por partido
+    - Tasas de victoria/empate/derrota
+    
+    Métodos de linkage disponibles:
+    - ward: Minimiza la varianza dentro de los clusters (recomendado)
+    - complete: Distancia máxima entre puntos de clusters
+    - average: Distancia promedio entre puntos de clusters
+    - single: Distancia mínima entre puntos de clusters
+    
+    Args:
+        league: Código de liga (PL, PD, SA, BL1, FL1)
+        n_clusters: Número de clusters deseados (2-10)
+        method: Método de linkage jerárquico
+        
+    Returns:
+        Resultados del clustering incluyendo:
+        - Dendrograma para visualización
+        - Asignación de clusters por equipo
+        - Estadísticas descriptivas por cluster
+        - Información sobre características de cada cluster
+    """
+    log_info("Clustering request", league=league, n_clusters=n_clusters, method=method)
+    
+    try:
+        # Obtener tabla de posiciones
+        standings_response = await get_standings(league=league)
+        standings = standings_response.get("standings", [])
+        
+        if len(standings) < 2:
+            log_error("Not enough teams for clustering", n_teams=len(standings))
+            return {
+                "success": False,
+                "error": "Se necesitan al menos 2 equipos para realizar clustering",
+                "n_teams": len(standings)
+            }
+        
+        # Realizar clustering
+        clustering_result = TeamClustering.perform_clustering(
+            standings=standings,
+            n_clusters=n_clusters,
+            method=method
+        )
+        
+        log_info("Clustering completed", 
+                 league=league, 
+                 n_clusters=n_clusters,
+                 n_teams=clustering_result["n_teams"])
+        
+        return {
+            "success": True,
+            "data": {
+                **clustering_result,
+                "league": league,
+            }
+        }
+        
+    except ValueError as e:
+        log_error("Clustering validation error", error=str(e), league=league)
+        return {
+            "success": False,
+            "error": str(e)
+        }
+    except Exception as e:
+        log_error("Clustering error", error=str(e), league=league)
+        return {
+            "success": False,
+            "error": f"Error al realizar clustering: {str(e)}"
+        }
+
+
+@router.get("/clustering/premier-league")
+async def get_premier_league_clustering(
+    n_clusters: int = Query(default=4, ge=2, le=10, description="Number of clusters (2-10)"),
+    method: str = Query(default="ward", description="Linkage method")
+):
+    """
+    🔬 Clustering de Premier League
+    
+    Shortcut endpoint para clustering de Premier League.
+    """
+    return await get_team_clustering(league="PL", n_clusters=n_clusters, method=method)
 
