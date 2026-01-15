@@ -211,3 +211,131 @@ async def get_premier_league_clustering(
     """
     return await get_team_clustering(league="PL", n_clusters=n_clusters, method=method)
 
+
+@router.get("/clustering/custom-teams")
+async def get_custom_teams_clustering(
+    n_clusters: int = Query(default=3, ge=2, le=6, description="Number of clusters (2-6)"),
+    method: str = Query(default="ward", description="Linkage method")
+):
+    """
+    🔬 Clustering de Equipos Custom (agregados por usuarios)
+    
+    Realiza clustering de equipos agregados manualmente basándose en
+    los atributos promedio de sus jugadores.
+    
+    Este clustering permite comparar equipos de diferentes ligas
+    o equipos personalizados entre sí.
+    """
+    from src.infrastructure.db.team_repository import TeamRepository
+    from src.infrastructure.chromadb.player_store import PlayerVectorStore
+    
+    log_info("Custom teams clustering request", n_clusters=n_clusters, method=method)
+    
+    try:
+        # Obtener equipos con jugadores de MongoDB
+        mongo_teams = await TeamRepository.get_teams_with_players()
+        
+        if len(mongo_teams) < 2:
+            return {
+                "success": False,
+                "error": "Se necesitan al menos 2 equipos con jugadores para realizar clustering",
+                "n_teams": len(mongo_teams)
+            }
+        
+        # Construir datos de standings simulados basados en atributos de jugadores
+        simulated_standings = []
+        
+        for team in mongo_teams:
+            players = PlayerVectorStore.search_by_team(team.name, limit=30)
+            
+            if not players or len(players) < 3:
+                continue
+            
+            # Calcular estadísticas promedio - PlayerAttributes son objetos, no dicts
+            avg_overall = sum(getattr(p, "overall_rating", 70) for p in players) / len(players)
+            avg_shooting = sum(getattr(p, "shooting", 60) for p in players) / len(players)
+            avg_defending = sum(getattr(p, "defending", 60) for p in players) / len(players)
+            avg_pace = sum(getattr(p, "pace", 70) for p in players) / len(players)
+            avg_passing = sum(getattr(p, "passing", 70) for p in players) / len(players)
+            
+            # Simular estadísticas de liga basadas en atributos
+            # Esto permite usar el mismo algoritmo de clustering
+            games_played = 20  # Simulado
+            
+            # Estimar puntos basado en overall (60-90 -> 15-55 puntos)
+            estimated_points = int(15 + (avg_overall - 60) * 1.33)
+            
+            # Estimar goles a favor basado en shooting y pace
+            attack_factor = (avg_shooting + avg_pace) / 2
+            estimated_gf = int(15 + (attack_factor - 60) * 0.8)
+            
+            # Estimar goles en contra basado en defending
+            estimated_ga = int(40 - (avg_defending - 55) * 0.8)
+            
+            # Estimar victorias/empates/derrotas
+            win_rate = (avg_overall - 60) / 35  # 0 a 0.86
+            wins = int(games_played * win_rate * 0.7)
+            draws = int(games_played * 0.2)
+            losses = games_played - wins - draws
+            
+            simulated_standings.append({
+                "position": len(simulated_standings) + 1,
+                "team": {
+                    "id": team.id,
+                    "name": team.name,
+                    "shortName": team.short_name or team.name[:3].upper(),
+                    "crest": team.logo_url or ""
+                },
+                "playedGames": games_played,
+                "won": wins,
+                "draw": draws,
+                "lost": losses,
+                "points": estimated_points,
+                "goalsFor": estimated_gf,
+                "goalsAgainst": estimated_ga,
+                "goalDifference": estimated_gf - estimated_ga,
+                # Metadatos adicionales
+                "_source": "custom",
+                "_avg_overall": round(avg_overall, 1),
+                "_player_count": len(players)
+            })
+        
+        if len(simulated_standings) < 2:
+            return {
+                "success": False,
+                "error": "No hay suficientes equipos con jugadores para clustering",
+                "n_teams": len(simulated_standings)
+            }
+        
+        # Ordenar por puntos simulados
+        simulated_standings.sort(key=lambda x: x["points"], reverse=True)
+        for i, team in enumerate(simulated_standings):
+            team["position"] = i + 1
+        
+        # Realizar clustering con datos simulados
+        clustering_result = TeamClustering.perform_clustering(
+            standings=simulated_standings,
+            n_clusters=min(n_clusters, len(simulated_standings)),
+            method=method
+        )
+        
+        log_info("Custom teams clustering completed", 
+                 n_clusters=n_clusters,
+                 n_teams=len(simulated_standings))
+        
+        return {
+            "success": True,
+            "data": {
+                **clustering_result,
+                "league": "Custom Teams",
+                "source": "user_generated",
+                "note": "Estadísticas simuladas basadas en atributos de jugadores"
+            }
+        }
+        
+    except Exception as e:
+        log_error("Custom clustering error", error=str(e))
+        return {
+            "success": False,
+            "error": f"Error al realizar clustering: {str(e)}"
+        }

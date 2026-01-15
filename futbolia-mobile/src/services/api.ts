@@ -321,10 +321,17 @@ export const teamsApi = {
   },
 
   // Get teams that have player data
-  getTeamsWithPlayers: async () => {
+  getTeamsWithPlayers: async (includeAll: boolean = true) => {
     return apiRequest<{ teams: TeamSearchResult[]; total: number }>(
-      "/teams/with-players"
+      `/teams/with-players?include_all=${includeAll}`
     );
+  },
+
+  // Refrescar caché de equipos (llamar después de agregar equipos)
+  refreshCache: async () => {
+    return apiRequest<{ success: boolean; message: string }>("/teams/refresh-cache", {
+      method: "POST",
+    });
   },
 
   // Add a new team
