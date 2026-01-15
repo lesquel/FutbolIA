@@ -20,26 +20,51 @@ import { ThemedText, Card, Input, Button, Icon } from "@/src/components/ui";
 import { teamsApi, TeamSearchResult } from "@/src/services/api";
 
 // Solo Premier League 2025-2026
-const ALLOWED_LEAGUES = [
-  "Premier League",
-];
+const ALLOWED_LEAGUES = ["Premier League"];
 
 // Equipos conocidos de Premier League (para validación cuando no hay liga en la respuesta)
 const PREMIER_LEAGUE_TEAMS = [
-  "Arsenal", "Aston Villa", "AFC Bournemouth", "Brentford", "Brighton",
-  "Brighton & Hove Albion", "Chelsea", "Crystal Palace", "Everton", "Fulham",
-  "Ipswich Town", "Leeds United", "Leicester City", "Liverpool", "Manchester City",
-  "Manchester United", "Newcastle United", "Nottingham Forest", "Southampton",
-  "Sunderland", "Tottenham", "Tottenham Hotspur", "West Ham", "West Ham United",
-  "Wolverhampton", "Wolverhampton Wanderers", "Burnley", "Luton Town", "Sheffield United",
+  "Arsenal",
+  "Aston Villa",
+  "AFC Bournemouth",
+  "Brentford",
+  "Brighton",
+  "Brighton & Hove Albion",
+  "Chelsea",
+  "Crystal Palace",
+  "Everton",
+  "Fulham",
+  "Ipswich Town",
+  "Leeds United",
+  "Leicester City",
+  "Liverpool",
+  "Manchester City",
+  "Manchester United",
+  "Newcastle United",
+  "Nottingham Forest",
+  "Southampton",
+  "Sunderland",
+  "Tottenham",
+  "Tottenham Hotspur",
+  "West Ham",
+  "West Ham United",
+  "Wolverhampton",
+  "Wolverhampton Wanderers",
+  "Burnley",
+  "Luton Town",
+  "Sheffield United",
 ];
 
 // Función para verificar si un nombre de equipo es de Premier League
 const isPremierLeagueTeam = (teamName: string): boolean => {
-  const normalizedName = teamName.toLowerCase().replace(/\s*(fc|afc)\s*$/i, "").trim();
-  return PREMIER_LEAGUE_TEAMS.some(known => 
-    normalizedName.includes(known.toLowerCase()) || 
-    known.toLowerCase().includes(normalizedName)
+  const normalizedName = teamName
+    .toLowerCase()
+    .replace(/\s*(fc|afc)\s*$/i, "")
+    .trim();
+  return PREMIER_LEAGUE_TEAMS.some(
+    (known) =>
+      normalizedName.includes(known.toLowerCase()) ||
+      known.toLowerCase().includes(normalizedName)
   );
 };
 
@@ -57,27 +82,107 @@ const isTeamInAllowedLeague = (team: TeamSearchResult): boolean => {
 // Logos from football-data.org - Usando nombres oficiales con FC
 const POPULAR_TEAMS = [
   // Top 6
-  { name: "Manchester City", league: "Premier League", logo_url: "https://crests.football-data.org/65.png" },
-  { name: "Liverpool FC", league: "Premier League", logo_url: "https://crests.football-data.org/64.png" },
-  { name: "Arsenal FC", league: "Premier League", logo_url: "https://crests.football-data.org/57.png" },
-  { name: "Chelsea FC", league: "Premier League", logo_url: "https://crests.football-data.org/61.png" },
-  { name: "Tottenham Hotspur FC", league: "Premier League", logo_url: "https://crests.football-data.org/73.png" },
-  { name: "Manchester United FC", league: "Premier League", logo_url: "https://crests.football-data.org/66.png" },
+  {
+    name: "Manchester City",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/65.png",
+  },
+  {
+    name: "Liverpool FC",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/64.png",
+  },
+  {
+    name: "Arsenal FC",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/57.png",
+  },
+  {
+    name: "Chelsea FC",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/61.png",
+  },
+  {
+    name: "Tottenham Hotspur FC",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/73.png",
+  },
+  {
+    name: "Manchester United FC",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/66.png",
+  },
   // Rest of Premier League
-  { name: "Newcastle United FC", league: "Premier League", logo_url: "https://crests.football-data.org/67.png" },
-  { name: "Aston Villa FC", league: "Premier League", logo_url: "https://crests.football-data.org/58.png" },
-  { name: "Brighton & Hove Albion FC", league: "Premier League", logo_url: "https://crests.football-data.org/397.png" },
-  { name: "West Ham United FC", league: "Premier League", logo_url: "https://crests.football-data.org/563.png" },
-  { name: "Crystal Palace FC", league: "Premier League", logo_url: "https://crests.football-data.org/354.png" },
-  { name: "Brentford FC", league: "Premier League", logo_url: "https://crests.football-data.org/402.png" },
-  { name: "Fulham FC", league: "Premier League", logo_url: "https://crests.football-data.org/63.png" },
-  { name: "Wolverhampton Wanderers FC", league: "Premier League", logo_url: "https://crests.football-data.org/76.png" },
-  { name: "AFC Bournemouth", league: "Premier League", logo_url: "https://crests.football-data.org/1044.png" },
-  { name: "Nottingham Forest FC", league: "Premier League", logo_url: "https://crests.football-data.org/351.png" },
-  { name: "Everton FC", league: "Premier League", logo_url: "https://crests.football-data.org/62.png" },
-  { name: "Leicester City FC", league: "Premier League", logo_url: "https://crests.football-data.org/338.png" },
-  { name: "Ipswich Town FC", league: "Premier League", logo_url: "https://crests.football-data.org/349.png" },
-  { name: "Southampton FC", league: "Premier League", logo_url: "https://crests.football-data.org/340.png" },
+  {
+    name: "Newcastle United FC",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/67.png",
+  },
+  {
+    name: "Aston Villa FC",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/58.png",
+  },
+  {
+    name: "Brighton & Hove Albion FC",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/397.png",
+  },
+  {
+    name: "West Ham United FC",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/563.png",
+  },
+  {
+    name: "Crystal Palace FC",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/354.png",
+  },
+  {
+    name: "Brentford FC",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/402.png",
+  },
+  {
+    name: "Fulham FC",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/63.png",
+  },
+  {
+    name: "Wolverhampton Wanderers FC",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/76.png",
+  },
+  {
+    name: "AFC Bournemouth",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/1044.png",
+  },
+  {
+    name: "Nottingham Forest FC",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/351.png",
+  },
+  {
+    name: "Everton FC",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/62.png",
+  },
+  {
+    name: "Leicester City FC",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/338.png",
+  },
+  {
+    name: "Ipswich Town FC",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/349.png",
+  },
+  {
+    name: "Southampton FC",
+    league: "Premier League",
+    logo_url: "https://crests.football-data.org/340.png",
+  },
 ];
 
 /**
@@ -95,35 +200,40 @@ const normalizeTeamName = (name: string): string => {
  * Elimina equipos duplicados basándose en el nombre normalizado
  * Prioriza equipos con logo_url y con "FC" en el nombre
  */
-const removeDuplicateTeams = (teams: TeamSearchResult[]): TeamSearchResult[] => {
+const removeDuplicateTeams = (
+  teams: TeamSearchResult[]
+): TeamSearchResult[] => {
   const seen = new Map<string, TeamSearchResult>();
-  
+
   for (const team of teams) {
     const normalized = normalizeTeamName(team.name);
     const existing = seen.get(normalized);
-    
+
     if (!existing) {
       seen.set(normalized, team);
     } else {
       // Priorizar: 1) Con logo, 2) Con "FC" en el nombre, 3) Con has_players
-      const shouldReplace = 
+      const shouldReplace =
         (!existing.logo_url && team.logo_url) ||
         (!existing.name.includes("FC") && team.name.includes("FC")) ||
         (!existing.has_players && team.has_players);
-      
+
       if (shouldReplace) {
         seen.set(normalized, team);
       }
     }
   }
-  
+
   return Array.from(seen.values());
 };
 
 interface TeamSelectorProps {
   label: string;
   selectedTeam: string | null;
-  onSelectTeam: (team: string, teamData?: { logo_url?: string; league?: string }) => void;
+  onSelectTeam: (
+    team: string,
+    teamData?: { logo_url?: string; league?: string }
+  ) => void;
   excludeTeam?: string | null; // To prevent selecting the same team twice
   icon?: any; // LucideIcon
 }
@@ -157,7 +267,7 @@ export const TeamSelector = memo(function TeamSelector({
       has_players: true,
       player_count: 11,
     }));
-    
+
     try {
       // Forzar que no use caché en el backend
       const response = await teamsApi.getTeamsWithPlayers();
@@ -169,7 +279,11 @@ export const TeamSelector = memo(function TeamSelector({
         // Incluir TODOS los equipos (include_all=true equivalente)
         const combinedTeams = [...fallbackTeams, ...response.data.teams];
         setTeams(removeDuplicateTeams(combinedTeams));
-        console.log("✅ Teams reloaded:", response.data.teams.length, "from API");
+        console.log(
+          "✅ Teams reloaded:",
+          response.data.teams.length,
+          "from API"
+        );
       } else {
         setTeams(fallbackTeams);
       }
@@ -195,7 +309,7 @@ export const TeamSelector = memo(function TeamSelector({
           player_count: 11,
         }));
         setTeams(fallbackTeams);
-        
+
         // Then try to load from API (non-blocking)
         const response = await teamsApi.getTeamsWithPlayers();
         if (
@@ -252,13 +366,13 @@ export const TeamSelector = memo(function TeamSelector({
       setHasSearched(true);
       try {
         // Search with timeout handling
-        const response = await Promise.race([
+        const response = (await Promise.race([
           teamsApi.search(searchQuery, true),
-          new Promise((_, reject) => 
+          new Promise((_, reject) =>
             setTimeout(() => reject(new Error("Timeout")), 5000)
-          )
-        ]) as any;
-        
+          ),
+        ])) as any;
+
         if (response.success && response.data?.teams) {
           // Ya NO filtramos por liga - permitir todos los equipos
           setTeams(removeDuplicateTeams(response.data.teams));
@@ -266,14 +380,15 @@ export const TeamSelector = memo(function TeamSelector({
           // Show error but keep previous results
           Alert.alert(
             "Búsqueda",
-            response.error || "No se encontraron equipos. Intenta con otro nombre."
+            response.error ||
+              "No se encontraron equipos. Intenta con otro nombre."
           );
         }
       } catch (error: any) {
         console.log("Search error:", error);
         Alert.alert(
           "Error de búsqueda",
-          error.message === "Timeout" 
+          error.message === "Timeout"
             ? "La búsqueda está tardando mucho. Intenta con un nombre más específico."
             : "Error al buscar equipos. Verifica tu conexión."
         );
@@ -313,37 +428,45 @@ export const TeamSelector = memo(function TeamSelector({
 
       if (addResponse.success) {
         // 2. Generate players automatically so GoalMind has data to work with
-        const generateResponse = await teamsApi.generatePlayers(searchQuery, 15, 75);
-        
+        const generateResponse = await teamsApi.generatePlayers(
+          searchQuery,
+          15,
+          75
+        );
+
         // 3. Refrescar caché del backend
         await teamsApi.refreshCache();
-        
+
         // 4. Refrescar la lista de equipos inmediatamente
         console.log("✅ Equipo agregado, refrescando lista...");
         await reloadTeams();
-        setRefreshKey(prev => prev + 1); // Forzar re-render
+        setRefreshKey((prev) => prev + 1); // Forzar re-render
 
-        const playersGenerated = generateResponse.success ? generateResponse.data?.players_generated || 15 : 0;
-        
+        const playersGenerated = generateResponse.success
+          ? generateResponse.data?.players_generated || 15
+          : 0;
+
         Alert.alert(
           "✅ Equipo Agregado",
           `${searchQuery} ha sido agregado con ${playersGenerated} jugadores. GoalMind ya conoce a sus jugadores.`,
-          [{ 
-            text: "¡Genial!", 
-            onPress: () => {
-              // Seleccionar el equipo recién agregado
-              handleSelectTeam(searchQuery, {
-                id: `new_${searchQuery.toLowerCase().replace(/\s+/g, "_")}`,
-                name: searchQuery,
-                short_name: searchQuery.substring(0, 3).toUpperCase(),
-                logo_url: "",
-                country: "",
-                league: "",
-                has_players: true,
-                player_count: playersGenerated,
-              });
-            }
-          }]
+          [
+            {
+              text: "¡Genial!",
+              onPress: () => {
+                // Seleccionar el equipo recién agregado
+                handleSelectTeam(searchQuery, {
+                  id: `new_${searchQuery.toLowerCase().replace(/\s+/g, "_")}`,
+                  name: searchQuery,
+                  short_name: searchQuery.substring(0, 3).toUpperCase(),
+                  logo_url: "",
+                  country: "",
+                  league: "",
+                  has_players: true,
+                  player_count: playersGenerated,
+                });
+              },
+            },
+          ]
         );
       } else {
         Alert.alert(
@@ -369,12 +492,16 @@ export const TeamSelector = memo(function TeamSelector({
   };
 
   // Helper to find logo from POPULAR_TEAMS
-  const getTeamLogo = (teamName: string, itemLogo?: string): string | undefined => {
+  const getTeamLogo = (
+    teamName: string,
+    itemLogo?: string
+  ): string | undefined => {
     if (itemLogo) return itemLogo;
-    const popularTeam = POPULAR_TEAMS.find(t => 
-      t.name === teamName || 
-      teamName.includes(t.name) || 
-      t.name.includes(teamName.replace(' FC', '').replace('FC ', ''))
+    const popularTeam = POPULAR_TEAMS.find(
+      (t) =>
+        t.name === teamName ||
+        teamName.includes(t.name) ||
+        t.name.includes(teamName.replace(" FC", "").replace("FC ", ""))
     );
     return popularTeam?.logo_url;
   };
@@ -418,8 +545,12 @@ export const TeamSelector = memo(function TeamSelector({
             )}
           </View>
           <View style={{ flex: 1 }}>
-            <ThemedText weight="semibold" numberOfLines={1}>{item.name}</ThemedText>
-            <ThemedText variant="muted" size="xs">{item.league || item.country || "Liga desconocida"}</ThemedText>
+            <ThemedText weight="semibold" numberOfLines={1}>
+              {item.name}
+            </ThemedText>
+            <ThemedText variant="muted" size="xs">
+              {item.league || item.country || "Liga desconocida"}
+            </ThemedText>
           </View>
           {item.has_players && (
             <View
@@ -429,7 +560,12 @@ export const TeamSelector = memo(function TeamSelector({
               ]}
             >
               <Icon icon={Check} size={12} variant="success" />
-              <ThemedText size="xs" style={{ color: theme.colors.success, marginLeft: 4 }}>Datos</ThemedText>
+              <ThemedText
+                size="xs"
+                style={{ color: theme.colors.success, marginLeft: 4 }}
+              >
+                Datos
+              </ThemedText>
             </View>
           )}
         </View>
@@ -443,8 +579,12 @@ export const TeamSelector = memo(function TeamSelector({
   return (
     <View style={styles.container}>
       <View style={styles.labelRow}>
-        {IconComponent ? <Icon icon={IconComponent} size={16} variant="secondary" /> : null}
-        <ThemedText variant="secondary" size="sm" style={styles.label}>{label}</ThemedText>
+        {IconComponent ? (
+          <Icon icon={IconComponent} size={16} variant="secondary" />
+        ) : null}
+        <ThemedText variant="secondary" size="sm" style={styles.label}>
+          {label}
+        </ThemedText>
       </View>
 
       <TouchableOpacity
@@ -469,11 +609,17 @@ export const TeamSelector = memo(function TeamSelector({
                 // First get logo from POPULAR_TEAMS (most reliable)
                 const logoUrl = getTeamLogo(selectedTeam, undefined);
                 // Then get other team data from teams list
-                const teamData = teams.find(t => t.name === selectedTeam);
-                const league = teamData?.league || POPULAR_TEAMS.find(t => 
-                  t.name === selectedTeam || selectedTeam.includes(t.name) || 
-                  t.name.includes(selectedTeam.replace(' FC', '').replace('FC ', ''))
-                )?.league;
+                const teamData = teams.find((t) => t.name === selectedTeam);
+                const league =
+                  teamData?.league ||
+                  POPULAR_TEAMS.find(
+                    (t) =>
+                      t.name === selectedTeam ||
+                      selectedTeam.includes(t.name) ||
+                      t.name.includes(
+                        selectedTeam.replace(" FC", "").replace("FC ", "")
+                      )
+                  )?.league;
                 return (
                   <>
                     <View
@@ -497,7 +643,9 @@ export const TeamSelector = memo(function TeamSelector({
                     <View style={{ flex: 1 }}>
                       <ThemedText weight="semibold">{selectedTeam}</ThemedText>
                       {league ? (
-                        <ThemedText variant="muted" size="xs">{league}</ThemedText>
+                        <ThemedText variant="muted" size="xs">
+                          {league}
+                        </ThemedText>
                       ) : null}
                     </View>
                   </>
@@ -531,7 +679,9 @@ export const TeamSelector = memo(function TeamSelector({
           >
             {/* Modal Header */}
             <View style={styles.modalHeader}>
-              <ThemedText size="xl" weight="bold">Seleccionar Equipo</ThemedText>
+              <ThemedText size="xl" weight="bold">
+                Seleccionar Equipo
+              </ThemedText>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
                 <Icon icon={X} size={24} variant="muted" />
               </TouchableOpacity>
@@ -575,28 +725,43 @@ export const TeamSelector = memo(function TeamSelector({
               style={styles.teamList}
               ListHeaderComponent={
                 hasSearched && teams.length > 0 ? (
-                    <View style={styles.searchResultsHeader}>
+                  <View style={styles.searchResultsHeader}>
                     <Icon icon={Check} size={16} variant="success" />
-                    <ThemedText variant="muted" size="sm">{teams.length} equipo(s) encontrado(s)</ThemedText>
+                    <ThemedText variant="muted" size="sm">
+                      {teams.length} equipo(s) encontrado(s)
+                    </ThemedText>
                   </View>
                 ) : null
               }
               ListEmptyComponent={
                 !loading ? (
                   <View style={styles.emptyContainer}>
-                    <ThemedText variant="muted" style={styles.emptyText}>{hasSearched && searchQuery.length > 0
+                    <ThemedText variant="muted" style={styles.emptyText}>
+                      {hasSearched && searchQuery.length > 0
                         ? `No se encontró "${searchQuery}" en la base de datos.`
-                        : "Escribe el nombre del equipo y presiona buscar."}</ThemedText>
+                        : "Escribe el nombre del equipo y presiona buscar."}
+                    </ThemedText>
                     {hasSearched && searchQuery.length >= 2 && (
                       <Card variant="outlined" style={styles.addCard}>
-                        <ThemedText weight="bold" style={{ marginBottom: 8 }}>{`¿Agregar ${searchQuery} con IA?`}</ThemedText>
+                        <ThemedText
+                          weight="bold"
+                          style={{ marginBottom: 8 }}
+                        >{`¿Agregar ${searchQuery} con IA?`}</ThemedText>
                         <ThemedText
                           size="sm"
                           variant="secondary"
                           style={{ marginBottom: 16 }}
-                        >GoalMind buscará los jugadores reales de este equipo y los guardará en la base de datos para futuras consultas.</ThemedText>
+                        >
+                          GoalMind buscará los jugadores reales de este equipo y
+                          los guardará en la base de datos para futuras
+                          consultas.
+                        </ThemedText>
                         <Button
-                          title={isAdding ? "Generando jugadores..." : `Agregar ${searchQuery} con IA`}
+                          title={
+                            isAdding
+                              ? "Generando jugadores..."
+                              : `Agregar ${searchQuery} con IA`
+                          }
                           onPress={handleAddNewTeam}
                           disabled={isAdding}
                           loading={isAdding}
