@@ -2,7 +2,7 @@
  * LeagueTable - Component to display league standings
  * Shows current Premier League 2025-2026 table
  */
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   View,
   Modal,
@@ -13,16 +13,20 @@ import {
   ActivityIndicator,
   Image,
   RefreshControl,
-  Dimensions,
+  useWindowDimensions,
   ScrollView,
   Animated,
 } from "react-native";
-import { X, Trophy, TrendingUp, TrendingDown, Minus } from "lucide-react-native";
+import {
+  X,
+  Trophy,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+} from "lucide-react-native";
 import { useTheme } from "@/src/theme";
 import { ThemedText, Card, Icon } from "@/src/components/ui";
 import { leaguesApi, StandingsEntry } from "@/src/services/api";
-
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 interface LeagueTableProps {
   visible: boolean;
@@ -31,6 +35,34 @@ interface LeagueTableProps {
 
 export function LeagueTable({ visible, onClose }: LeagueTableProps) {
   const { theme } = useTheme();
+
+  // Responsive breakpoints
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const isTablet = screenWidth >= 768;
+  const isDesktop = screenWidth >= 1024;
+  const isLargeScreen = isTablet || isDesktop;
+
+  // Calculate responsive modal dimensions
+  const modalDimensions = useMemo(() => {
+    if (isDesktop) {
+      return {
+        width: Math.min(700, screenWidth * 0.6),
+        maxHeight: screenHeight * 0.85,
+        minHeight: screenHeight * 0.6,
+      };
+    } else if (isTablet) {
+      return {
+        width: Math.min(600, screenWidth * 0.75),
+        maxHeight: screenHeight * 0.8,
+        minHeight: screenHeight * 0.6,
+      };
+    }
+    return {
+      maxHeight: screenHeight * 0.92,
+      minHeight: screenHeight * 0.75,
+    };
+  }, [screenWidth, screenHeight, isTablet, isDesktop]);
+
   const [standings, setStandings] = useState<StandingsEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -82,19 +114,79 @@ export function LeagueTable({ visible, onClose }: LeagueTableProps) {
   };
 
   const renderHeader = () => (
-    <View style={[styles.headerRow, { borderBottomColor: theme.colors.border }]}>
-      <ThemedText size="xs" weight="bold" style={styles.posCol}>#</ThemedText>
-      <ThemedText size="xs" weight="bold" style={styles.teamCol}>Equipo</ThemedText>
-      <ThemedText size="xs" weight="bold" style={styles.statCol}>PJ</ThemedText>
-      <ThemedText size="xs" weight="bold" style={styles.statCol}>G</ThemedText>
-      <ThemedText size="xs" weight="bold" style={styles.statCol}>E</ThemedText>
-      <ThemedText size="xs" weight="bold" style={styles.statCol}>P</ThemedText>
-      <ThemedText size="xs" weight="bold" style={styles.statCol}>DG</ThemedText>
-      <ThemedText size="xs" weight="bold" style={styles.ptsCol}>Pts</ThemedText>
+    <View
+      style={[
+        styles.headerRow,
+        isLargeScreen && styles.headerRowLarge,
+        { borderBottomColor: theme.colors.border },
+      ]}
+    >
+      <ThemedText
+        size={isLargeScreen ? "sm" : "xs"}
+        weight="bold"
+        style={[styles.posCol, isLargeScreen && styles.posColLarge]}
+      >
+        #
+      </ThemedText>
+      <ThemedText
+        size={isLargeScreen ? "sm" : "xs"}
+        weight="bold"
+        style={[styles.teamCol, isLargeScreen && styles.teamColLarge]}
+      >
+        Equipo
+      </ThemedText>
+      <ThemedText
+        size={isLargeScreen ? "sm" : "xs"}
+        weight="bold"
+        style={[styles.statCol, isLargeScreen && styles.statColLarge]}
+      >
+        PJ
+      </ThemedText>
+      <ThemedText
+        size={isLargeScreen ? "sm" : "xs"}
+        weight="bold"
+        style={[styles.statCol, isLargeScreen && styles.statColLarge]}
+      >
+        G
+      </ThemedText>
+      <ThemedText
+        size={isLargeScreen ? "sm" : "xs"}
+        weight="bold"
+        style={[styles.statCol, isLargeScreen && styles.statColLarge]}
+      >
+        E
+      </ThemedText>
+      <ThemedText
+        size={isLargeScreen ? "sm" : "xs"}
+        weight="bold"
+        style={[styles.statCol, isLargeScreen && styles.statColLarge]}
+      >
+        P
+      </ThemedText>
+      <ThemedText
+        size={isLargeScreen ? "sm" : "xs"}
+        weight="bold"
+        style={[styles.statCol, isLargeScreen && styles.statColLarge]}
+      >
+        DG
+      </ThemedText>
+      <ThemedText
+        size={isLargeScreen ? "sm" : "xs"}
+        weight="bold"
+        style={[styles.ptsCol, isLargeScreen && styles.ptsColLarge]}
+      >
+        Pts
+      </ThemedText>
     </View>
   );
 
-  const renderTeamRow = ({ item, index }: { item: StandingsEntry; index: number }) => {
+  const renderTeamRow = ({
+    item,
+    index,
+  }: {
+    item: StandingsEntry;
+    index: number;
+  }) => {
     const positionColor = getPositionColor(item.position);
     const isChampionsLeague = item.position <= 4;
     const isEuropaLeague = item.position === 5;
@@ -105,56 +197,123 @@ export function LeagueTable({ visible, onClose }: LeagueTableProps) {
       <View
         style={[
           styles.teamRow,
+          isLargeScreen && styles.teamRowLarge,
           {
-            backgroundColor: index % 2 === 0 ? theme.colors.surface : theme.colors.background,
+            backgroundColor:
+              index % 2 === 0 ? theme.colors.surface : theme.colors.background,
             borderLeftColor: positionColor,
-            borderLeftWidth: isChampionsLeague || isEuropaLeague || isConferenceLeague || isRelegation ? 3 : 0,
+            borderLeftWidth:
+              isChampionsLeague ||
+              isEuropaLeague ||
+              isConferenceLeague ||
+              isRelegation
+                ? 3
+                : 0,
           },
         ]}
       >
-        <View style={styles.posCol}>
+        <View style={[styles.posCol, isLargeScreen && styles.posColLarge]}>
           <ThemedText
-            size="sm"
+            size={isLargeScreen ? "base" : "sm"}
             weight="bold"
             style={{ color: positionColor }}
           >
             {item.position}
           </ThemedText>
         </View>
-        <View style={styles.teamCol}>
-          <View style={styles.teamInfo}>
+        <View style={[styles.teamCol, isLargeScreen && styles.teamColLarge]}>
+          <View
+            style={[styles.teamInfo, isLargeScreen && styles.teamInfoLarge]}
+          >
             {item.team.crest ? (
               <Image
                 source={{ uri: item.team.crest }}
-                style={styles.teamLogo}
+                style={[styles.teamLogo, isLargeScreen && styles.teamLogoLarge]}
                 resizeMode="contain"
               />
             ) : (
-              <View style={[styles.teamLogoPlaceholder, { backgroundColor: theme.colors.surfaceSecondary }]}>
-                <ThemedText size="xs" weight="bold">
+              <View
+                style={[
+                  styles.teamLogoPlaceholder,
+                  isLargeScreen && styles.teamLogoPlaceholderLarge,
+                  { backgroundColor: theme.colors.surfaceSecondary },
+                ]}
+              >
+                <ThemedText size={isLargeScreen ? "sm" : "xs"} weight="bold">
                   {item.team.shortName?.charAt(0) || "?"}
                 </ThemedText>
               </View>
             )}
             <View style={styles.teamNameContainer}>
-              <ThemedText size="sm" weight="semibold" numberOfLines={1}>
+              <ThemedText
+                size={isLargeScreen ? "base" : "sm"}
+                weight="semibold"
+                numberOfLines={1}
+              >
                 {item.team.shortName || item.team.name}
               </ThemedText>
             </View>
           </View>
         </View>
-        <ThemedText size="sm" style={styles.statCol} variant="secondary">{item.playedGames}</ThemedText>
-        <ThemedText size="sm" style={styles.statCol} variant="secondary">{item.won}</ThemedText>
-        <ThemedText size="sm" style={styles.statCol} variant="secondary">{item.draw}</ThemedText>
-        <ThemedText size="sm" style={styles.statCol} variant="secondary">{item.lost}</ThemedText>
         <ThemedText
-          size="sm"
-          style={[styles.statCol, { color: item.goalDifference > 0 ? theme.colors.success : item.goalDifference < 0 ? theme.colors.error : theme.colors.textSecondary }]}
+          size={isLargeScreen ? "base" : "sm"}
+          style={[styles.statCol, isLargeScreen && styles.statColLarge]}
+          variant="secondary"
         >
-          {item.goalDifference > 0 ? `+${item.goalDifference}` : item.goalDifference}
+          {item.playedGames}
         </ThemedText>
-        <View style={[styles.ptsCol, styles.ptsContainer]}>
-          <ThemedText size="sm" weight="bold" style={{ color: theme.colors.primary }}>
+        <ThemedText
+          size={isLargeScreen ? "base" : "sm"}
+          style={[styles.statCol, isLargeScreen && styles.statColLarge]}
+          variant="secondary"
+        >
+          {item.won}
+        </ThemedText>
+        <ThemedText
+          size={isLargeScreen ? "base" : "sm"}
+          style={[styles.statCol, isLargeScreen && styles.statColLarge]}
+          variant="secondary"
+        >
+          {item.draw}
+        </ThemedText>
+        <ThemedText
+          size={isLargeScreen ? "base" : "sm"}
+          style={[styles.statCol, isLargeScreen && styles.statColLarge]}
+          variant="secondary"
+        >
+          {item.lost}
+        </ThemedText>
+        <ThemedText
+          size={isLargeScreen ? "base" : "sm"}
+          style={[
+            styles.statCol,
+            isLargeScreen && styles.statColLarge,
+            {
+              color:
+                item.goalDifference > 0
+                  ? theme.colors.success
+                  : item.goalDifference < 0
+                    ? theme.colors.error
+                    : theme.colors.textSecondary,
+            },
+          ]}
+        >
+          {item.goalDifference > 0
+            ? `+${item.goalDifference}`
+            : item.goalDifference}
+        </ThemedText>
+        <View
+          style={[
+            styles.ptsCol,
+            styles.ptsContainer,
+            isLargeScreen && styles.ptsColLarge,
+          ]}
+        >
+          <ThemedText
+            size={isLargeScreen ? "base" : "sm"}
+            weight="bold"
+            style={{ color: theme.colors.primary }}
+          >
             {item.points}
           </ThemedText>
         </View>
@@ -163,22 +322,68 @@ export function LeagueTable({ visible, onClose }: LeagueTableProps) {
   };
 
   const renderLegend = () => (
-    <View style={[styles.legend, { borderTopColor: theme.colors.border }]}>
-      <View style={styles.legendItem}>
-        <View style={[styles.legendDot, { backgroundColor: theme.colors.success }]} />
-        <ThemedText size="xs" variant="muted">Champions League</ThemedText>
+    <View
+      style={[
+        styles.legend,
+        isLargeScreen && styles.legendLarge,
+        { borderTopColor: theme.colors.border },
+      ]}
+    >
+      <View
+        style={[styles.legendItem, isLargeScreen && styles.legendItemLarge]}
+      >
+        <View
+          style={[
+            styles.legendDot,
+            isLargeScreen && styles.legendDotLarge,
+            { backgroundColor: theme.colors.success },
+          ]}
+        />
+        <ThemedText size={isLargeScreen ? "sm" : "xs"} variant="muted">
+          Champions League
+        </ThemedText>
       </View>
-      <View style={styles.legendItem}>
-        <View style={[styles.legendDot, { backgroundColor: "#f59e0b" }]} />
-        <ThemedText size="xs" variant="muted">Europa League</ThemedText>
+      <View
+        style={[styles.legendItem, isLargeScreen && styles.legendItemLarge]}
+      >
+        <View
+          style={[
+            styles.legendDot,
+            isLargeScreen && styles.legendDotLarge,
+            { backgroundColor: "#f59e0b" },
+          ]}
+        />
+        <ThemedText size={isLargeScreen ? "sm" : "xs"} variant="muted">
+          Europa League
+        </ThemedText>
       </View>
-      <View style={styles.legendItem}>
-        <View style={[styles.legendDot, { backgroundColor: "#8b5cf6" }]} />
-        <ThemedText size="xs" variant="muted">Conference</ThemedText>
+      <View
+        style={[styles.legendItem, isLargeScreen && styles.legendItemLarge]}
+      >
+        <View
+          style={[
+            styles.legendDot,
+            isLargeScreen && styles.legendDotLarge,
+            { backgroundColor: "#8b5cf6" },
+          ]}
+        />
+        <ThemedText size={isLargeScreen ? "sm" : "xs"} variant="muted">
+          Conference
+        </ThemedText>
       </View>
-      <View style={styles.legendItem}>
-        <View style={[styles.legendDot, { backgroundColor: theme.colors.error }]} />
-        <ThemedText size="xs" variant="muted">Descenso</ThemedText>
+      <View
+        style={[styles.legendItem, isLargeScreen && styles.legendItemLarge]}
+      >
+        <View
+          style={[
+            styles.legendDot,
+            isLargeScreen && styles.legendDotLarge,
+            { backgroundColor: theme.colors.error },
+          ]}
+        />
+        <ThemedText size={isLargeScreen ? "sm" : "xs"} variant="muted">
+          Descenso
+        </ThemedText>
       </View>
     </View>
   );
@@ -187,36 +392,88 @@ export function LeagueTable({ visible, onClose }: LeagueTableProps) {
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
+      animationType={isLargeScreen ? "fade" : "slide"}
       onRequestClose={onClose}
+      statusBarTranslucent
     >
-      <View style={styles.modalOverlay}>
-        <Pressable
-          style={styles.modalBackdrop}
-          onPress={onClose}
-        />
+      <View
+        style={[
+          styles.modalOverlay,
+          isLargeScreen && styles.modalOverlayCenter,
+        ]}
+      >
+        <Pressable style={styles.modalBackdrop} onPress={onClose} />
         <View
-          style={[styles.modalContent, { backgroundColor: theme.colors.background }]}
+          style={[
+            styles.modalContent,
+            isLargeScreen && [
+              styles.modalContentCenter,
+              {
+                width: modalDimensions.width,
+                maxHeight: modalDimensions.maxHeight,
+                minHeight: modalDimensions.minHeight,
+              },
+            ],
+            { backgroundColor: theme.colors.background },
+          ]}
         >
           {/* Header */}
-          <View style={[styles.modalHeader, { borderBottomColor: theme.colors.border }]}>
-            <View style={styles.titleContainer}>
-              <Icon icon={Trophy} size={24} variant="primary" />
+          <View
+            style={[
+              styles.modalHeader,
+              isLargeScreen && styles.modalHeaderLarge,
+              { borderBottomColor: theme.colors.border },
+            ]}
+          >
+            <View
+              style={[
+                styles.titleContainer,
+                isLargeScreen && styles.titleContainerLarge,
+              ]}
+            >
+              <Icon
+                icon={Trophy}
+                size={isLargeScreen ? 32 : 24}
+                variant="primary"
+              />
               <View style={styles.titleText}>
-                <ThemedText size="xl" weight="bold">Premier League</ThemedText>
-                <ThemedText size="sm" variant="muted">Temporada 2025-2026</ThemedText>
+                <ThemedText size={isLargeScreen ? "2xl" : "xl"} weight="bold">
+                  Premier League
+                </ThemedText>
+                <ThemedText
+                  size={isLargeScreen ? "base" : "sm"}
+                  variant="muted"
+                >
+                  Temporada 2025-2026
+                </ThemedText>
               </View>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Icon icon={X} size={24} variant="muted" />
+            <TouchableOpacity
+              onPress={onClose}
+              style={[
+                styles.closeButton,
+                isLargeScreen && styles.closeButtonLarge,
+              ]}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Icon icon={X} size={isLargeScreen ? 28 : 24} variant="muted" />
             </TouchableOpacity>
           </View>
 
           {/* Content */}
           {loading ? (
-            <View style={styles.loadingContainer}>
+            <View
+              style={[
+                styles.loadingContainer,
+                isLargeScreen && styles.loadingContainerLarge,
+              ]}
+            >
               <ActivityIndicator size="large" color={theme.colors.primary} />
-              <ThemedText variant="muted" style={{ marginTop: 12 }}>
+              <ThemedText
+                variant="muted"
+                size={isLargeScreen ? "base" : "sm"}
+                style={{ marginTop: 16 }}
+              >
                 Cargando tabla de posiciones...
               </ThemedText>
             </View>
@@ -232,10 +489,14 @@ export function LeagueTable({ visible, onClose }: LeagueTableProps) {
                 bounces={true}
                 onScroll={Animated.event(
                   [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                  { useNativeDriver: false }
+                  { useNativeDriver: false },
                 )}
-                onContentSizeChange={(width, height) => setContentHeight(height)}
-                onLayout={(event) => setScrollViewHeight(event.nativeEvent.layout.height)}
+                onContentSizeChange={(width, height) =>
+                  setContentHeight(height)
+                }
+                onLayout={(event) =>
+                  setScrollViewHeight(event.nativeEvent.layout.height)
+                }
                 scrollEventThrottle={16}
                 refreshControl={
                   <RefreshControl
@@ -247,13 +508,13 @@ export function LeagueTable({ visible, onClose }: LeagueTableProps) {
               >
                 {renderHeader()}
                 {standings.map((item, index) => (
-                <View key={`team-${item.position}-${item.team.name}`}>
-                  {renderTeamRow({ item, index })}
-                </View>
-              ))}
+                  <View key={`team-${item.position}-${item.team.name}`}>
+                    {renderTeamRow({ item, index })}
+                  </View>
+                ))}
                 {renderLegend()}
               </ScrollView>
-              
+
               {/* Custom Scrollbar */}
               {contentHeight > scrollViewHeight && (
                 <View style={styles.scrollbarTrack}>
@@ -264,13 +525,24 @@ export function LeagueTable({ visible, onClose }: LeagueTableProps) {
                         backgroundColor: theme.colors.primary + "80",
                         height: Math.max(
                           (scrollViewHeight / contentHeight) * scrollViewHeight,
-                          30
+                          30,
                         ),
                         transform: [
                           {
                             translateY: scrollY.interpolate({
-                              inputRange: [0, Math.max(contentHeight - scrollViewHeight, 1)],
-                              outputRange: [0, scrollViewHeight - Math.max((scrollViewHeight / contentHeight) * scrollViewHeight, 30)],
+                              inputRange: [
+                                0,
+                                Math.max(contentHeight - scrollViewHeight, 1),
+                              ],
+                              outputRange: [
+                                0,
+                                scrollViewHeight -
+                                  Math.max(
+                                    (scrollViewHeight / contentHeight) *
+                                      scrollViewHeight,
+                                    30,
+                                  ),
+                              ],
                               extrapolate: "clamp",
                             }),
                           },
@@ -298,10 +570,10 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.7)",
   },
   modalContent: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: SCREEN_HEIGHT * 0.9,
-    minHeight: SCREEN_HEIGHT * 0.7,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    maxHeight: "92%",
+    minHeight: "75%",
     flexDirection: "column",
     overflow: "hidden",
   },
@@ -315,20 +587,20 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   scrollContent: {
-    paddingBottom: 20,
+    paddingBottom: 24,
   },
   scrollbarTrack: {
     position: "absolute",
-    right: 2,
+    right: 3,
     top: 0,
     bottom: 0,
-    width: 4,
+    width: 5,
     backgroundColor: "rgba(0, 0, 0, 0.1)",
-    borderRadius: 2,
+    borderRadius: 3,
   },
   scrollbarThumb: {
-    width: 4,
-    borderRadius: 2,
+    width: 5,
+    borderRadius: 3,
     position: "absolute",
     right: 0,
   },
@@ -336,101 +608,181 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 22,
     borderBottomWidth: 1,
   },
   titleContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 14,
+    flex: 1,
   },
   titleText: {
-    gap: 2,
+    gap: 4,
+    flex: 1,
   },
   closeButton: {
-    padding: 8,
+    padding: 10,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 60,
+    paddingVertical: 70,
   },
   listContent: {
-    paddingBottom: 20,
+    paddingBottom: 24,
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderBottomWidth: 1,
   },
   teamRow: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 12,
   },
   posCol: {
-    width: 28,
+    width: 32,
     alignItems: "center",
   },
   teamCol: {
     flex: 1,
-    paddingRight: 8,
+    paddingRight: 10,
+    minWidth: 0,
   },
   teamInfo: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
   },
   teamLogo: {
-    width: 24,
-    height: 24,
+    width: 28,
+    height: 28,
   },
   teamLogoPlaceholder: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
   },
   teamNameContainer: {
     flex: 1,
+    minWidth: 0,
   },
   statCol: {
-    width: 28,
+    width: 30,
     textAlign: "center",
   },
   ptsCol: {
-    width: 36,
+    width: 40,
     alignItems: "center",
   },
   ptsContainer: {
-    borderRadius: 4,
-    paddingVertical: 2,
-    paddingHorizontal: 4,
+    borderRadius: 6,
+    paddingVertical: 3,
+    paddingHorizontal: 6,
   },
   legend: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "center",
-    gap: 16,
-    paddingVertical: 16,
+    gap: 14,
+    paddingVertical: 18,
     paddingHorizontal: 16,
-    marginTop: 8,
+    marginTop: 10,
     borderTopWidth: 1,
   },
   legendItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 6,
   },
   legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  // ==========================================
+  // RESPONSIVE STYLES FOR TABLETS AND DESKTOP
+  // ==========================================
+  modalOverlayCenter: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContentCenter: {
+    borderRadius: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  modalHeaderLarge: {
+    paddingHorizontal: 28,
+    paddingVertical: 28,
+  },
+  titleContainerLarge: {
+    gap: 18,
+  },
+  closeButtonLarge: {
+    padding: 14,
+  },
+  loadingContainerLarge: {
+    paddingVertical: 100,
+  },
+  headerRowLarge: {
+    paddingHorizontal: 24,
+    paddingVertical: 18,
+  },
+  teamRowLarge: {
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+  },
+  posColLarge: {
+    width: 44,
+  },
+  teamColLarge: {
+    paddingRight: 16,
+  },
+  teamInfoLarge: {
+    gap: 14,
+  },
+  teamLogoLarge: {
+    width: 36,
+    height: 36,
+  },
+  teamLogoPlaceholderLarge: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+  },
+  statColLarge: {
+    width: 40,
+  },
+  ptsColLarge: {
+    width: 52,
+  },
+  legendLarge: {
+    gap: 20,
+    paddingVertical: 24,
+    paddingHorizontal: 24,
+    marginTop: 16,
+  },
+  legendItemLarge: {
+    gap: 10,
+  },
+  legendDotLarge: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
   },
 });
-

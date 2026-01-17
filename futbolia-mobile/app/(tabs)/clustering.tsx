@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Platform,
+  useWindowDimensions,
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import { Database, TrendingUp, RefreshCw } from "lucide-react-native";
@@ -28,6 +29,11 @@ import { leaguesApi } from "@/src/services/api";
 export default function ClusteringScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const { width: screenWidth } = useWindowDimensions();
+  const isTablet = screenWidth >= 768;
+  const isDesktop = screenWidth >= 1024;
+  const isLargeScreen = isTablet || isDesktop;
+
   const [loading, setLoading] = useState(true);
   const [clusteringData, setClusteringData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +50,7 @@ export default function ClusteringScreen() {
     try {
       const response = await leaguesApi.getPremierLeagueClustering(
         nClusters,
-        method
+        method,
       );
       if (response.success && response.data) {
         setClusteringData(response.data);
@@ -60,22 +66,41 @@ export default function ClusteringScreen() {
   };
 
   const renderControls = () => (
-    <Card padding="md" style={styles.controlsCard}>
-      <ThemedText size="sm" weight="semibold" style={styles.controlsTitle}>
+    <Card
+      padding={isLargeScreen ? "lg" : "md"}
+      style={[styles.controlsCard, isLargeScreen && styles.controlsCardLarge]}
+    >
+      <ThemedText
+        size={isLargeScreen ? "base" : "sm"}
+        weight="semibold"
+        style={[
+          styles.controlsTitle,
+          isLargeScreen && styles.controlsTitleLarge,
+        ]}
+      >
         Parámetros de Clustering
       </ThemedText>
 
       {/* Selector de número de clusters */}
-      <View style={styles.controlGroup}>
-        <ThemedText size="xs" variant="muted" style={styles.controlLabel}>
+      <View
+        style={[styles.controlGroup, isLargeScreen && styles.controlGroupLarge]}
+      >
+        <ThemedText
+          size={isLargeScreen ? "sm" : "xs"}
+          variant="muted"
+          style={styles.controlLabel}
+        >
           Número de Clusters: {nClusters}
         </ThemedText>
-        <View style={styles.buttonRow}>
+        <View
+          style={[styles.buttonRow, isLargeScreen && styles.buttonRowLarge]}
+        >
           {[2, 3, 4, 5, 6].map((num) => (
             <TouchableOpacity
               key={num}
               style={[
                 styles.controlButton,
+                isLargeScreen && styles.controlButtonLarge,
                 {
                   backgroundColor:
                     nClusters === num
@@ -87,11 +112,10 @@ export default function ClusteringScreen() {
               onPress={() => setNClusters(num)}
             >
               <ThemedText
-                size="xs"
+                size={isLargeScreen ? "sm" : "xs"}
                 weight={nClusters === num ? "bold" : "normal"}
                 style={{
-                  color:
-                    nClusters === num ? "#fff" : theme.colors.text,
+                  color: nClusters === num ? "#fff" : theme.colors.text,
                 }}
               >
                 {num}
@@ -102,11 +126,19 @@ export default function ClusteringScreen() {
       </View>
 
       {/* Selector de método */}
-      <View style={styles.controlGroup}>
-        <ThemedText size="xs" variant="muted" style={styles.controlLabel}>
+      <View
+        style={[styles.controlGroup, isLargeScreen && styles.controlGroupLarge]}
+      >
+        <ThemedText
+          size={isLargeScreen ? "sm" : "xs"}
+          variant="muted"
+          style={styles.controlLabel}
+        >
           Método de Linkage:
         </ThemedText>
-        <View style={styles.buttonRow}>
+        <View
+          style={[styles.buttonRow, isLargeScreen && styles.buttonRowLarge]}
+        >
           {[
             { value: "ward", label: "Ward" },
             { value: "complete", label: "Complete" },
@@ -117,6 +149,7 @@ export default function ClusteringScreen() {
               key={m.value}
               style={[
                 styles.controlButton,
+                isLargeScreen && styles.controlButtonLarge,
                 {
                   backgroundColor:
                     method === m.value
@@ -128,7 +161,7 @@ export default function ClusteringScreen() {
               onPress={() => setMethod(m.value)}
             >
               <ThemedText
-                size="xs"
+                size={isLargeScreen ? "sm" : "xs"}
                 weight={method === m.value ? "bold" : "normal"}
                 style={{
                   color: method === m.value ? "#fff" : theme.colors.text,
@@ -144,7 +177,7 @@ export default function ClusteringScreen() {
       <Button
         title="Recalcular"
         variant="outline"
-        size="sm"
+        size={isLargeScreen ? "md" : "sm"}
         onPress={loadClustering}
         icon={RefreshCw}
         style={styles.recalculateButton}
@@ -153,38 +186,87 @@ export default function ClusteringScreen() {
   );
 
   const renderInfoCard = () => (
-    <Card padding="md" style={styles.infoCard}>
-      <View style={styles.infoHeader}>
-        <Icon icon={Database} size={24} variant="primary" />
-        <ThemedText size="lg" weight="bold" style={styles.infoTitle}>
+    <Card
+      padding={isLargeScreen ? "lg" : "md"}
+      style={[styles.infoCard, isLargeScreen && styles.infoCardLarge]}
+    >
+      <View
+        style={[styles.infoHeader, isLargeScreen && styles.infoHeaderLarge]}
+      >
+        <Icon
+          icon={Database}
+          size={isLargeScreen ? 32 : 24}
+          variant="primary"
+        />
+        <ThemedText
+          size={isLargeScreen ? "xl" : "lg"}
+          weight="bold"
+          style={styles.infoTitle}
+        >
           Minería de Datos: Clustering Jerárquico
         </ThemedText>
       </View>
-      <ThemedText size="sm" variant="secondary" style={styles.infoText}>
+      <ThemedText
+        size={isLargeScreen ? "base" : "sm"}
+        variant="secondary"
+        style={[styles.infoText, isLargeScreen && styles.infoTextLarge]}
+      >
         Este análisis utiliza técnicas de clustering jerárquico para agrupar
         equipos según sus características de rendimiento en la tabla de
         posiciones.
       </ThemedText>
-      <View style={styles.infoSection}>
-        <ThemedText size="xs" weight="semibold" style={styles.infoSubtitle}>
+      <View
+        style={[styles.infoSection, isLargeScreen && styles.infoSectionLarge]}
+      >
+        <ThemedText
+          size={isLargeScreen ? "sm" : "xs"}
+          weight="semibold"
+          style={styles.infoSubtitle}
+        >
           Características Analizadas:
         </ThemedText>
-        <ThemedText size="xs" variant="muted" style={styles.infoList}>
-          • Puntos por partido jugado{'\n'}
-          • Diferencia de goles por partido{'\n'}
-          • Goles a favor/contra por partido{'\n'}
-          • Tasas de victoria, empate y derrota
+        <ThemedText
+          size={isLargeScreen ? "sm" : "xs"}
+          variant="muted"
+          style={styles.infoList}
+        >
+          • Puntos por partido jugado{"\n"}• Diferencia de goles por partido
+          {"\n"}• Goles a favor/contra por partido{"\n"}• Tasas de victoria,
+          empate y derrota
         </ThemedText>
       </View>
-      <View style={styles.infoSection}>
-        <ThemedText size="xs" weight="semibold" style={styles.infoSubtitle}>
+      <View
+        style={[styles.infoSection, isLargeScreen && styles.infoSectionLarge]}
+      >
+        <ThemedText
+          size={isLargeScreen ? "sm" : "xs"}
+          weight="semibold"
+          style={styles.infoSubtitle}
+        >
           Métodos de Linkage:
         </ThemedText>
-        <ThemedText size="xs" variant="muted" style={styles.infoList}>
-          • <ThemedText size="xs" weight="semibold">Ward:</ThemedText> Minimiza varianza (recomendado){'\n'}
-          • <ThemedText size="xs" weight="semibold">Complete:</ThemedText> Distancia máxima{'\n'}
-          • <ThemedText size="xs" weight="semibold">Average:</ThemedText> Distancia promedio{'\n'}
-          • <ThemedText size="xs" weight="semibold">Single:</ThemedText> Distancia mínima
+        <ThemedText
+          size={isLargeScreen ? "sm" : "xs"}
+          variant="muted"
+          style={styles.infoList}
+        >
+          •{" "}
+          <ThemedText size={isLargeScreen ? "sm" : "xs"} weight="semibold">
+            Ward:
+          </ThemedText>{" "}
+          Minimiza varianza (recomendado){"\n"}•{" "}
+          <ThemedText size={isLargeScreen ? "sm" : "xs"} weight="semibold">
+            Complete:
+          </ThemedText>{" "}
+          Distancia máxima{"\n"}•{" "}
+          <ThemedText size={isLargeScreen ? "sm" : "xs"} weight="semibold">
+            Average:
+          </ThemedText>{" "}
+          Distancia promedio{"\n"}•{" "}
+          <ThemedText size={isLargeScreen ? "sm" : "xs"} weight="semibold">
+            Single:
+          </ThemedText>{" "}
+          Distancia mínima
         </ThemedText>
       </View>
     </Card>
@@ -207,17 +289,24 @@ export default function ClusteringScreen() {
     <ThemedView variant="background" style={styles.container}>
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          isLargeScreen && styles.scrollContentLarge,
+        ]}
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View style={styles.header}>
-          <Icon icon={TrendingUp} size={32} variant="primary" />
+        <View style={[styles.header, isLargeScreen && styles.headerLarge]}>
+          <Icon
+            icon={TrendingUp}
+            size={isLargeScreen ? 40 : 32}
+            variant="primary"
+          />
           <View style={styles.headerText}>
-            <ThemedText size="xl" weight="bold">
+            <ThemedText size={isLargeScreen ? "2xl" : "xl"} weight="bold">
               Análisis de Clustering
             </ThemedText>
-            <ThemedText size="sm" variant="muted">
+            <ThemedText size={isLargeScreen ? "base" : "sm"} variant="muted">
               Minería de Datos - Premier League
             </ThemedText>
           </View>
@@ -255,7 +344,11 @@ export default function ClusteringScreen() {
                   <ThemedText size="xs" variant="muted">
                     Equipos Analizados
                   </ThemedText>
-                  <ThemedText size="lg" weight="bold" style={{ color: theme.colors.primary }}>
+                  <ThemedText
+                    size="lg"
+                    weight="bold"
+                    style={{ color: theme.colors.primary }}
+                  >
                     {clusteringData.n_teams}
                   </ThemedText>
                 </View>
@@ -263,7 +356,11 @@ export default function ClusteringScreen() {
                   <ThemedText size="xs" variant="muted">
                     Clusters Generados
                   </ThemedText>
-                  <ThemedText size="lg" weight="bold" style={{ color: theme.colors.primary }}>
+                  <ThemedText
+                    size="lg"
+                    weight="bold"
+                    style={{ color: theme.colors.primary }}
+                  >
                     {clusteringData.n_clusters}
                   </ThemedText>
                 </View>
@@ -271,7 +368,11 @@ export default function ClusteringScreen() {
                   <ThemedText size="xs" variant="muted">
                     Método
                   </ThemedText>
-                  <ThemedText size="lg" weight="bold" style={{ color: theme.colors.primary }}>
+                  <ThemedText
+                    size="lg"
+                    weight="bold"
+                    style={{ color: theme.colors.primary }}
+                  >
                     {clusteringData.method.toUpperCase()}
                   </ThemedText>
                 </View>
@@ -284,7 +385,11 @@ export default function ClusteringScreen() {
                 <ThemedText size="lg" weight="bold" style={styles.sectionTitle}>
                   Dendrograma Jerárquico
                 </ThemedText>
-                <ThemedText size="xs" variant="muted" style={styles.sectionSubtitle}>
+                <ThemedText
+                  size="xs"
+                  variant="muted"
+                  style={styles.sectionSubtitle}
+                >
                   Visualización de la estructura jerárquica de clusters
                 </ThemedText>
                 <DendrogramChart
@@ -319,14 +424,21 @@ export default function ClusteringScreen() {
                         weight="bold"
                         style={{ color: theme.colors.primary }}
                       >
-                        Cluster {cluster.cluster_id} - {cluster.n_teams}{" "}
-                        equipos
+                        Cluster {cluster.cluster_id} - {cluster.n_teams} equipos
                       </ThemedText>
                     </View>
-                    <ThemedText size="xs" variant="secondary" style={styles.clusterDescription}>
+                    <ThemedText
+                      size="xs"
+                      variant="secondary"
+                      style={styles.clusterDescription}
+                    >
                       {cluster.description}
                     </ThemedText>
-                    <ThemedText size="xs" variant="muted" style={styles.clusterTeams}>
+                    <ThemedText
+                      size="xs"
+                      variant="muted"
+                      style={styles.clusterTeams}
+                    >
                       Equipos: {cluster.teams.join(", ")}
                     </ThemedText>
                     <View style={styles.clusterStats}>
@@ -356,8 +468,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 32,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 40,
   },
   loadingContainer: {
     flex: 1,
@@ -365,129 +478,185 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    marginTop: 12,
+    marginTop: 14,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    marginBottom: 16,
+    gap: 14,
+    marginBottom: 20,
   },
   headerText: {
     flex: 1,
   },
   infoCard: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   infoHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    marginBottom: 12,
+    gap: 14,
+    marginBottom: 14,
   },
   infoTitle: {
     flex: 1,
   },
   infoText: {
-    marginBottom: 12,
-    lineHeight: 20,
+    marginBottom: 14,
+    lineHeight: 22,
   },
   infoSection: {
-    marginTop: 12,
-    paddingTop: 12,
+    marginTop: 14,
+    paddingTop: 14,
     borderTopWidth: 1,
     borderTopColor: "rgba(0,0,0,0.1)",
   },
   infoSubtitle: {
-    marginBottom: 6,
+    marginBottom: 8,
   },
   infoList: {
-    lineHeight: 18,
+    lineHeight: 20,
   },
   controlsCard: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   controlsTitle: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   controlGroup: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   controlLabel: {
-    marginBottom: 8,
+    marginBottom: 10,
   },
   buttonRow: {
     flexDirection: "row",
-    gap: 8,
+    gap: 10,
     flexWrap: "wrap",
   },
   controlButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 10,
     borderWidth: 1,
-    minWidth: 60,
+    minWidth: 65,
     alignItems: "center",
   },
   recalculateButton: {
-    marginTop: 8,
+    marginTop: 10,
   },
   errorCard: {
-    marginBottom: 16,
+    marginBottom: 18,
     alignItems: "center",
+    paddingVertical: 20,
   },
   retryButton: {
-    marginTop: 12,
+    marginTop: 14,
   },
   statsCard: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   statsTitle: {
-    marginBottom: 12,
+    marginBottom: 14,
   },
   statsGrid: {
     flexDirection: "row",
     justifyContent: "space-around",
+    flexWrap: "wrap",
+    gap: 12,
   },
   statItem: {
     alignItems: "center",
+    minWidth: 90,
+    paddingVertical: 8,
   },
   chartSection: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   sectionTitle: {
-    marginBottom: 8,
+    marginBottom: 10,
   },
   sectionSubtitle: {
-    marginBottom: 12,
+    marginBottom: 14,
   },
   teamsCard: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   clusterGroup: {
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
-    marginBottom: 12,
+    marginBottom: 14,
     overflow: "hidden",
   },
   clusterHeader: {
-    padding: 10,
+    padding: 12,
   },
   clusterDescription: {
-    padding: 10,
-    paddingTop: 8,
+    padding: 12,
+    paddingTop: 10,
     fontStyle: "italic",
+    lineHeight: 20,
   },
   clusterTeams: {
-    paddingHorizontal: 10,
-    paddingBottom: 8,
+    paddingHorizontal: 12,
+    paddingBottom: 10,
+    lineHeight: 20,
   },
   clusterStats: {
     flexDirection: "row",
     justifyContent: "space-between",
-    padding: 10,
-    paddingTop: 8,
+    padding: 12,
+    paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: "rgba(0,0,0,0.1)",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  // ==========================================
+  // RESPONSIVE STYLES FOR TABLETS AND DESKTOP
+  // ==========================================
+  scrollContentLarge: {
+    paddingHorizontal: 32,
+    maxWidth: 1000,
+    alignSelf: "center",
+    width: "100%",
+  },
+  headerLarge: {
+    marginBottom: 28,
+    gap: 18,
+  },
+  infoCardLarge: {
+    borderRadius: 18,
+    marginBottom: 24,
+  },
+  infoHeaderLarge: {
+    marginBottom: 20,
+    gap: 14,
+  },
+  infoTextLarge: {
+    lineHeight: 26,
+    marginBottom: 24,
+  },
+  infoSectionLarge: {
+    marginBottom: 20,
+  },
+  controlsCardLarge: {
+    borderRadius: 18,
+    marginBottom: 24,
+  },
+  controlsTitleLarge: {
+    marginBottom: 24,
+  },
+  controlGroupLarge: {
+    marginBottom: 24,
+  },
+  buttonRowLarge: {
+    gap: 14,
+  },
+  controlButtonLarge: {
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+    minWidth: 80,
   },
 });

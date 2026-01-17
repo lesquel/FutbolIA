@@ -2,7 +2,7 @@
  * TeamSelector - Dropdown/Modal for selecting teams
  * Now with button-based search to reduce server load!
  */
-import { useState, useEffect, useCallback, useRef, memo } from "react";
+import { useState, useEffect, useCallback, useRef, memo, useMemo } from "react";
 import {
   View,
   Modal,
@@ -13,6 +13,9 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  useWindowDimensions,
+  Platform,
+  SafeAreaView,
 } from "react-native";
 import { Search, X, Check, Sparkles, Loader2 } from "lucide-react-native";
 import { useTheme } from "@/src/theme";
@@ -64,7 +67,7 @@ const isPremierLeagueTeam = (teamName: string): boolean => {
   return PREMIER_LEAGUE_TEAMS.some(
     (known) =>
       normalizedName.includes(known.toLowerCase()) ||
-      known.toLowerCase().includes(normalizedName)
+      known.toLowerCase().includes(normalizedName),
   );
 };
 
@@ -201,7 +204,7 @@ const normalizeTeamName = (name: string): string => {
  * Prioriza equipos con logo_url y con "FC" en el nombre
  */
 const removeDuplicateTeams = (
-  teams: TeamSearchResult[]
+  teams: TeamSearchResult[],
 ): TeamSearchResult[] => {
   const seen = new Map<string, TeamSearchResult>();
 
@@ -232,7 +235,7 @@ interface TeamSelectorProps {
   selectedTeam: string | null;
   onSelectTeam: (
     team: string,
-    teamData?: { logo_url?: string; league?: string }
+    teamData?: { logo_url?: string; league?: string },
   ) => void;
   excludeTeam?: string | null; // To prevent selecting the same team twice
   icon?: any; // LucideIcon
@@ -246,6 +249,35 @@ export const TeamSelector = memo(function TeamSelector({
   icon: IconComponent,
 }: TeamSelectorProps) {
   const { theme } = useTheme();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+
+  // Responsive breakpoints
+  const isTablet = screenWidth >= 768;
+  const isDesktop = screenWidth >= 1024;
+  const isLargeScreen = isTablet || isDesktop;
+
+  // Calculate responsive modal dimensions
+  const modalDimensions = useMemo(() => {
+    if (isDesktop) {
+      return {
+        width: Math.min(600, screenWidth * 0.5),
+        maxHeight: screenHeight * 0.8,
+        minHeight: 500,
+      };
+    } else if (isTablet) {
+      return {
+        width: Math.min(500, screenWidth * 0.65),
+        maxHeight: screenHeight * 0.75,
+        minHeight: 450,
+      };
+    }
+    return {
+      width: "100%" as any,
+      maxHeight: "92%" as any,
+      minHeight: "65%" as any,
+    };
+  }, [screenWidth, screenHeight, isTablet, isDesktop]);
+
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [teams, setTeams] = useState<TeamSearchResult[]>([]);
@@ -282,7 +314,7 @@ export const TeamSelector = memo(function TeamSelector({
         console.log(
           "✅ Teams reloaded:",
           response.data.teams.length,
-          "from API"
+          "from API",
         );
       } else {
         setTeams(fallbackTeams);
@@ -369,7 +401,7 @@ export const TeamSelector = memo(function TeamSelector({
         const response = (await Promise.race([
           teamsApi.search(searchQuery, true),
           new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Timeout")), 5000)
+            setTimeout(() => reject(new Error("Timeout")), 5000),
           ),
         ])) as any;
 
@@ -381,7 +413,7 @@ export const TeamSelector = memo(function TeamSelector({
           Alert.alert(
             "Búsqueda",
             response.error ||
-              "No se encontraron equipos. Intenta con otro nombre."
+              "No se encontraron equipos. Intenta con otro nombre.",
           );
         }
       } catch (error: any) {
@@ -390,7 +422,7 @@ export const TeamSelector = memo(function TeamSelector({
           "Error de búsqueda",
           error.message === "Timeout"
             ? "La búsqueda está tardando mucho. Intenta con un nombre más específico."
-            : "Error al buscar equipos. Verifica tu conexión."
+            : "Error al buscar equipos. Verifica tu conexión.",
         );
       } finally {
         setLoading(false);
@@ -431,7 +463,7 @@ export const TeamSelector = memo(function TeamSelector({
         const generateResponse = await teamsApi.generatePlayers(
           searchQuery,
           15,
-          75
+          75,
         );
 
         // 3. Refrescar caché del backend
@@ -466,12 +498,12 @@ export const TeamSelector = memo(function TeamSelector({
                 });
               },
             },
-          ]
+          ],
         );
       } else {
         Alert.alert(
           "Error",
-          addResponse.error || "No se pudo agregar el equipo"
+          addResponse.error || "No se pudo agregar el equipo",
         );
       }
     } catch (error) {
@@ -494,14 +526,14 @@ export const TeamSelector = memo(function TeamSelector({
   // Helper to find logo from POPULAR_TEAMS
   const getTeamLogo = (
     teamName: string,
-    itemLogo?: string
+    itemLogo?: string,
   ): string | undefined => {
     if (itemLogo) return itemLogo;
     const popularTeam = POPULAR_TEAMS.find(
       (t) =>
         t.name === teamName ||
         teamName.includes(t.name) ||
-        t.name.includes(teamName.replace(" FC", "").replace("FC ", ""))
+        t.name.includes(teamName.replace(" FC", "").replace("FC ", "")),
     );
     return popularTeam?.logo_url;
   };
@@ -518,6 +550,8 @@ export const TeamSelector = memo(function TeamSelector({
         onPress={() => handleSelectTeam(item.name, itemWithLogo)}
         style={[
           styles.teamItem,
+          isLargeScreen && styles.teamItemLarge,
+          isDesktop && styles.teamItemDesktop,
           {
             backgroundColor:
               selectedTeam === item.name
@@ -526,11 +560,18 @@ export const TeamSelector = memo(function TeamSelector({
             borderBottomColor: theme.colors.border,
           },
         ]}
+        activeOpacity={0.7}
       >
-        <View style={styles.teamItemContent}>
+        <View
+          style={[
+            styles.teamItemContent,
+            isLargeScreen && styles.teamItemContentLarge,
+          ]}
+        >
           <View
             style={[
               styles.teamItemBadge,
+              isLargeScreen && styles.teamItemBadgeLarge,
               { backgroundColor: theme.colors.surfaceSecondary },
             ]}
           >
@@ -541,14 +582,20 @@ export const TeamSelector = memo(function TeamSelector({
                 resizeMode="contain"
               />
             ) : (
-              <ThemedText weight="bold">{getInitials(item.name)}</ThemedText>
+              <ThemedText weight="bold" size={isLargeScreen ? "lg" : "base"}>
+                {getInitials(item.name)}
+              </ThemedText>
             )}
           </View>
           <View style={{ flex: 1 }}>
-            <ThemedText weight="semibold" numberOfLines={1}>
+            <ThemedText
+              weight="semibold"
+              size={isLargeScreen ? "lg" : "base"}
+              numberOfLines={1}
+            >
               {item.name}
             </ThemedText>
-            <ThemedText variant="muted" size="xs">
+            <ThemedText variant="muted" size={isLargeScreen ? "sm" : "xs"}>
               {item.league || item.country || "Liga desconocida"}
             </ThemedText>
           </View>
@@ -556,12 +603,17 @@ export const TeamSelector = memo(function TeamSelector({
             <View
               style={[
                 styles.dataBadge,
+                isLargeScreen && styles.dataBadgeLarge,
                 { backgroundColor: theme.colors.success + "20" },
               ]}
             >
-              <Icon icon={Check} size={12} variant="success" />
+              <Icon
+                icon={Check}
+                size={isLargeScreen ? 16 : 12}
+                variant="success"
+              />
               <ThemedText
-                size="xs"
+                size={isLargeScreen ? "sm" : "xs"}
                 style={{ color: theme.colors.success, marginLeft: 4 }}
               >
                 Datos
@@ -570,7 +622,7 @@ export const TeamSelector = memo(function TeamSelector({
           )}
         </View>
         {selectedTeam === item.name && (
-          <Icon icon={Check} size={20} variant="primary" />
+          <Icon icon={Check} size={isLargeScreen ? 24 : 20} variant="primary" />
         )}
       </TouchableOpacity>
     );
@@ -590,18 +642,17 @@ export const TeamSelector = memo(function TeamSelector({
       <TouchableOpacity
         onPress={() => setModalVisible(true)}
         activeOpacity={0.7}
+        style={[
+          styles.selector,
+          {
+            backgroundColor: theme.colors.surface,
+            borderColor: selectedTeam
+              ? theme.colors.primary
+              : theme.colors.border,
+          },
+        ]}
       >
-        <View
-          style={[
-            styles.selector,
-            {
-              backgroundColor: theme.colors.surface,
-              borderColor: selectedTeam
-                ? theme.colors.primary
-                : theme.colors.border,
-            },
-          ]}
-        >
+        <View style={styles.selectorContent}>
           {selectedTeam ? (
             <View style={styles.selectedTeam}>
               {/* Find team data to show logo and league - prioritize POPULAR_TEAMS for logos */}
@@ -617,8 +668,8 @@ export const TeamSelector = memo(function TeamSelector({
                       t.name === selectedTeam ||
                       selectedTeam.includes(t.name) ||
                       t.name.includes(
-                        selectedTeam.replace(" FC", "").replace("FC ", "")
-                      )
+                        selectedTeam.replace(" FC", "").replace("FC ", ""),
+                      ),
                   )?.league;
                 return (
                   <>
@@ -663,33 +714,67 @@ export const TeamSelector = memo(function TeamSelector({
       <Modal
         visible={modalVisible}
         transparent
-        animationType="slide"
+        animationType={isLargeScreen ? "fade" : "slide"}
         onRequestClose={() => setModalVisible(false)}
+        statusBarTranslucent
       >
         <Pressable
-          style={styles.modalOverlay}
+          style={[
+            styles.modalOverlay,
+            isLargeScreen && styles.modalOverlayCenter,
+          ]}
           onPress={() => setModalVisible(false)}
         >
           <Pressable
             style={[
               styles.modalContent,
               { backgroundColor: theme.colors.background },
+              isLargeScreen && [
+                styles.modalContentCenter,
+                {
+                  width: modalDimensions.width,
+                  maxHeight: modalDimensions.maxHeight,
+                  minHeight: modalDimensions.minHeight,
+                },
+              ],
             ]}
             onPress={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <View style={styles.modalHeader}>
-              <ThemedText size="xl" weight="bold">
+            <View
+              style={[
+                styles.modalHeader,
+                isLargeScreen && styles.modalHeaderLarge,
+              ]}
+            >
+              <ThemedText size={isLargeScreen ? "2xl" : "xl"} weight="bold">
                 Seleccionar Equipo
               </ThemedText>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <Icon icon={X} size={24} variant="muted" />
+              <TouchableOpacity
+                onPress={() => setModalVisible(false)}
+                style={[
+                  styles.closeButton,
+                  isLargeScreen && styles.closeButtonLarge,
+                ]}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Icon icon={X} size={isLargeScreen ? 28 : 24} variant="muted" />
               </TouchableOpacity>
             </View>
 
             {/* Search Input with Button */}
-            <View style={styles.searchContainer}>
-              <View style={styles.searchInputRow}>
+            <View
+              style={[
+                styles.searchContainer,
+                isLargeScreen && styles.searchContainerLarge,
+              ]}
+            >
+              <View
+                style={[
+                  styles.searchInputRow,
+                  isLargeScreen && styles.searchInputRowLarge,
+                ]}
+              >
                 <View style={styles.searchInputWrapper}>
                   <Input
                     placeholder="Buscar equipo..."
@@ -700,19 +785,23 @@ export const TeamSelector = memo(function TeamSelector({
                   />
                 </View>
                 <Button
-                  title=""
+                  title={isLargeScreen ? "Buscar" : ""}
                   variant="primary"
-                  size="md"
+                  size={isLargeScreen ? "lg" : "md"}
                   onPress={handleSearch}
                   loading={loading}
                   icon={loading ? Loader2 : Search}
-                  style={styles.searchButton}
+                  style={[
+                    styles.searchButton,
+                    isLargeScreen && styles.searchButtonLarge,
+                  ]}
                 />
               </View>
               {loading && (
                 <ActivityIndicator
                   style={styles.searchLoader}
                   color={theme.colors.primary}
+                  size={isLargeScreen ? "large" : "small"}
                 />
               )}
             </View>
@@ -723,6 +812,13 @@ export const TeamSelector = memo(function TeamSelector({
               keyExtractor={(item, index) => item.id || `team-${index}`}
               renderItem={renderTeamItem}
               style={styles.teamList}
+              contentContainerStyle={
+                isLargeScreen && styles.teamListContentLarge
+              }
+              showsVerticalScrollIndicator={true}
+              numColumns={isDesktop ? 2 : 1}
+              key={isDesktop ? "two-columns" : "one-column"}
+              columnWrapperStyle={isDesktop ? styles.columnWrapper : undefined}
               ListHeaderComponent={
                 hasSearched && teams.length > 0 ? (
                   <View style={styles.searchResultsHeader}>
@@ -784,13 +880,13 @@ export const TeamSelector = memo(function TeamSelector({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   labelRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    marginBottom: 8,
+    gap: 8,
+    marginBottom: 10,
   },
   label: {
     flex: 1,
@@ -799,19 +895,27 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 16,
-    borderRadius: 12,
+    padding: 18,
+    borderRadius: 14,
     borderWidth: 1,
+    minHeight: 64,
+  },
+  selectorContent: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   selectedTeam: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 14,
+    flex: 1,
   },
   teamBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -821,54 +925,56 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalContent: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-    maxHeight: "90%",
-    minHeight: "60%",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 32,
+    maxHeight: "92%",
+    minHeight: "65%",
   },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 22,
   },
   searchContainer: {
-    marginBottom: 10,
+    marginBottom: 14,
   },
   searchInputRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
   },
   searchInputWrapper: {
     flex: 1,
   },
   searchButton: {
-    minWidth: 50,
-    paddingHorizontal: 12,
+    minWidth: 54,
+    paddingHorizontal: 14,
   },
   searchLoader: {
-    marginTop: 8,
+    marginTop: 10,
     alignSelf: "center",
   },
   searchResultsHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 4,
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 6,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(0,0,0,0.1)",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   dataBadge: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-    marginRight: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginRight: 10,
   },
   teamList: {
     flex: 1,
@@ -877,19 +983,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderBottomWidth: 1,
   },
   teamItemContent: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 14,
   },
   teamItemBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
@@ -903,16 +1009,89 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   emptyContainer: {
-    padding: 20,
+    padding: 24,
     alignItems: "center",
   },
   emptyText: {
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: 24,
+    lineHeight: 22,
   },
   addCard: {
     width: "100%",
     alignItems: "center",
-    padding: 16,
+    padding: 18,
+  },
+  // ==========================================
+  // RESPONSIVE STYLES FOR TABLETS AND DESKTOP
+  // ==========================================
+  modalOverlayCenter: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContentCenter: {
+    borderRadius: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  modalHeaderLarge: {
+    marginBottom: 28,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0,0,0,0.1)",
+  },
+  closeButton: {
+    padding: 4,
+  },
+  closeButtonLarge: {
+    padding: 8,
+    borderRadius: 8,
+  },
+  searchContainerLarge: {
+    marginBottom: 20,
+  },
+  searchInputRowLarge: {
+    gap: 16,
+  },
+  searchButtonLarge: {
+    minWidth: 120,
+    paddingHorizontal: 20,
+  },
+  teamListContentLarge: {
+    paddingBottom: 24,
+  },
+  columnWrapper: {
+    gap: 12,
+    paddingHorizontal: 4,
+  },
+  teamItemLarge: {
+    paddingVertical: 18,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    marginVertical: 4,
+  },
+  teamItemDesktop: {
+    flex: 0.5,
+    marginHorizontal: 4,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.08)",
+  },
+  teamItemContentLarge: {
+    gap: 18,
+  },
+  teamItemBadgeLarge: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+  },
+  dataBadgeLarge: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 14,
   },
 });
