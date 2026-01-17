@@ -10,6 +10,7 @@ import {
   Switch,
   TouchableOpacity,
   Alert,
+  useWindowDimensions,
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "expo-router";
@@ -43,6 +44,10 @@ export default function SettingsScreen() {
   const { t, i18n } = useTranslation();
   const { user, isAuthenticated, logout } = useAuth();
   const router = useRouter();
+  const { width: screenWidth } = useWindowDimensions();
+  const isTablet = screenWidth >= 768;
+  const isDesktop = screenWidth >= 1024;
+  const isLargeScreen = isTablet || isDesktop;
 
   const [currentLang, setCurrentLang] = useState(getCurrentLanguage());
 
@@ -84,12 +89,20 @@ export default function SettingsScreen() {
       disabled={!onPress}
       activeOpacity={onPress ? 0.7 : 1}
     >
-      <View style={styles.settingRow}>
-        <Icon icon={icon} size={22} variant={iconVariant} />
+      <View
+        style={[styles.settingRow, isLargeScreen && styles.settingRowLarge]}
+      >
+        <Icon
+          icon={icon}
+          size={isLargeScreen ? 26 : 22}
+          variant={iconVariant}
+        />
         <View style={styles.settingInfo}>
-          <ThemedText weight="medium">{title}</ThemedText>
+          <ThemedText weight="medium" size={isLargeScreen ? "lg" : "base"}>
+            {title}
+          </ThemedText>
           {subtitle && (
-            <ThemedText variant="muted" size="sm">
+            <ThemedText variant="muted" size={isLargeScreen ? "base" : "sm"}>
               {subtitle}
             </ThemedText>
           )}
@@ -148,7 +161,6 @@ export default function SettingsScreen() {
                     { backgroundColor: theme.colors.border },
                   ]}
                 />
-
 
                 <SettingRow
                   icon={LogOut}
@@ -236,7 +248,11 @@ export default function SettingsScreen() {
               ]}
             >
               <View style={styles.flagContainer}>
-                <ThemedText size="lg" weight="bold" style={{ color: theme.colors.primary }}>
+                <ThemedText
+                  size="lg"
+                  weight="bold"
+                  style={{ color: theme.colors.primary }}
+                >
                   ES
                 </ThemedText>
               </View>
@@ -262,7 +278,11 @@ export default function SettingsScreen() {
               ]}
             >
               <View style={styles.flagContainer}>
-                <ThemedText size="lg" weight="bold" style={{ color: theme.colors.primary }}>
+                <ThemedText
+                  size="lg"
+                  weight="bold"
+                  style={{ color: theme.colors.primary }}
+                >
                   EN
                 </ThemedText>
               </View>
@@ -286,7 +306,9 @@ export default function SettingsScreen() {
             <View style={styles.settingRow}>
               <Icon icon={Trophy} size={22} variant="primary" />
               <View style={styles.settingInfo}>
-                <ThemedText weight="medium">GoalMind: El Oráculo del Fútbol</ThemedText>
+                <ThemedText weight="medium">
+                  GoalMind: El Oráculo del Fútbol
+                </ThemedText>
                 <ThemedText variant="muted" size="sm">
                   Tu oráculo deportivo con IA
                 </ThemedText>
@@ -386,69 +408,86 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 32,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 40,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 28,
   },
   sectionTitle: {
-    marginBottom: 12,
+    marginBottom: 14,
     marginLeft: 4,
     letterSpacing: 1,
   },
   settingRow: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
-    gap: 16,
+    padding: 18,
+    gap: 18,
   },
   settingInfo: {
     flex: 1,
   },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
   },
   divider: {
     height: 1,
-    marginLeft: 56,
+    marginLeft: 60,
   },
   languageOption: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
-    gap: 16,
+    padding: 18,
+    gap: 18,
   },
   flagContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: "rgba(16, 185, 129, 0.1)",
     alignItems: "center",
     justifyContent: "center",
   },
   techCard: {
-    marginBottom: 24,
+    marginBottom: 28,
+    paddingVertical: 20,
+  },
+  techTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 8,
   },
   techTitle: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   techGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 12,
+    gap: 14,
+    justifyContent: "space-around",
   },
   techItem: {
     alignItems: "center",
-    width: "30%",
-    paddingVertical: 8,
+    width: "28%",
+    minWidth: 80,
+    paddingVertical: 10,
   },
   footer: {
     alignItems: "center",
-    paddingVertical: 20,
+    paddingVertical: 24,
+  },
+  // ==========================================
+  // RESPONSIVE STYLES FOR TABLETS AND DESKTOP
+  // ==========================================
+  settingRowLarge: {
+    padding: 22,
+    gap: 22,
   },
 });

@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Image,
+  useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -26,6 +27,10 @@ export default function LoginScreen() {
   const { t } = useTranslation();
   const { login } = useAuth();
   const router = useRouter();
+  const { width: screenWidth } = useWindowDimensions();
+  const isTablet = screenWidth >= 768;
+  const isDesktop = screenWidth >= 1024;
+  const isLargeScreen = isTablet || isDesktop;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -70,27 +75,42 @@ export default function LoginScreen() {
         style={styles.keyboardView}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            isLargeScreen && styles.scrollContentLarge,
+          ]}
           keyboardShouldPersistTaps="handled"
         >
           {/* Logo & Header */}
-          <View style={styles.header}>
+          <View style={[styles.header, isLargeScreen && styles.headerLarge]}>
             <Image
               source={require("../assets/images/logo.png")}
-              style={styles.logoImage}
+              style={[styles.logoImage, isLargeScreen && styles.logoImageLarge]}
               resizeMode="contain"
             />
-            <ThemedText size="3xl" weight="bold">
+            <ThemedText size={isLargeScreen ? "4xl" : "3xl"} weight="bold">
               GoalMind: El Oráculo del Fútbol
             </ThemedText>
-            <ThemedText variant="secondary" size="lg" style={styles.subtitle}>
+            <ThemedText
+              variant="secondary"
+              size={isLargeScreen ? "xl" : "lg"}
+              style={[styles.subtitle, isLargeScreen && styles.subtitleLarge]}
+            >
               {t("auth.loginSubtitle")}
             </ThemedText>
           </View>
 
           {/* Login Form */}
-          <Card variant="elevated" padding="lg" style={styles.formCard}>
-            <ThemedText size="xl" weight="semibold" style={styles.formTitle}>
+          <Card
+            variant="elevated"
+            padding={isLargeScreen ? "xl" : "lg"}
+            style={[styles.formCard, isLargeScreen && styles.formCardLarge]}
+          >
+            <ThemedText
+              size={isLargeScreen ? "2xl" : "xl"}
+              weight="semibold"
+              style={[styles.formTitle, isLargeScreen && styles.formTitleLarge]}
+            >
               {t("auth.login")}
             </ThemedText>
 
@@ -225,7 +245,11 @@ export default function LoginScreen() {
               { backgroundColor: theme.colors.primary + "15" },
             ]}
           >
-            <ThemedText variant="secondary" size="sm" style={styles.goalMindText}>
+            <ThemedText
+              variant="secondary"
+              size="sm"
+              style={styles.goalMindText}
+            >
               {t("auth.dixieWelcome")}
             </ThemedText>
           </View>
@@ -244,7 +268,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 24,
     justifyContent: "center",
   },
   header: {
@@ -252,81 +277,121 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   logoImage: {
-    width: 120,
-    height: 120,
-    marginBottom: 16,
+    width: 100,
+    height: 100,
+    marginBottom: 20,
   },
   logo: {
-    fontSize: 64,
-    marginBottom: 8,
+    fontSize: 56,
+    marginBottom: 10,
   },
   subtitle: {
-    marginTop: 8,
+    marginTop: 10,
     textAlign: "center",
+    paddingHorizontal: 16,
+    lineHeight: 24,
   },
   formCard: {
     marginBottom: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 24,
   },
   formTitle: {
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: 24,
   },
   errorBox: {
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
+    padding: 14,
+    borderRadius: 10,
+    marginBottom: 18,
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   label: {
-    marginBottom: 8,
+    marginBottom: 10,
   },
   input: {
     borderWidth: 1,
-    borderRadius: 12,
-    padding: 14,
+    borderRadius: 14,
+    padding: 16,
     fontSize: 16,
+    minHeight: 52,
   },
   passwordContainer: {
     position: "relative",
   },
   passwordInput: {
-    paddingRight: 50,
+    paddingRight: 54,
   },
   eyeButton: {
     position: "absolute",
-    right: 12,
-    top: 12,
-    padding: 4,
+    right: 14,
+    top: 14,
+    padding: 6,
   },
   loginButton: {
-    marginTop: 8,
+    marginTop: 12,
   },
   loader: {
-    marginLeft: 8,
+    marginLeft: 10,
   },
   forgotPassword: {
     alignItems: "center",
-    marginTop: 16,
+    marginTop: 18,
+    padding: 8,
   },
   registerSection: {
     flexDirection: "row",
     justifyContent: "center",
-    marginBottom: 16,
+    alignItems: "center",
+    marginBottom: 18,
+    flexWrap: "wrap",
   },
   guestMode: {
     alignItems: "center",
-    marginBottom: 24,
+    marginBottom: 28,
+    padding: 8,
   },
   goalMindBox: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
-    borderRadius: 12,
-    gap: 12,
+    padding: 18,
+    borderRadius: 14,
+    gap: 14,
   },
   goalMindText: {
     flex: 1,
+    lineHeight: 22,
+  },
+  // ==========================================
+  // RESPONSIVE STYLES FOR TABLETS AND DESKTOP
+  // ==========================================
+  scrollContentLarge: {
+    paddingHorizontal: 48,
+    maxWidth: 600,
+    alignSelf: "center",
+    width: "100%",
+  },
+  headerLarge: {
+    marginBottom: 40,
+  },
+  logoImageLarge: {
+    width: 140,
+    height: 140,
+    marginBottom: 28,
+  },
+  subtitleLarge: {
+    marginTop: 14,
+    lineHeight: 30,
+  },
+  formCardLarge: {
+    borderRadius: 20,
+    marginBottom: 32,
+    paddingHorizontal: 32,
+    paddingVertical: 32,
+  },
+  formTitleLarge: {
+    marginBottom: 32,
   },
 });
