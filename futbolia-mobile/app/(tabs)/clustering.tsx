@@ -289,7 +289,6 @@ export default function ClusteringScreen() {
                 </ThemedText>
                 <DendrogramChart
                   data={clusteringData.dendrogram}
-                  clusterInfo={clusteringData.cluster_info}
                 />
               </View>
             )}
@@ -323,17 +322,17 @@ export default function ClusteringScreen() {
                         equipos
                       </ThemedText>
                     </View>
-                    <ThemedText size="xs" variant="secondary" style={styles.clusterDescription}>
+                    <ThemedText size="sm" weight="semibold" style={styles.clusterDescription}>
                       {cluster.description}
                     </ThemedText>
-                    <ThemedText size="xs" variant="muted" style={styles.clusterTeams}>
+                    <ThemedText size="xs" variant="secondary" style={styles.clusterTeams}>
                       Equipos: {cluster.teams.join(", ")}
                     </ThemedText>
                     <View style={styles.clusterStats}>
-                      <ThemedText size="xs" variant="muted">
+                      <ThemedText size="xs" weight="medium">
                         Puntos promedio: {cluster.avg_points.toFixed(1)}
                       </ThemedText>
-                      <ThemedText size="xs" variant="muted">
+                      <ThemedText size="xs" weight="medium">
                         DG promedio: {cluster.avg_goal_difference.toFixed(1)}
                       </ThemedText>
                     </View>
@@ -476,7 +475,7 @@ const styles = StyleSheet.create({
   clusterDescription: {
     padding: 10,
     paddingTop: 8,
-    fontStyle: "italic",
+    paddingBottom: 4,
   },
   clusterTeams: {
     paddingHorizontal: 10,
