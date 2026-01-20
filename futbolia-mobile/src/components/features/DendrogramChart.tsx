@@ -3,7 +3,7 @@
  * Muestra la estructura jerárquica de clusters de equipos
  */
 import React, { useMemo } from "react";
-import { View, StyleSheet, Dimensions, ScrollView } from "react-native";
+import { View, StyleSheet, Dimensions } from "react-native";
 import Svg, { Line, Text as SvgText, Circle, Rect } from "react-native-svg";
 import { useTheme } from "@/src/theme";
 import { ThemedText } from "@/src/components/ui";
@@ -26,15 +26,9 @@ interface DendrogramData {
 
 interface DendrogramChartProps {
   data: DendrogramData;
-  clusterInfo?: Array<{
-    cluster_id: number;
-    n_teams: number;
-    description: string;
-    teams: string[];
-  }>;
 }
 
-export function DendrogramChart({ data, clusterInfo }: DendrogramChartProps) {
+export function DendrogramChart({ data }: DendrogramChartProps) {
   const { theme } = useTheme();
 
   // Normalizar coordenadas del dendrograma para el viewport
@@ -65,16 +59,16 @@ export function DendrogramChart({ data, clusterInfo }: DendrogramChartProps) {
     const availableWidth = CHART_WIDTH - MARGIN_LEFT - MARGIN_RIGHT;
     const availableHeight = CHART_HEIGHT - MARGIN_TOP - MARGIN_BOTTOM;
     const nLeaves = data.leaves?.length || 1;
-    
+
     // Mejorar el espaciado: distribuir uniformemente las hojas
     const spacing = availableWidth / (nLeaves - 1 || 1); // Espaciado uniforme entre hojas
-    
+
     // Función para mapear posiciones X originales a nuevas posiciones distribuidas
     const mapXToLeafIndex = (x: number): number => {
       const normalizedX = (x / maxX) * (nLeaves - 1);
       return Math.max(0, Math.min(Math.round(normalizedX), nLeaves - 1));
     };
-    
+
     const scaleY = availableHeight / (maxY - minY || 1);
     const offsetY = minY;
 
@@ -94,14 +88,14 @@ export function DendrogramChart({ data, clusterInfo }: DendrogramChartProps) {
         const y1 = CHART_HEIGHT - MARGIN_BOTTOM - (dcoord[1] - offsetY) * scaleY;
         const y2 = CHART_HEIGHT - MARGIN_BOTTOM - (dcoord[2] - offsetY) * scaleY;
         const y3 = CHART_HEIGHT - MARGIN_BOTTOM - (dcoord[3] - offsetY) * scaleY;
-        
+
         // Mapear las posiciones X originales a las nuevas posiciones distribuidas uniformemente
         const leafIdx0 = mapXToLeafIndex(icoord[0]);
         const leafIdx2 = mapXToLeafIndex(icoord[2]);
-        
+
         const x0 = MARGIN_LEFT + leafIdx0 * spacing;
         const x2 = MARGIN_LEFT + leafIdx2 * spacing;
-        
+
         // Cada merge tiene 3 líneas (└ ─ ┘)
         // Línea vertical izquierda
         lines.push({
@@ -128,18 +122,18 @@ export function DendrogramChart({ data, clusterInfo }: DendrogramChartProps) {
     });
 
     // Preparar etiquetas - Mapear hojas a posiciones X
-    const labels: Array<{ 
-      x: number; 
-      y: number; 
-      text: string; 
+    const labels: Array<{
+      x: number;
+      y: number;
+      text: string;
       index: number;
       leafPosition: number;
     }> = [];
-    
+
     if (data.ivl && data.leaves && data.leaves.length > 0) {
       // Usar el mapeo del backend si está disponible, sino calcularlo
       let leafXMap: { [key: number]: number } = {};
-      
+
       if (data.leaf_x_positions) {
         // Usar las posiciones proporcionadas por el backend
         leafXMap = data.leaf_x_positions;
@@ -152,25 +146,25 @@ export function DendrogramChart({ data, clusterInfo }: DendrogramChartProps) {
           });
         });
         const uniqueX = Array.from(new Set(allXValues)).sort((a, b) => a - b);
-        
+
         data.leaves.forEach((leafIdx, posIdx) => {
-          leafXMap[leafIdx] = uniqueX[posIdx] !== undefined 
-            ? uniqueX[posIdx] 
+          leafXMap[leafIdx] = uniqueX[posIdx] !== undefined
+            ? uniqueX[posIdx]
             : (posIdx * (maxX / data.leaves.length));
         });
       }
-      
+
       // Crear etiquetas para cada hoja (en la parte inferior)
       // Distribuir uniformemente para mejor espaciado
       const nLeaves = data.leaves.length;
       const totalWidth = availableWidth;
       const spacing = totalWidth / (nLeaves - 1 || 1); // Espaciado uniforme
-      
+
       data.leaves.forEach((leafIdx, posIdx) => {
         // Usar distribución uniforme en lugar de las posiciones originales para mejor espaciado
         const xPosition = posIdx * spacing;
         const x = MARGIN_LEFT + xPosition;
-        
+
         labels.push({
           x,
           y: CHART_HEIGHT - MARGIN_BOTTOM + 50, // Posición abajo para las etiquetas
@@ -228,13 +222,13 @@ export function DendrogramChart({ data, clusterInfo }: DendrogramChartProps) {
 
           {/* Renderizar etiquetas de equipos en la parte inferior con texto inclinado */}
           {normalizedCoords.labels.map((label, idx) => {
-            const shortName = label.text.length > 20 
-              ? label.text.substring(0, 20) + "..." 
+            const shortName = label.text.length > 20
+              ? label.text.substring(0, 20) + "..."
               : label.text;
-            
+
             // Calcular posición Y de la hoja (parte inferior del dendrograma)
             const leafY = CHART_HEIGHT - MARGIN_BOTTOM;
-            
+
             return (
               <React.Fragment key={`label-group-${idx}`}>
                 {/* Línea conectora desde la hoja hasta la etiqueta */}
@@ -284,51 +278,7 @@ export function DendrogramChart({ data, clusterInfo }: DendrogramChartProps) {
         </View>
       </View>
 
-      {/* Información de clusters */}
-      {clusterInfo && clusterInfo.length > 0 && (
-        <View style={styles.clusterInfo}>
-          <ThemedText size="lg" weight="bold" style={styles.sectionTitle}>
-            Análisis de Clusters
-          </ThemedText>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.clusterScroll}
-          >
-            {clusterInfo.map((cluster) => (
-              <View
-                key={cluster.cluster_id}
-                style={[
-                  styles.clusterCard,
-                  { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
-                ]}
-              >
-                <View
-                  style={[
-                    styles.clusterBadge,
-                    { backgroundColor: theme.colors.primary + "20" },
-                  ]}
-                >
-                  <ThemedText
-                    size="sm"
-                    weight="bold"
-                    style={{ color: theme.colors.primary }}
-                  >
-                    Cluster {cluster.cluster_id}
-                  </ThemedText>
-                </View>
-                <ThemedText size="xs" variant="muted" style={styles.clusterDesc}>
-                  {cluster.description}
-                </ThemedText>
-                <ThemedText size="xs" style={styles.clusterTeams}>
-                  {cluster.n_teams} equipos: {cluster.teams.slice(0, 3).join(", ")}
-                  {cluster.teams.length > 3 && "..."}
-                </ThemedText>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-      )}
+
     </View>
   );
 }
@@ -353,36 +303,5 @@ const styles = StyleSheet.create({
   infoText: {
     textAlign: "center",
     lineHeight: 16,
-  },
-  clusterInfo: {
-    marginTop: 8,
-  },
-  sectionTitle: {
-    marginBottom: 12,
-  },
-  clusterScroll: {
-    flexDirection: "row",
-  },
-  clusterCard: {
-    minWidth: 200,
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    marginRight: 12,
-  },
-  clusterBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    marginBottom: 8,
-    alignSelf: "flex-start",
-  },
-  clusterDesc: {
-    marginBottom: 8,
-    lineHeight: 16,
-  },
-  clusterTeams: {
-    fontSize: 11,
-    opacity: 0.8,
   },
 });
