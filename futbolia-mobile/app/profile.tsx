@@ -10,20 +10,31 @@ import {
   TouchableOpacity,
   Alert,
   Image,
+  useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "@/src/theme";
-import { useAuth, FavoriteTeam } from "@/src/context";
-import { ThemedView, ThemedText, Card, Button } from "@/src/components/ui";
+import { useAuth } from "@/src/context";
+import {
+  ThemedView,
+  ThemedText,
+  Card,
+  Button,
+  Icon,
+} from "@/src/components/ui";
+import { BarChart3, Trophy, Settings } from "lucide-react-native";
 
 export default function ProfileScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const { user, isAuthenticated, favoriteTeams, removeFavoriteTeam, logout } =
-    useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const router = useRouter();
+  const { width: screenWidth } = useWindowDimensions();
+  const isTablet = screenWidth >= 768;
+  const isDesktop = screenWidth >= 1024;
+  const isLargeScreen = isTablet || isDesktop;
 
   const [stats] = useState({
     totalPredictions: 47,
@@ -50,23 +61,6 @@ export default function ProfileScreen() {
         },
       },
     ]);
-  };
-
-  const handleRemoveTeam = (team: FavoriteTeam) => {
-    Alert.alert(
-      t("profile.removeTeamTitle"),
-      t("profile.removeTeamMessage", { team: team.name }),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("common.remove"),
-          style: "destructive",
-          onPress: () => {
-            void removeFavoriteTeam(team.id);
-          },
-        },
-      ]
-    );
   };
 
   // If not authenticated, show login prompt
@@ -131,9 +125,12 @@ export default function ProfileScreen() {
 
         {/* Stats Section */}
         <View style={styles.section}>
-          <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
-            📊 {t("profile.statistics")}
-          </ThemedText>
+          <View style={styles.statsTitleRow}>
+            <Icon icon={BarChart3} size={18} variant="primary" />
+            <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
+              {t("profile.statistics")}
+            </ThemedText>
+          </View>
 
           <View style={styles.statsGrid}>
             <Card variant="outlined" padding="md" style={styles.statCard}>
@@ -176,9 +173,7 @@ export default function ProfileScreen() {
             </Card>
 
             <Card variant="outlined" padding="md" style={styles.statCard}>
-              <ThemedText size="xl" weight="bold">
-                🏆
-              </ThemedText>
+              <Icon icon={Trophy} size={32} variant="primary" />
               <ThemedText variant="secondary" size="sm" numberOfLines={1}>
                 {stats.favoriteLeague}
               </ThemedText>
@@ -186,88 +181,14 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Favorite Teams Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <ThemedText size="lg" weight="semibold">
-              ❤️ {t("profile.favoriteTeams")}
-            </ThemedText>
-            <TouchableOpacity onPress={() => router.push("/teams")}>
-              <ThemedText variant="primary" size="sm">
-                + {t("profile.addTeam")}
-              </ThemedText>
-            </TouchableOpacity>
-          </View>
-
-          {favoriteTeams.length > 0 ? (
-            <View style={styles.teamsList}>
-              {favoriteTeams.map((team) => (
-                <Card
-                  key={team.id}
-                  variant="default"
-                  padding="sm"
-                  style={styles.teamCard}
-                >
-                  <View style={styles.teamRow}>
-                    <View
-                      style={[
-                        styles.teamLogo,
-                        { backgroundColor: theme.colors.surfaceSecondary },
-                      ]}
-                    >
-                      {team.logoUrl ? (
-                        <Image
-                          source={{ uri: team.logoUrl }}
-                          style={styles.teamLogoImage}
-                          resizeMode="contain"
-                        />
-                      ) : (
-                        <ThemedText size="lg">⚽</ThemedText>
-                      )}
-                    </View>
-                    <View style={styles.teamInfo}>
-                      <ThemedText weight="semibold">{team.name}</ThemedText>
-                      {team.league && (
-                        <ThemedText variant="muted" size="sm">
-                          {team.league}
-                        </ThemedText>
-                      )}
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => handleRemoveTeam(team)}
-                      style={styles.removeButton}
-                    >
-                      <ThemedText style={{ color: theme.colors.error }}>
-                        ✕
-                      </ThemedText>
-                    </TouchableOpacity>
-                  </View>
-                </Card>
-              ))}
-            </View>
-          ) : (
-            <Card variant="outlined" padding="lg">
-              <View style={styles.emptyTeams}>
-                <ThemedText size="3xl">⚽</ThemedText>
-                <ThemedText variant="secondary" style={styles.emptyText}>
-                  {t("profile.noFavoriteTeams")}
-                </ThemedText>
-                <Button
-                  title={t("profile.searchTeams")}
-                  variant="outline"
-                  size="sm"
-                  onPress={() => router.push("/teams")}
-                />
-              </View>
-            </Card>
-          )}
-        </View>
-
         {/* Account Actions */}
         <View style={styles.section}>
-          <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
-            ⚙️ {t("profile.account")}
-          </ThemedText>
+          <View style={styles.statsTitleRow}>
+            <Icon icon={Settings} size={18} variant="primary" />
+            <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
+              {t("profile.account")}
+            </ThemedText>
+          </View>
 
           <Card variant="default" padding="none">
             <TouchableOpacity
@@ -291,7 +212,7 @@ export default function ProfileScreen() {
               style={styles.actionRow}
               onPress={() => router.push("/settings")}
             >
-              <ThemedText>⚙️</ThemedText>
+              <Icon icon={Settings} size={20} variant="primary" />
               <ThemedText style={styles.actionText}>
                 {t("profile.settings")}
               </ThemedText>
@@ -323,74 +244,87 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 40,
   },
   notAuthContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 32,
+    paddingHorizontal: 32,
+    paddingVertical: 48,
   },
   notAuthEmoji: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   notAuthTitle: {
-    marginBottom: 8,
+    marginBottom: 12,
     textAlign: "center",
   },
   notAuthSubtitle: {
-    marginBottom: 24,
+    marginBottom: 28,
     textAlign: "center",
+    lineHeight: 22,
   },
   loginButton: {
-    marginBottom: 16,
-    minWidth: 200,
+    marginBottom: 18,
+    minWidth: 220,
   },
   profileCard: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   avatarContainer: {
     flexDirection: "row",
     alignItems: "center",
   },
   avatar: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 16,
+    marginRight: 18,
   },
   userInfo: {
     flex: 1,
   },
   memberBadge: {
-    marginTop: 4,
+    marginTop: 6,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 28,
   },
   sectionTitle: {
-    marginBottom: 12,
+    marginBottom: 14,
+    flex: 1,
+  },
+  statsTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 14,
   },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 14,
   },
   statsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 12,
+    gap: 14,
   },
   statCard: {
     flex: 1,
     minWidth: "45%",
     alignItems: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 12,
   },
   teamsList: {
-    gap: 8,
+    gap: 10,
   },
   teamCard: {
     marginBottom: 0,
@@ -400,35 +334,37 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   teamLogo: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 12,
+    marginRight: 14,
   },
   teamLogoImage: {
-    width: 32,
-    height: 32,
+    width: 36,
+    height: 36,
   },
   teamInfo: {
     flex: 1,
   },
   removeButton: {
-    padding: 8,
+    padding: 10,
   },
   emptyTeams: {
     alignItems: "center",
-    gap: 12,
+    gap: 14,
+    paddingVertical: 20,
   },
   emptyText: {
     textAlign: "center",
+    lineHeight: 22,
   },
   actionRow: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
-    gap: 12,
+    padding: 18,
+    gap: 14,
   },
   actionText: {
     flex: 1,
@@ -436,4 +372,7 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
   },
+  // ==========================================
+  // RESPONSIVE STYLES FOR TABLETS AND DESKTOP
+  // ==========================================
 });

@@ -18,7 +18,14 @@ import { useTranslation } from "react-i18next";
 
 import { useTheme } from "@/src/theme";
 import { useAuth } from "@/src/context";
-import { ThemedView, ThemedText, Card, Button } from "@/src/components/ui";
+import {
+  ThemedView,
+  ThemedText,
+  Card,
+  Button,
+  Icon,
+} from "@/src/components/ui";
+import { Gift, Check } from "lucide-react-native";
 
 export default function RegisterScreen() {
   const { theme } = useTheme();
@@ -261,24 +268,27 @@ export default function RegisterScreen() {
 
           {/* Benefits */}
           <Card variant="outlined" padding="md" style={styles.benefitsCard}>
-            <ThemedText weight="semibold" style={styles.benefitsTitle}>
-              🎁 {t("auth.benefits")}
-            </ThemedText>
+            <View style={styles.benefitsTitleRow}>
+              <Icon icon={Gift} size={20} variant="primary" />
+              <ThemedText weight="semibold" style={styles.benefitsTitle}>
+                {t("auth.benefits")}
+              </ThemedText>
+            </View>
             <View style={styles.benefitsList}>
               <View style={styles.benefitItem}>
-                <ThemedText>✅</ThemedText>
+                <Icon icon={Check} size={18} variant="success" />
                 <ThemedText variant="secondary" size="sm">
                   {t("auth.benefit1")}
                 </ThemedText>
               </View>
               <View style={styles.benefitItem}>
-                <ThemedText>✅</ThemedText>
+                <Icon icon={Check} size={18} variant="success" />
                 <ThemedText variant="secondary" size="sm">
                   {t("auth.benefit2")}
                 </ThemedText>
               </View>
               <View style={styles.benefitItem}>
-                <ThemedText>✅</ThemedText>
+                <Icon icon={Check} size={18} variant="success" />
                 <ThemedText variant="secondary" size="sm">
                   {t("auth.benefit3")}
                 </ThemedText>
@@ -300,84 +310,101 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 24,
   },
   header: {
     alignItems: "center",
     marginBottom: 24,
-    marginTop: 20,
+    marginTop: 16,
   },
   logo: {
-    fontSize: 48,
-    marginBottom: 8,
+    fontSize: 44,
+    marginBottom: 10,
   },
   subtitle: {
-    marginTop: 8,
+    marginTop: 10,
     textAlign: "center",
+    paddingHorizontal: 16,
+    lineHeight: 22,
   },
   formCard: {
-    marginBottom: 20,
+    marginBottom: 22,
+    paddingHorizontal: 20,
+    paddingVertical: 24,
   },
   errorBox: {
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
+    padding: 14,
+    borderRadius: 10,
+    marginBottom: 18,
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   label: {
-    marginBottom: 8,
+    marginBottom: 10,
   },
   input: {
     borderWidth: 1,
-    borderRadius: 12,
-    padding: 14,
+    borderRadius: 14,
+    padding: 16,
     fontSize: 16,
+    minHeight: 52,
   },
   passwordContainer: {
     position: "relative",
   },
   passwordInput: {
-    paddingRight: 50,
+    paddingRight: 54,
   },
   eyeButton: {
     position: "absolute",
-    right: 12,
-    top: 12,
-    padding: 4,
+    right: 14,
+    top: 14,
+    padding: 6,
   },
   hint: {
-    marginTop: 4,
+    marginTop: 6,
   },
   registerButton: {
-    marginTop: 8,
+    marginTop: 12,
   },
   loader: {
-    marginLeft: 8,
+    marginLeft: 10,
   },
   terms: {
     textAlign: "center",
-    marginTop: 16,
-    lineHeight: 18,
+    marginTop: 18,
+    lineHeight: 20,
+    paddingHorizontal: 8,
   },
   loginSection: {
     flexDirection: "row",
     justifyContent: "center",
-    marginBottom: 20,
+    alignItems: "center",
+    marginBottom: 22,
+    flexWrap: "wrap",
   },
   benefitsCard: {
-    marginBottom: 20,
+    marginBottom: 22,
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+  },
+  benefitsTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 14,
   },
   benefitsTitle: {
-    marginBottom: 12,
+    flex: 1,
   },
   benefitsList: {
-    gap: 8,
+    gap: 10,
   },
   benefitItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
   },
 });

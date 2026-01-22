@@ -8,6 +8,7 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 
 from src.core.config import settings
+from src.core.cache import team_cache, api_cache
 from src.domain.entities import Team, Match, MatchStatus
 
 
@@ -27,9 +28,6 @@ class FootballAPIClient:
     """
     
     BASE_URL = "https://api.football-data.org/v4"
-    
-    # Cache for teams to avoid repeated API calls
-    _teams_cache: List[dict] = []
     
     # Códigos de ligas disponibles en tier gratuito
     LEAGUES = {
@@ -52,13 +50,21 @@ class FootballAPIClient:
     
     @classmethod
     async def get_team_by_name(cls, team_name: str) -> Optional[Team]:
-        """Search for a team by name"""
+        """Search for a team by name with caching"""
         if not settings.FOOTBALL_DATA_API_KEY:
             return cls._mock_team(team_name)
         
+        cache_key = f"football_data_team:{team_name.lower()}"
+        
+        # Check cache first
+        cached_team = await team_cache.get(cache_key)
+        if cached_team is not None:
+            return cached_team
+        
         try:
-            # Use cache if available
-            teams = cls._teams_cache
+            # Try to get teams list from cache
+            teams_cache_key = "football_data_teams_list"
+            teams = await api_cache.get(teams_cache_key)
             
             if not teams:
                 async with httpx.AsyncClient() as client:
@@ -72,21 +78,45 @@ class FootballAPIClient:
                     if response.status_code == 200:
                         data = response.json()
                         teams = data.get("teams", [])
-                        cls._teams_cache = teams
+                        # Cache teams list for 1 hour
+                        await api_cache.set(teams_cache_key, teams, ttl=3600)
                     elif response.status_code == 429:
                         print("⚠️ Football-Data.org: Rate limit alcanzado (10 req/min en tier gratuito)")
+                        return cls._mock_team(team_name)
+                    else:
+                        # Handle other error status codes (403, 500, etc.)
+                        print(f"⚠️ Football-Data.org: Error {response.status_code} al obtener equipos")
+                        return cls._mock_team(team_name)
+            
+            # Verificar que teams no sea None antes de iterar
+            if teams is None:
+                return cls._mock_team(team_name)
             
             # Buscar coincidencia por nombre
             for team_data in teams:
                 if team_name.lower() in team_data["name"].lower() or \
                    team_name.lower() in team_data.get("shortName", "").lower():
-                    return Team(
+                    # Try to get league from running competitions
+                    league = ""
+                    try:
+                        running_competitions = team_data.get("runningCompetitions", [])
+                        if running_competitions:
+                            # Get the first active league (usually the main one)
+                            league = running_competitions[0].get("name", "")
+                    except Exception:
+                        pass
+                    
+                    team = Team(
                         id=str(team_data["id"]),
                         name=team_data["name"],
                         short_name=team_data.get("tla", "")[:3],
                         logo_url=team_data.get("crest", ""),
                         country=team_data.get("area", {}).get("name", ""),
+                        league=league,  # ✅ Incluir liga si está disponible
                     )
+                    # Cache individual team for 2 hours
+                    await team_cache.set(cache_key, team, ttl=7200)
+                    return team
         except Exception as e:
             print(f"Football-Data.org error: {e}")
         

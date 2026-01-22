@@ -1,0 +1,10 @@
+# Python
+futbolia-backend/__pycache__/
+futbolia-backend/venv/
+futbolia-backend/*.py[cod]
+futbolia-backend/$py.class
+
+# Node / Mobile
+futbolia-mobile/node_modules/
+futbolia-mobile/.expo/
+futbolia-mobile/dist/

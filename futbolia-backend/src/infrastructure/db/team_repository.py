@@ -167,6 +167,8 @@ class TeamRepository:
             country=doc.get("country", ""),
             league=doc.get("league", ""),
             form=doc.get("form", "DDDDD"),
+            has_players=doc.get("has_players", False),
+            player_count=doc.get("player_count", 0),
         )
 
 

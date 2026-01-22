@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from typing import Optional
 
-from src.core.logger import log_info, log_warning, log_error, log_prediction
+from src.core.logger import log_info, log_warning, log_error, log_prediction, log_debug
 from src.use_cases.prediction import PredictionUseCase
 from src.presentation.auth_routes import get_current_user
 from src.infrastructure.db.dixie_stats import DixieStats
@@ -62,16 +62,20 @@ async def predict_match(
     
     # Record prediction stats for Dixie
     try:
-        predicted_winner = result.get("data", {}).get("prediction", {}).get("winner", "")
-        confidence = result.get("data", {}).get("prediction", {}).get("confidence", 0)
+        prediction_data = result.get("data", {}).get("prediction", {})
+        prediction_id = prediction_data.get("id", "")
+        predicted_winner = prediction_data.get("winner", "")
+        confidence = prediction_data.get("confidence", 0)
         
-        await DixieStats.record_prediction(
-            home_team=request.home_team,
-            away_team=request.away_team,
-            predicted_winner=predicted_winner,
-            confidence=confidence,
-            user_id=current_user.id
-        )
+        if prediction_id:
+            await DixieStats.record_prediction(
+                prediction_id=prediction_id,
+                home_team=request.home_team,
+                away_team=request.away_team,
+                predicted_winner=predicted_winner,
+                confidence=confidence,
+                user_id=current_user.id
+            )
         
         log_prediction(
             home_team=request.home_team,
@@ -86,16 +90,47 @@ async def predict_match(
     return result
 
 
+
+
 @router.get("/history")
-async def get_history(
+async def get_prediction_history(
     limit: int = Query(default=20, le=100),
     current_user = Depends(get_current_user)
 ):
-    """📊 Get user's prediction history and stats"""
-    result = await PredictionUseCase.get_user_history(
-        user_id=current_user.id,
-        limit=limit,
-    )
+    """
+    📜 Get user's prediction history with statistics
+    
+    Returns the user's past predictions sorted by date (newest first)
+    and overall statistics (total, correct, accuracy).
+    """
+    from src.infrastructure.db.prediction_repository import PredictionRepository
+    
+    try:
+        # Get predictions and stats in parallel
+        predictions = await PredictionRepository.find_by_user(current_user.id, limit)
+        stats = await PredictionRepository.get_stats(current_user.id)
+        
+        return {
+            "success": True,
+            "data": {
+                "predictions": [p.to_dict() for p in predictions],
+                "stats": stats,
+            }
+        }
+    except Exception as e:
+        log_error("Error fetching prediction history", error=str(e))
+        raise HTTPException(status_code=500, detail="Error fetching prediction history")
+
+
+@router.get("/matches")
+async def get_upcoming_matches():
+    """
+    ⚽ Get next 5 upcoming matches from Premier League only (first division)
+    
+    Returns only future matches from Premier League based on current time.
+    Used for featured match and upcoming matches sections.
+    """
+    result = await PredictionUseCase.get_available_matches()
     return result
 
 
@@ -114,15 +149,6 @@ async def get_prediction_detail(
     return result
 
 
-@router.get("/matches")
-async def get_upcoming_matches(
-    league_id: int = Query(default=39, description="League ID (39=Premier League, 140=La Liga)")
-):
-    """⚽ Get upcoming matches available for prediction"""
-    result = await PredictionUseCase.get_available_matches(league_id)
-    return result
-
-
 @router.post("/compare")
 async def compare_teams(request: CompareTeamsRequest):
     """📈 Get player comparison between two teams"""
@@ -135,21 +161,28 @@ async def compare_teams(request: CompareTeamsRequest):
 
 @router.get("/teams")
 async def get_available_teams():
-    """🏆 Get list of teams with player data in the system"""
+    """🏆 Get list of teams with player data in the system (solo de las 5 ligas principales)"""
     from src.infrastructure.chromadb.player_store import PlayerVectorStore
+    from src.presentation.team_routes import ALLOWED_LEAGUES, get_team_league
     
-    # Get unique teams from our player database
+    # Get unique teams from our player database (solo de las 5 ligas)
     teams = set()
     
-    # Search for players from major teams
+    # Search for players from major teams de Premier League 2025-2026
     major_teams = [
-        "Real Madrid", "Manchester City", "Barcelona", "Bayern Munich",
-        "Liverpool", "Arsenal", "Paris Saint-Germain", "Inter Milan",
-        "Juventus", "Atletico Madrid"
+        "Manchester City", "Liverpool", "Arsenal", "Chelsea",
+        "Tottenham Hotspur", "Manchester United", "Newcastle United",
+        "Brighton & Hove Albion", "West Ham United", "Aston Villa",
+        "Crystal Palace", "Wolverhampton Wanderers", "Fulham", "Brentford"
     ]
     
     available_teams = []
     for team_name in major_teams:
+        # Solo incluir equipos de las 5 ligas permitidas
+        league = get_team_league(team_name)
+        if league not in ALLOWED_LEAGUES:
+            continue
+            
         players = PlayerVectorStore.search_by_team(team_name, limit=1)
         if players:
             available_teams.append({

@@ -1,7 +1,13 @@
 /**
  * Card - Themed card component for content containers
  */
-import { View, ViewProps, StyleSheet } from "react-native";
+import {
+  View,
+  ViewProps,
+  StyleSheet,
+  Platform,
+  useWindowDimensions,
+} from "react-native";
 import { useTheme } from "@/src/theme";
 
 interface CardProps extends ViewProps {
@@ -17,30 +23,42 @@ export function Card({
   ...props
 }: CardProps) {
   const { theme, isDark } = useTheme();
+  const { width: screenWidth } = useWindowDimensions();
+  const isLargeScreen = screenWidth >= 768;
 
   const getPadding = () => {
+    // Responsive padding - smaller on mobile
     switch (padding) {
       case "none":
         return 0;
       case "sm":
-        return 12;
+        return isLargeScreen ? 12 : 8;
       case "md":
-        return 16;
+        return isLargeScreen ? 16 : 12;
       case "lg":
-        return 24;
+        return isLargeScreen ? 24 : 14;
     }
   };
 
   const getVariantStyles = () => {
     switch (variant) {
       case "elevated":
-        return {
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: isDark ? 0.3 : 0.1,
-          shadowRadius: 12,
-          elevation: 8,
-        };
+        // Use boxShadow for web, shadow* props for native
+        const shadowStyle = Platform.select({
+          web: {
+            boxShadow: isDark
+              ? "0 4px 12px rgba(0, 0, 0, 0.3)"
+              : "0 4px 12px rgba(0, 0, 0, 0.1)",
+          },
+          default: {
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: isDark ? 0.3 : 0.1,
+            shadowRadius: 12,
+            elevation: 8,
+          },
+        });
+        return shadowStyle || {};
       case "outlined":
         return {
           borderWidth: 1,
@@ -59,7 +77,7 @@ export function Card({
       style={[
         {
           backgroundColor: theme.colors.card,
-          borderRadius: 16,
+          borderRadius: isLargeScreen ? 16 : 12,
           padding: getPadding(),
           ...getVariantStyles(),
         },

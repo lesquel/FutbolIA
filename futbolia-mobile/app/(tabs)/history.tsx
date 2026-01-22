@@ -10,9 +10,11 @@ import {
   RefreshControl,
   FlatList,
   TouchableOpacity,
+  useWindowDimensions,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { ClipboardList, BarChart3, Trophy } from "lucide-react-native";
 
 import { useTheme } from "@/src/theme";
 import {
@@ -21,6 +23,7 @@ import {
   Card,
   Button,
   TeamBadge,
+  Icon,
 } from "@/src/components/ui";
 import {
   predictionsApi,
@@ -32,6 +35,10 @@ export default function HistoryScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
+  const { width: screenWidth } = useWindowDimensions();
+  const isTablet = screenWidth >= 768;
+  const isDesktop = screenWidth >= 1024;
+  const isLargeScreen = isTablet || isDesktop;
 
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [stats, setStats] = useState<PredictionStats | null>(null);
@@ -42,7 +49,7 @@ export default function HistoryScreen() {
   useFocusEffect(
     useCallback(() => {
       loadHistory();
-    }, [])
+    }, []),
   );
 
   const loadHistory = async () => {
@@ -80,28 +87,43 @@ export default function HistoryScreen() {
       activeOpacity={0.7}
       onPress={() => router.push(`/prediction/${item.id}`)}
     >
-      <Card variant="default" padding="md" style={styles.predictionCard}>
+      <Card
+        variant="default"
+        padding={isLargeScreen ? "lg" : "md"}
+        style={[
+          styles.predictionCard,
+          isLargeScreen && styles.predictionCardLarge,
+        ]}
+      >
         {/* Match Header */}
-        <View style={styles.cardHeader}>
-          <ThemedText variant="muted" size="xs">
+        <View
+          style={[styles.cardHeader, isLargeScreen && styles.cardHeaderLarge]}
+        >
+          <ThemedText variant="muted" size={isLargeScreen ? "sm" : "xs"}>
             {item.match?.league || "Liga"}
           </ThemedText>
-          <ThemedText variant="muted" size="xs">
+          <ThemedText variant="muted" size={isLargeScreen ? "sm" : "xs"}>
             {formatDate(item.created_at)}
           </ThemedText>
         </View>
 
         {/* Teams */}
-        <View style={styles.teamsRow}>
+        <View style={[styles.teamsRow, isLargeScreen && styles.teamsRowLarge]}>
           <View style={styles.teamInfo}>
-            <ThemedText weight="semibold" size="sm" numberOfLines={1}>
+            <ThemedText
+              weight="semibold"
+              size={isLargeScreen ? "base" : "sm"}
+              numberOfLines={1}
+            >
               {item.match?.home_team?.name || "Local"}
             </ThemedText>
           </View>
 
-          <View style={styles.scoreBox}>
+          <View
+            style={[styles.scoreBox, isLargeScreen && styles.scoreBoxLarge]}
+          >
             <ThemedText
-              size="lg"
+              size={isLargeScreen ? "xl" : "lg"}
               weight="bold"
               style={{ color: theme.colors.primary }}
             >
@@ -110,7 +132,11 @@ export default function HistoryScreen() {
           </View>
 
           <View style={[styles.teamInfo, { alignItems: "flex-end" }]}>
-            <ThemedText weight="semibold" size="sm" numberOfLines={1}>
+            <ThemedText
+              weight="semibold"
+              size={isLargeScreen ? "base" : "sm"}
+              numberOfLines={1}
+            >
               {item.match?.away_team?.name || "Visitante"}
             </ThemedText>
           </View>
@@ -120,16 +146,34 @@ export default function HistoryScreen() {
         <View
           style={[
             styles.resultBadge,
+            isLargeScreen && styles.resultBadgeLarge,
             {
               backgroundColor: theme.colors.primary + "15",
               borderColor: theme.colors.primary + "30",
             },
           ]}
         >
-          <ThemedText variant="primary" size="sm" weight="semibold">
-            🏆 {item.result?.winner || "Sin resultado"}
-          </ThemedText>
-          <ThemedText variant="muted" size="xs">
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: isLargeScreen ? 10 : 6,
+            }}
+          >
+            <Icon
+              icon={Trophy}
+              size={isLargeScreen ? 20 : 16}
+              variant="primary"
+            />
+            <ThemedText
+              variant="primary"
+              size={isLargeScreen ? "base" : "sm"}
+              weight="semibold"
+            >
+              {item.result?.winner || "Sin resultado"}
+            </ThemedText>
+          </View>
+          <ThemedText variant="muted" size={isLargeScreen ? "sm" : "xs"}>
             {item.result?.confidence || 0}% confianza
           </ThemedText>
         </View>
@@ -193,9 +237,12 @@ export default function HistoryScreen() {
 
         {/* Predictions List */}
         <View style={styles.listHeader}>
-          <ThemedText size="lg" weight="semibold">
-            📋 {t("history.title")}
-          </ThemedText>
+          <View style={styles.listHeaderRow}>
+            <Icon icon={ClipboardList} size={20} variant="primary" />
+            <ThemedText size="lg" weight="semibold">
+              {t("history.title")}
+            </ThemedText>
+          </View>
         </View>
 
         {predictions.length > 0 ? (
@@ -206,9 +253,7 @@ export default function HistoryScreen() {
           ))
         ) : (
           <Card variant="outlined" padding="lg" style={styles.emptyCard}>
-            <ThemedText size="3xl" style={styles.emptyIcon}>
-              📊
-            </ThemedText>
+            <Icon icon={BarChart3} size={64} variant="muted" />
             <ThemedText variant="muted" style={styles.emptyText}>
               {t("history.noPredictions")}
             </ThemedText>
@@ -227,57 +272,100 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 32,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 40,
   },
   statsContainer: {
     flexDirection: "row",
-    gap: 12,
+    gap: 10,
     marginBottom: 24,
+    flexWrap: "wrap",
   },
   statCard: {
     flex: 1,
+    minWidth: 100,
     alignItems: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 8,
   },
   listHeader: {
     marginBottom: 16,
   },
+  listHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
   predictionCard: {
-    marginBottom: 12,
+    marginBottom: 14,
   },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 12,
+    alignItems: "center",
+    marginBottom: 14,
+    flexWrap: "wrap",
+    gap: 6,
   },
   teamsRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 14,
+    gap: 8,
   },
   teamInfo: {
     flex: 1,
+    minWidth: 0,
   },
   scoreBox: {
     paddingHorizontal: 16,
     alignItems: "center",
+    flexShrink: 0,
   },
   resultBadge: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 10,
-    borderRadius: 8,
+    padding: 12,
+    borderRadius: 10,
     borderWidth: 1,
+    flexWrap: "wrap",
+    gap: 8,
   },
   emptyCard: {
     alignItems: "center",
-    paddingVertical: 40,
+    paddingVertical: 48,
+    paddingHorizontal: 24,
   },
   emptyIcon: {
     marginBottom: 16,
   },
   emptyText: {
-    marginBottom: 8,
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  // ==========================================
+  // RESPONSIVE STYLES FOR TABLETS AND DESKTOP
+  // ==========================================
+  predictionCardLarge: {
+    borderRadius: 18,
+    marginBottom: 18,
+  },
+  cardHeaderLarge: {
+    marginBottom: 18,
+    gap: 10,
+  },
+  teamsRowLarge: {
+    marginBottom: 18,
+    gap: 12,
+  },
+  scoreBoxLarge: {
+    paddingHorizontal: 24,
+  },
+  resultBadgeLarge: {
+    padding: 16,
+    borderRadius: 14,
+    gap: 12,
   },
 });

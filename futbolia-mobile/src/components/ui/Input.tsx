@@ -27,8 +27,8 @@ export function Input({
   const borderColor = error
     ? theme.colors.error
     : isFocused
-    ? theme.colors.primary
-    : theme.colors.border;
+      ? theme.colors.primary
+      : theme.colors.border;
 
   return (
     <View style={styles.container}>
@@ -83,25 +83,26 @@ export function Input({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   label: {
-    marginBottom: 8,
+    marginBottom: 10,
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 12,
-    paddingHorizontal: 16,
+    borderRadius: 14,
+    paddingHorizontal: 18,
+    minHeight: 54,
   },
   input: {
-    paddingVertical: 14,
+    paddingVertical: 16,
     fontSize: 16,
   },
   icon: {
-    marginRight: 12,
+    marginRight: 14,
   },
   error: {
-    marginTop: 4,
+    marginTop: 6,
   },
 });

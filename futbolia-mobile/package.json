@@ -7,7 +7,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "build:web": "npx expo export -p web"
+    "build:web": "bunx expo export -p web"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -24,6 +24,7 @@
     "expo-web-browser": "~15.0.10",
     "i18next": "^25.7.3",
     "lodash": "^4.17.21",
+    "lucide-react-native": "^0.562.0",
     "nativewind": "^4.2.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",

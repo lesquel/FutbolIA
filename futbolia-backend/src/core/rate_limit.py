@@ -7,7 +7,7 @@ from collections import defaultdict
 from typing import Dict, Tuple, Optional
 from fastapi import Request, HTTPException, status
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response
+from starlette.responses import Response, JSONResponse
 
 from src.core.config import settings
 from src.core.logger import log_warning
@@ -33,10 +33,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         
         # Endpoint-specific limits (requests per minute)
         self.endpoint_limits = {
-            "/api/v1/predictions/predict": 10,  # AI predictions are expensive
-            "/api/v1/teams/generate-players": 5,  # AI generation
-            "/api/v1/auth/register": 5,  # Prevent spam registrations
-            "/api/v1/auth/login": 10,  # Prevent brute force
+            "/api/v1/predictions/predict": 50,  # AI predictions are expensive
+            "/api/v1/teams/generate-players": 50,  # AI generation
+            "/api/v1/auth/register": 20,  # Prevent spam registrations
+            "/api/v1/auth/login": 30,  # Prevent brute force
         }
         
         # Whitelist (no rate limiting)
@@ -126,14 +126,22 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 limit=limit,
                 count=count
             )
-            raise HTTPException(
+            # Return JSON response directly instead of raising HTTPException
+            # This ensures proper 429 status code instead of 500
+            return JSONResponse(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail={
+                content={
+                    "success": False,
                     "error": "Rate limit exceeded",
                     "message": f"Too many requests. Limit: {limit}/min. Try again in {reset_time}s",
                     "retry_after": reset_time
                 },
-                headers={"Retry-After": str(reset_time)}
+                headers={
+                    "Retry-After": str(reset_time),
+                    "X-RateLimit-Limit": str(limit),
+                    "X-RateLimit-Remaining": "0",
+                    "X-RateLimit-Reset": str(reset_time)
+                }
             )
         
         # Add rate limit headers to response

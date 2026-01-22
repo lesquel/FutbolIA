@@ -4,11 +4,131 @@ Manages all environment variables and application settings
 """
 import os
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Dict
 from dotenv import load_dotenv
 
 # Load .env file
 load_dotenv()
+
+
+# =============================================================================
+# GLOBAL LEAGUES CONFIGURATION - 50+ LEAGUES WORLDWIDE
+# =============================================================================
+
+# Mapeo de ligas soportadas con sus códigos de API
+SUPPORTED_LEAGUES: Dict[str, Dict[str, str]] = {
+    # EUROPA - Top 5
+    "PL": {"name": "Premier League", "country": "England", "football_data": "PL", "thesportsdb": "4328"},
+    "PD": {"name": "La Liga", "country": "Spain", "football_data": "PD", "thesportsdb": "4335"},
+    "SA": {"name": "Serie A", "country": "Italy", "football_data": "SA", "thesportsdb": "4332"},
+    "BL1": {"name": "Bundesliga", "country": "Germany", "football_data": "BL1", "thesportsdb": "4331"},
+    "FL1": {"name": "Ligue 1", "country": "France", "football_data": "FL1", "thesportsdb": "4334"},
+    # EUROPA - Otras
+    "PPL": {"name": "Primeira Liga", "country": "Portugal", "football_data": "PPL", "thesportsdb": "4344"},
+    "DED": {"name": "Eredivisie", "country": "Netherlands", "football_data": "DED", "thesportsdb": "4337"},
+    "ELC": {"name": "EFL Championship", "country": "England", "football_data": "ELC", "thesportsdb": "4329"},
+    "BEL": {"name": "Jupiler Pro League", "country": "Belgium", "thesportsdb": "4355"},
+    "TUR": {"name": "Süper Lig", "country": "Turkey", "thesportsdb": "4339"},
+    "SCO": {"name": "Scottish Premiership", "country": "Scotland", "thesportsdb": "4330"},
+    "GRE": {"name": "Super League Greece", "country": "Greece", "thesportsdb": "4356"},
+    "AUT": {"name": "Austrian Bundesliga", "country": "Austria", "thesportsdb": "4357"},
+    "SUI": {"name": "Swiss Super League", "country": "Switzerland", "thesportsdb": "4354"},
+    "POL": {"name": "Ekstraklasa", "country": "Poland", "thesportsdb": "4360"},
+    "DEN": {"name": "Danish Superliga", "country": "Denmark", "thesportsdb": "4352"},
+    "NOR": {"name": "Eliteserien", "country": "Norway", "thesportsdb": "4358"},
+    "SWE": {"name": "Allsvenskan", "country": "Sweden", "thesportsdb": "4359"},
+    # SUDAMÉRICA
+    "BSA": {"name": "Brasileirão Série A", "country": "Brazil", "football_data": "BSA", "thesportsdb": "4351"},
+    "ARG": {"name": "Liga Profesional Argentina", "country": "Argentina", "thesportsdb": "4406"},
+    "ECU": {"name": "Liga Pro Ecuador", "country": "Ecuador", "thesportsdb": "4407"},
+    "COL": {"name": "Liga BetPlay Dimayor", "country": "Colombia", "thesportsdb": "4410"},
+    "PER": {"name": "Liga 1 Perú", "country": "Peru", "thesportsdb": "4411"},
+    "CHI": {"name": "Primera División Chile", "country": "Chile", "thesportsdb": "4409"},
+    "URU": {"name": "Primera División Uruguay", "country": "Uruguay", "thesportsdb": "4412"},
+    "PAR": {"name": "Primera División Paraguay", "country": "Paraguay", "thesportsdb": "4413"},
+    # NORTEAMÉRICA
+    "MLS": {"name": "Major League Soccer", "country": "USA", "thesportsdb": "4346"},
+    "MX": {"name": "Liga MX", "country": "Mexico", "thesportsdb": "4350"},
+    # ASIA
+    "JPN": {"name": "J1 League", "country": "Japan", "thesportsdb": "4350"},
+    "KOR": {"name": "K League 1", "country": "South Korea", "thesportsdb": "4378"},
+    "CHN": {"name": "Chinese Super League", "country": "China", "thesportsdb": "4379"},
+    "SAU": {"name": "Saudi Pro League", "country": "Saudi Arabia", "thesportsdb": "4380"},
+    # OCEANÍA
+    "AUS": {"name": "A-League", "country": "Australia", "thesportsdb": "4396"},
+    # COMPETICIONES INTERNACIONALES
+    "CL": {"name": "UEFA Champions League", "country": "Europe", "football_data": "CL", "thesportsdb": "4480"},
+    "EL": {"name": "UEFA Europa League", "country": "Europe", "thesportsdb": "4481"},
+    "WC": {"name": "FIFA World Cup", "country": "International", "football_data": "WC", "thesportsdb": "4429"},
+    "EC": {"name": "UEFA Euro Championship", "country": "Europe", "football_data": "EC", "thesportsdb": "4424"},
+    "CA": {"name": "Copa América", "country": "South America", "thesportsdb": "4477"},
+    "COPA": {"name": "Copa Libertadores", "country": "South America", "thesportsdb": "4478"},
+}
+
+# Mapeo expandido para predicciones (nombre completo -> código)
+LEAGUE_MAPPING_PREDICTIONS: Dict[str, str] = {
+    # Europa Top 5
+    "Premier League": "PL",
+    "La Liga": "PD",
+    "Serie A": "SA",
+    "Bundesliga": "BL1",
+    "Ligue 1": "FL1",
+    # Europa Otras
+    "Primeira Liga": "PPL",
+    "Eredivisie": "DED",
+    "EFL Championship": "ELC",
+    "Jupiler Pro League": "BEL",
+    "Süper Lig": "TUR",
+    "Scottish Premiership": "SCO",
+    "Super League Greece": "GRE",
+    "Austrian Bundesliga": "AUT",
+    "Swiss Super League": "SUI",
+    "Ekstraklasa": "POL",
+    "Danish Superliga": "DEN",
+    "Eliteserien": "NOR",
+    "Allsvenskan": "SWE",
+    # Sudamérica
+    "Brasileirão Série A": "BSA",
+    "Brasileirao": "BSA",
+    "Liga Profesional Argentina": "ARG",
+    "Liga Argentina": "ARG",
+    "Liga Pro Ecuador": "ECU",
+    "Liga Pro": "ECU",
+    "LigaPro": "ECU",
+    "Liga BetPlay Dimayor": "COL",
+    "Liga BetPlay": "COL",
+    "Liga 1 Perú": "PER",
+    "Liga 1 Peru": "PER",
+    "Primera División Chile": "CHI",
+    "Primera División Uruguay": "URU",
+    "Primera División Paraguay": "PAR",
+    # Norteamérica
+    "Major League Soccer": "MLS",
+    "MLS": "MLS",
+    "Liga MX": "MX",
+    # Asia
+    "J1 League": "JPN",
+    "J-League": "JPN",
+    "K League 1": "KOR",
+    "K-League": "KOR",
+    "Chinese Super League": "CHN",
+    "Saudi Pro League": "SAU",
+    # Oceanía
+    "A-League": "AUS",
+    # Internacionales
+    "UEFA Champions League": "CL",
+    "Champions League": "CL",
+    "UEFA Europa League": "EL",
+    "Europa League": "EL",
+    "FIFA World Cup": "WC",
+    "World Cup": "WC",
+    "UEFA Euro Championship": "EC",
+    "Euro": "EC",
+    "Copa América": "CA",
+    "Copa America": "CA",
+    "Copa Libertadores": "COPA",
+    "Libertadores": "COPA",
+}
 
 
 @dataclass
@@ -67,7 +187,9 @@ class Settings:
                 "http://localhost:8081",
                 "http://localhost:19006",
                 "exp://localhost:8081",
-                "*",
+                "http://127.0.0.1:8081",
+                "http://192.168.1.101:8081",  # IP local común
+                "*",  # Permite todas las conexiones en desarrollo
             ]
     
     def is_production(self) -> bool:

@@ -1,9 +1,9 @@
 /**
  * TeamBadge - Display team information with logo/icon
- * Fixed: Removed text nodes from View components (React Native Web compatibility)
+ * Fixed: Added proper image loading states and error handling
  */
-import React from "react";
-import { View, Image, StyleSheet } from "react-native";
+import React, { useState, useCallback, memo } from "react";
+import { View, Image, StyleSheet, ActivityIndicator } from "react-native";
 import { useTheme } from "@/src/theme";
 import { ThemedText } from "./ThemedText";
 
@@ -11,11 +11,11 @@ interface TeamBadgeProps {
   name: string;
   logoUrl?: string;
   form?: string;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
   showForm?: boolean;
 }
 
-export function TeamBadge({
+export const TeamBadge = memo(function TeamBadge({
   name,
   logoUrl,
   form,
@@ -23,22 +23,26 @@ export function TeamBadge({
   showForm = false,
 }: TeamBadgeProps) {
   const { theme } = useTheme();
+  const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
   const getSizes = () => {
     switch (size) {
       case "sm":
-        return { logo: 40, font: "sm" as const };
+        return { logo: 36, font: "xs" as const, maxWidth: 80 };
       case "md":
-        return { logo: 60, font: "base" as const };
+        return { logo: 50, font: "sm" as const, maxWidth: 100 };
       case "lg":
-        return { logo: 80, font: "lg" as const };
+        return { logo: 70, font: "base" as const, maxWidth: 120 };
+      case "xl":
+        return { logo: 100, font: "xl" as const, maxWidth: 160 };
     }
   };
 
   const sizes = getSizes();
 
   // Get initials if no logo - ensure it's always a valid string
-  const getInitials = (): string => {
+  const getInitials = useCallback((): string => {
     if (!name || typeof name !== "string") return "?";
     return (
       name
@@ -48,7 +52,7 @@ export function TeamBadge({
         .join("")
         .slice(0, 3) || "?"
     );
-  };
+  }, [name]);
 
   // Form indicator colors
   const getFormColor = (result: string) => {
@@ -67,6 +71,19 @@ export function TeamBadge({
   // Parse form string safely
   const formResults = form ? form.split("").filter((r) => r.trim()) : [];
 
+  // Validate logo URL
+  const hasValidLogo = logoUrl && logoUrl.startsWith("http") && !imageError;
+
+  const handleImageLoad = useCallback(() => {
+    setImageLoading(false);
+    setImageError(false);
+  }, []);
+
+  const handleImageError = useCallback(() => {
+    setImageLoading(false);
+    setImageError(true);
+  }, []);
+
   return (
     <View style={styles.container}>
       <View
@@ -80,12 +97,26 @@ export function TeamBadge({
           },
         ]}
       >
-        {logoUrl ? (
-          <Image
-            source={{ uri: logoUrl }}
-            style={{ width: sizes.logo - 10, height: sizes.logo - 10 }}
-            resizeMode="contain"
-          />
+        {hasValidLogo ? (
+          <>
+            {imageLoading && (
+              <ActivityIndicator
+                size="small"
+                color={theme.colors.primary}
+                style={StyleSheet.absoluteFill}
+              />
+            )}
+            <Image
+              source={{ uri: logoUrl, cache: "force-cache" }}
+              style={[
+                { width: sizes.logo - 10, height: sizes.logo - 10 },
+                imageLoading && { opacity: 0 },
+              ]}
+              resizeMode="contain"
+              onLoad={handleImageLoad}
+              onError={handleImageError}
+            />
+          </>
         ) : (
           <ThemedText weight="bold" style={{ fontSize: sizes.logo / 3 }}>
             {getInitials()}
@@ -95,7 +126,7 @@ export function TeamBadge({
       <ThemedText
         size={sizes.font}
         weight="semibold"
-        style={styles.name}
+        style={[styles.name, { maxWidth: sizes.maxWidth }]}
         numberOfLines={2}
       >
         {name || "Unknown Team"}
@@ -115,31 +146,32 @@ export function TeamBadge({
       )}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
+    paddingHorizontal: 4,
   },
   logoContainer: {
     borderRadius: 50,
     borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   name: {
     textAlign: "center",
-    maxWidth: 100,
+    lineHeight: 18,
   },
   formContainer: {
     flexDirection: "row",
-    gap: 4,
-    marginTop: 8,
+    gap: 5,
+    marginTop: 10,
   },
   formDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
 });

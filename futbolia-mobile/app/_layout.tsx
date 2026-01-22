@@ -13,10 +13,36 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
+import { LogBox, Platform } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import "../global.css";
 
 // i18n initialization
 import "@/src/i18n/i18n";
+
+// Silenciar warnings específicos de React Native
+const warningsToIgnore = [
+  "props.pointerEvents is deprecated",
+  "Cannot record touch end without a touch start",
+  "useNativeDriver is not supported",
+  "paddingTop was given a value",
+  "SafeAreaView has been deprecated",
+];
+
+if (Platform.OS === "web") {
+  // Silenciar warnings en Web
+  const originalWarn = console.warn;
+  console.warn = (...args: any[]) => {
+    const message = args[0]?.toString() || "";
+    if (warningsToIgnore.some(w => message.includes(w))) {
+      return; // Silenciar estos warnings
+    }
+    originalWarn.apply(console, args);
+  };
+} else {
+  // Para plataformas nativas, usar LogBox
+  LogBox.ignoreLogs(warningsToIgnore);
+}
 
 // Theme provider
 import { ThemeProvider, useTheme } from "@/src/theme";
@@ -53,11 +79,13 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <RootLayoutNav />
-      </AuthProvider>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <RootLayoutNav />
+        </AuthProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
 

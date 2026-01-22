@@ -20,7 +20,7 @@
 FutbolIA es una plataforma de predicciones deportivas que utiliza **Dixie**, una IA analista de élite, para predecir resultados de partidos de fútbol combinando:
 
 - 🧠 **DeepSeek V3** - Modelo de lenguaje avanzado
-- 📊 **ChromaDB RAG** - Base de datos vectorial con atributos de jugadores tipo FIFA
+- **ChromaDB RAG** - Base de datos vectorial con atributos de jugadores tipo FIFA
 - ⚽ **Datos en tiempo real** - Integración con APIs de fútbol
 - 📱 **App Multiplataforma** - iOS, Android y Web
 
@@ -58,7 +58,7 @@ FutbolIA/
 ### Prerrequisitos
 
 - **Python 3.13+** con [uv](https://docs.astral.sh/uv/)
-- **Node.js 18+** con [Bun](https://bun.sh/) o npm
+- **Node.js 18+** con [Bun](https://bun.sh/)
 - **MongoDB** (local o [Atlas](https://www.mongodb.com/atlas))
 - **DeepSeek API Key** ([obtener aquí](https://platform.deepseek.com/))
 
@@ -224,13 +224,13 @@ EXPO_PUBLIC_DEFAULT_THEME=dark
 
 ## 📱 Capturas de Pantalla
 
-| Home                   | Predict                | History      | Settings         |
-| ---------------------- | ---------------------- | ------------ | ---------------- |
-| 🏠 Partidos destacados | 🔮 Selector de equipos | 📊 Historial | ⚙️ Configuración |
+| Home                       | Predict                       | History             | Settings                 |
+| -------------------------- | ----------------------------- | ------------------- | ------------------------ |
+| Home - Partidos destacados | Predict - Selector de equipos | History - Historial | Settings - Configuración |
 
 ---
 
-## 🛠️ Tecnologías
+## Tecnologías
 
 ### Backend
 
@@ -243,6 +243,7 @@ EXPO_PUBLIC_DEFAULT_THEME=dark
 
 ### Frontend
 
+- **React Native** - Framework para aplicaciones móviles
 - **Expo SDK 54** - React Native framework
 - **Expo Router** - Navegación basada en archivos
 - **NativeWind** - Tailwind CSS para React Native
@@ -298,3 +299,5 @@ Este proyecto fue creado para **Casa Abierta ULEAM 2025** - Minería de Datos - 
 🏆 _Tu oráculo deportivo de élite_
 
 </div>
+
+uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000

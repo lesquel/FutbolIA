@@ -1,7 +1,23 @@
 /**
- * PredictionCard - Display Dixie's prediction with analysis and player details
+ * PredictionCard - Display GoalMind's prediction with analysis and player details
  */
-import { View, StyleSheet, ScrollView } from "react-native";
+import { memo, useMemo } from "react";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  useWindowDimensions,
+} from "react-native";
+import {
+  Sparkles,
+  BarChart3,
+  Target,
+  Star,
+  Brain,
+  Home,
+  Bus,
+  Trophy,
+} from "lucide-react-native";
 import { useTheme } from "@/src/theme";
 import { useTranslation } from "@/src/i18n/i18n";
 import {
@@ -10,6 +26,7 @@ import {
   ConfidenceRing,
   TeamBadge,
   Button,
+  Icon,
 } from "@/src/components/ui";
 import { Prediction, Player } from "@/src/services/api";
 
@@ -28,8 +45,8 @@ const getPositionColor = (position: string, theme: any) => {
   return "#e74c3c"; // Red for attackers
 };
 
-// Player Row Component
-const PlayerRow = ({ player, theme }: { player: Player; theme: any }) => (
+// Player Row Component - Memoized for performance
+const PlayerRow = memo(({ player, theme }: { player: Player; theme: any }) => (
   <View style={styles.playerRow}>
     <View
       style={[
@@ -59,56 +76,70 @@ const PlayerRow = ({ player, theme }: { player: Player; theme: any }) => (
       </ThemedText>
     </View>
   </View>
-);
+));
+PlayerRow.displayName = "PlayerRow";
 
-// Team Squad Section
-const TeamSquadSection = ({
-  teamName,
-  players,
-  theme,
-  emoji,
-}: {
-  teamName: string;
-  players: Player[];
-  theme: any;
-  emoji: string;
-}) => (
-  <View style={styles.squadSection}>
-    <ThemedText size="md" weight="semibold" style={styles.squadTitle}>
-      {emoji} {teamName}
-    </ThemedText>
-    <View
-      style={[
-        styles.squadBox,
-        { backgroundColor: theme.colors.surfaceSecondary },
-      ]}
-    >
-      {players.length > 0 ? (
-        players
-          .slice(0, 11)
-          .map((player, index) => (
-            <PlayerRow key={index} player={player} theme={theme} />
-          ))
-      ) : (
-        <ThemedText variant="muted" size="sm">
-          Sin datos de jugadores
-        </ThemedText>
-      )}
-    </View>
-    {players.length > 0 && (
-      <View style={styles.statsRow}>
-        <ThemedText variant="muted" size="xs">
-          📊 Promedio OVR:{" "}
-          {Math.round(
-            players.reduce((a, p) => a + p.overall_rating, 0) / players.length
+// Team Squad Section - Memoized for performance
+const TeamSquadSection = memo(
+  ({
+    teamName,
+    players,
+    theme,
+    icon: IconComponent,
+  }: {
+    teamName: string;
+    players: Player[];
+    theme: any;
+    icon: any;
+  }) => {
+    const avgOvr = useMemo(() => {
+      if (players.length === 0) return 0;
+      return Math.round(
+        players.reduce((a, p) => a + p.overall_rating, 0) / players.length,
+      );
+    }, [players]);
+
+    return (
+      <View style={styles.squadSection}>
+        <View style={styles.squadTitleRow}>
+          <Icon icon={IconComponent} size={20} variant="primary" />
+          <ThemedText size="md" weight="semibold" style={styles.squadTitle}>
+            {teamName}
+          </ThemedText>
+        </View>
+        <View
+          style={[
+            styles.squadBox,
+            { backgroundColor: theme.colors.surfaceSecondary },
+          ]}
+        >
+          {players.length > 0 ? (
+            players
+              .slice(0, 11)
+              .map((player, index) => (
+                <PlayerRow key={index} player={player} theme={theme} />
+              ))
+          ) : (
+            <ThemedText variant="muted" size="sm">
+              Sin datos de jugadores
+            </ThemedText>
           )}
-        </ThemedText>
+        </View>
+        {players.length > 0 && (
+          <View style={styles.statsRow}>
+            <Icon icon={BarChart3} size={14} variant="muted" />
+            <ThemedText variant="muted" size="xs" style={styles.statsText}>
+              Promedio OVR: {avgOvr}
+            </ThemedText>
+          </View>
+        )}
       </View>
-    )}
-  </View>
+    );
+  },
 );
+TeamSquadSection.displayName = "TeamSquadSection";
 
-export function PredictionCard({
+export const PredictionCard = memo(function PredictionCard({
   prediction,
   onSave,
   onShare,
@@ -116,6 +147,12 @@ export function PredictionCard({
 }: PredictionCardProps) {
   const { theme, isDark } = useTheme();
   const { t } = useTranslation();
+
+  // Responsive breakpoints
+  const { width: screenWidth } = useWindowDimensions();
+  const isTablet = screenWidth >= 768;
+  const isDesktop = screenWidth >= 1024;
+  const isLargeScreen = isTablet || isDesktop;
 
   const { result, match } = prediction;
 
@@ -127,38 +164,52 @@ export function PredictionCard({
 
   return (
     <Card variant="elevated" padding="lg">
-      {/* Header - Dixie's Title */}
-      <View style={styles.header}>
-        <View style={styles.dixieIcon}>
-          <ThemedText size="2xl">🔮</ThemedText>
+      {/* Header - GoalMind's Title */}
+      <View style={[styles.header, isLargeScreen && styles.headerLarge]}>
+        <View style={styles.goalMindIcon}>
+          <Icon
+            icon={Sparkles}
+            size={isLargeScreen ? 40 : 24}
+            variant="primary"
+          />
         </View>
         <View style={styles.headerText}>
-          <ThemedText size="xl" weight="bold">
+          <ThemedText size={isLargeScreen ? "2xl" : "lg"} weight="bold">
             {t("prediction.title")}
           </ThemedText>
-          <ThemedText variant="muted" size="sm">
+          <ThemedText variant="muted" size={isLargeScreen ? "base" : "xs"}>
             Análisis táctico con IA
           </ThemedText>
         </View>
       </View>
 
       {/* Match Overview */}
-      <View style={styles.matchOverview}>
+      <View
+        style={[
+          styles.matchOverview,
+          isLargeScreen && styles.matchOverviewLarge,
+        ]}
+      >
         <TeamBadge
           name={match.home_team.name}
           logoUrl={match.home_team.logo_url}
-          size="md"
+          size={isLargeScreen ? "lg" : "sm"}
         />
 
-        <View style={styles.scoreContainer}>
+        <View
+          style={[
+            styles.scoreContainer,
+            isLargeScreen && styles.scoreContainerLarge,
+          ]}
+        >
           <ThemedText
-            size="3xl"
+            size={isLargeScreen ? "3xl" : "2xl"}
             weight="bold"
             style={{ color: theme.colors.primary }}
           >
             {result.predicted_score}
           </ThemedText>
-          <ThemedText variant="muted" size="xs">
+          <ThemedText variant="muted" size={isLargeScreen ? "sm" : "xs"}>
             {t("prediction.score")}
           </ThemedText>
         </View>
@@ -166,7 +217,7 @@ export function PredictionCard({
         <TeamBadge
           name={match.away_team.name}
           logoUrl={match.away_team.logo_url}
-          size="md"
+          size={isLargeScreen ? "lg" : "sm"}
         />
       </View>
 
@@ -174,6 +225,7 @@ export function PredictionCard({
       <View
         style={[
           styles.winnerBadge,
+          isLargeScreen && styles.winnerBadgeLarge,
           {
             backgroundColor: isDraw
               ? theme.colors.warning + "20"
@@ -182,32 +234,67 @@ export function PredictionCard({
           },
         ]}
       >
-        <ThemedText variant="primary" weight="bold">
-          🏆 {t("prediction.winner")}: {result.winner}
+        <Icon icon={Trophy} size={isLargeScreen ? 26 : 16} variant="primary" />
+        <ThemedText
+          variant="primary"
+          weight="bold"
+          size={isLargeScreen ? "lg" : "sm"}
+          style={styles.winnerText}
+        >
+          {t("prediction.winner")}: {result.winner}
         </ThemedText>
       </View>
 
       {/* Confidence Ring */}
-      <View style={styles.confidenceSection}>
+      <View
+        style={[
+          styles.confidenceSection,
+          isLargeScreen && styles.confidenceSectionLarge,
+        ]}
+      >
         <ConfidenceRing
           percentage={result.confidence}
-          size={140}
+          size={isLargeScreen ? 180 : 110}
           label={t("prediction.confidence")}
         />
       </View>
 
       {/* Tactical Analysis */}
-      <View style={styles.analysisSection}>
-        <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
-          📊 {t("prediction.analysis")}
-        </ThemedText>
+      <View
+        style={[
+          styles.analysisSection,
+          isLargeScreen && styles.analysisSectionLarge,
+        ]}
+      >
+        <View style={styles.sectionTitleRow}>
+          <Icon
+            icon={BarChart3}
+            size={isLargeScreen ? 24 : 16}
+            variant="primary"
+          />
+          <ThemedText
+            size={isLargeScreen ? "xl" : "base"}
+            weight="semibold"
+            style={styles.sectionTitle}
+          >
+            {t("prediction.analysis")}
+          </ThemedText>
+        </View>
         <View
           style={[
             styles.analysisBox,
+            isLargeScreen && styles.analysisBoxLarge,
             { backgroundColor: theme.colors.surfaceSecondary },
           ]}
         >
-          <ThemedText variant="secondary" size="sm" style={styles.analysisText}>
+          <ThemedText
+            variant="secondary"
+            size={isLargeScreen ? "base" : "sm"}
+            style={[
+              styles.analysisText,
+              isLargeScreen && styles.analysisTextLarge,
+            ]}
+          >
             {result.reasoning}
           </ThemedText>
         </View>
@@ -216,9 +303,20 @@ export function PredictionCard({
       {/* Key Factors */}
       {result.key_factors && result.key_factors.length > 0 && (
         <View style={styles.factorsSection}>
-          <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
-            🎯 {t("prediction.keyFactors")}
-          </ThemedText>
+          <View style={styles.sectionTitleRow}>
+            <Icon
+              icon={Target}
+              size={isLargeScreen ? 20 : 16}
+              variant="primary"
+            />
+            <ThemedText
+              size={isLargeScreen ? "lg" : "base"}
+              weight="semibold"
+              style={styles.sectionTitle}
+            >
+              {t("prediction.keyFactors")}
+            </ThemedText>
+          </View>
           {result.key_factors.map((factor, index) => (
             <View
               key={index}
@@ -238,9 +336,12 @@ export function PredictionCard({
       {/* Star Players */}
       <View style={styles.starsSection}>
         <View style={styles.starPlayer}>
-          <ThemedText variant="muted" size="xs">
-            ⭐ {t("prediction.starPlayerHome")}
-          </ThemedText>
+          <View style={styles.starPlayerHeader}>
+            <Icon icon={Star} size={16} variant="warning" />
+            <ThemedText variant="muted" size="xs">
+              {t("prediction.starPlayerHome")}
+            </ThemedText>
+          </View>
           <ThemedText weight="semibold">
             {result.star_player_home || "N/A"}
           </ThemedText>
@@ -251,9 +352,12 @@ export function PredictionCard({
         />
 
         <View style={styles.starPlayer}>
-          <ThemedText variant="muted" size="xs">
-            ⭐ {t("prediction.starPlayerAway")}
-          </ThemedText>
+          <View style={styles.starPlayerHeader}>
+            <Icon icon={Star} size={16} variant="warning" />
+            <ThemedText variant="muted" size="xs">
+              {t("prediction.starPlayerAway")}
+            </ThemedText>
+          </View>
           <ThemedText weight="semibold">
             {result.star_player_away || "N/A"}
           </ThemedText>
@@ -262,23 +366,34 @@ export function PredictionCard({
 
       {/* Team Squads - Detailed Player Analytics */}
       {prediction.context && (
-        <View style={styles.squadsContainer}>
-          <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
+        <View
+          style={[
+            styles.squadsContainer,
+            isLargeScreen && styles.squadsContainerLarge,
+          ]}
+        >
+          <ThemedText
+            size={isLargeScreen ? "xl" : "base"}
+            weight="semibold"
+            style={styles.sectionTitle}
+          >
             👥 Plantillas Analizadas
           </ThemedText>
 
-          <View style={styles.squadsGrid}>
+          <View
+            style={[styles.squadsGrid, isLargeScreen && styles.squadsGridLarge]}
+          >
             <TeamSquadSection
               teamName={match.home_team.name}
               players={prediction.context.home_players || []}
               theme={theme}
-              emoji="🏠"
+              icon={Home}
             />
             <TeamSquadSection
               teamName={match.away_team.name}
               players={prediction.context.away_players || []}
               theme={theme}
-              emoji="🚌"
+              icon={Bus}
             />
           </View>
         </View>
@@ -287,9 +402,20 @@ export function PredictionCard({
       {/* Tactical Insight */}
       {result.tactical_insight && (
         <View style={styles.insightSection}>
-          <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
-            🧠 Insight Táctico
-          </ThemedText>
+          <View style={styles.sectionTitleRow}>
+            <Icon
+              icon={Brain}
+              size={isLargeScreen ? 20 : 16}
+              variant="primary"
+            />
+            <ThemedText
+              size={isLargeScreen ? "lg" : "base"}
+              weight="semibold"
+              style={styles.sectionTitle}
+            >
+              Insight Táctico
+            </ThemedText>
+          </View>
           <View
             style={[
               styles.analysisBox,
@@ -304,12 +430,12 @@ export function PredictionCard({
       )}
 
       {/* Action Buttons */}
-      <View style={styles.actions}>
+      <View style={[styles.actions, isLargeScreen && styles.actionsLarge]}>
         {onSave && (
           <Button
             title={t("prediction.savePrediction")}
             variant="primary"
-            size="md"
+            size={isLargeScreen ? "lg" : "md"}
             onPress={onSave}
             style={styles.actionButton}
           />
@@ -318,7 +444,7 @@ export function PredictionCard({
           <Button
             title={t("prediction.newPrediction")}
             variant="outline"
-            size="md"
+            size={isLargeScreen ? "lg" : "md"}
             onPress={onNewPrediction}
             style={styles.actionButton}
           />
@@ -326,16 +452,16 @@ export function PredictionCard({
       </View>
     </Card>
   );
-}
+});
 
 const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 10,
   },
-  dixieIcon: {
-    marginRight: 12,
+  goalMindIcon: {
+    marginRight: 8,
   },
   headerText: {
     flex: 1,
@@ -344,116 +470,194 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    marginBottom: 16,
+    paddingHorizontal: 0,
+    marginBottom: 10,
   },
   scoreContainer: {
     alignItems: "center",
+    paddingHorizontal: 8,
   },
   winnerBadge: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    borderWidth: 1,
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  winnerText: {
+    marginLeft: 4,
+    flexShrink: 1,
+  },
+  sectionTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 8,
+  },
+  squadTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 8,
+  },
+  statsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 8,
+  },
+  statsText: {
+    marginLeft: 4,
+  },
+  starPlayerHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginBottom: 4,
   },
   confidenceSection: {
     alignItems: "center",
-    marginVertical: 20,
+    marginVertical: 10,
   },
   analysisSection: {
-    marginTop: 8,
+    marginTop: 6,
   },
   sectionTitle: {
-    marginBottom: 12,
+    marginBottom: 6,
+    flexShrink: 1,
   },
   analysisBox: {
-    padding: 16,
-    borderRadius: 12,
+    padding: 10,
+    borderRadius: 10,
   },
   analysisText: {
-    lineHeight: 22,
+    lineHeight: 20,
   },
   factorsSection: {
-    marginTop: 20,
+    marginTop: 10,
   },
   factorItem: {
-    paddingLeft: 12,
-    paddingVertical: 8,
+    paddingLeft: 10,
+    paddingVertical: 4,
     borderLeftWidth: 3,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   starsSection: {
     flexDirection: "row",
-    marginTop: 20,
-    paddingTop: 16,
+    marginTop: 10,
+    paddingTop: 10,
   },
   starPlayer: {
     flex: 1,
     alignItems: "center",
+    paddingHorizontal: 6,
   },
   divider: {
     width: 1,
     height: "100%",
-    marginHorizontal: 8,
+    marginHorizontal: 6,
   },
   // Squad styles
   squadsContainer: {
-    marginTop: 24,
-    paddingTop: 16,
+    marginTop: 12,
+    paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: "rgba(0,0,0,0.1)",
   },
   squadsGrid: {
-    gap: 16,
+    gap: 8,
   },
   squadSection: {
-    marginBottom: 12,
+    marginBottom: 6,
   },
   squadTitle: {
     marginBottom: 8,
   },
   squadBox: {
-    padding: 12,
-    borderRadius: 12,
+    padding: 8,
+    borderRadius: 10,
   },
   playerRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 6,
+    paddingVertical: 4,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(0,0,0,0.05)",
   },
   positionBadge: {
     width: 32,
-    height: 20,
+    height: 18,
     borderRadius: 4,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 8,
+    marginRight: 6,
   },
   playerName: {
     flex: 1,
   },
   ovrBadge: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 8,
-  },
-  statsRow: {
-    marginTop: 8,
-    alignItems: "flex-end",
+    borderRadius: 5,
   },
   insightSection: {
-    marginTop: 20,
+    marginTop: 10,
   },
   actions: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 24,
+    flexDirection: "column",
+    gap: 8,
+    marginTop: 12,
   },
   actionButton: {
     flex: 1,
+  },
+  // ==========================================
+  // RESPONSIVE STYLES FOR TABLETS AND DESKTOP
+  // ==========================================
+  headerLarge: {
+    marginBottom: 28,
+  },
+  matchOverviewLarge: {
+    paddingHorizontal: 24,
+    marginBottom: 28,
+  },
+  scoreContainerLarge: {
+    paddingHorizontal: 24,
+  },
+  winnerBadgeLarge: {
+    paddingVertical: 18,
+    paddingHorizontal: 28,
+    borderRadius: 18,
+    marginBottom: 32,
+  },
+  confidenceSectionLarge: {
+    marginVertical: 32,
+  },
+  analysisSectionLarge: {
+    marginTop: 20,
+  },
+  analysisBoxLarge: {
+    padding: 24,
+    borderRadius: 18,
+  },
+  analysisTextLarge: {
+    lineHeight: 28,
+  },
+  squadsContainerLarge: {
+    marginTop: 36,
+    paddingTop: 28,
+  },
+  squadsGridLarge: {
+    flexDirection: "row",
+    gap: 24,
+  },
+  actionsLarge: {
+    flexDirection: "row",
+    gap: 16,
+    marginTop: 36,
   },
 });

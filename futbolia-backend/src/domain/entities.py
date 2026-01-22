@@ -112,6 +112,8 @@ class Team:
     attack_rating: int = 0
     defense_rating: int = 0
     players: List[Player] = field(default_factory=list)
+    has_players: bool = False  # Si tiene jugadores en ChromaDB
+    player_count: int = 0  # Cantidad de jugadores
     
     def to_dict(self) -> dict:
         return {
@@ -124,6 +126,8 @@ class Team:
             "form": self.form,
             "attack_rating": self.attack_rating,
             "defense_rating": self.defense_rating,
+            "has_players": self.has_players,
+            "player_count": self.player_count,
         }
 
 

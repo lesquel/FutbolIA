@@ -173,6 +173,43 @@ class PlayerVectorStore:
             cls.initialize()
         return cls._collection.count()
     
+    @classmethod
+    def clear_all(cls) -> None:
+        """Clear all players from the vector store"""
+        if cls._client is None:
+            cls.initialize()
+        
+        # Delete and recreate collection
+        try:
+            cls._client.delete_collection(settings.CHROMA_COLLECTION_NAME)
+            print(f"🗑️ Deleted collection: {settings.CHROMA_COLLECTION_NAME}")
+        except Exception as e:
+            print(f"⚠️ Error deleting collection: {e}")
+        
+        # Recreate collection
+        cls._collection = cls._client.get_or_create_collection(
+            name=settings.CHROMA_COLLECTION_NAME,
+            metadata={"description": "FIFA Player Attributes for tactical analysis"}
+        )
+        print(f"✅ Recreated collection: {settings.CHROMA_COLLECTION_NAME}")
+    
+    @classmethod
+    def get_all_teams(cls) -> List[str]:
+        """Get list of all unique teams in the store"""
+        if cls._collection is None:
+            cls.initialize()
+        
+        # Get all documents
+        results = cls._collection.get(include=["metadatas"])
+        
+        teams = set()
+        if results and results.get("metadatas"):
+            for metadata in results["metadatas"]:
+                if metadata.get("team"):
+                    teams.add(metadata["team"])
+        
+        return sorted(list(teams))
+    
     @staticmethod
     def _results_to_players(results: dict) -> List[PlayerAttributes]:
         """Convert ChromaDB results to PlayerAttributes list"""

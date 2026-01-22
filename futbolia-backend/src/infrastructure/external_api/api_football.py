@@ -15,6 +15,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 
 from src.core.config import settings
+from src.core.cache import team_cache, squad_cache
 from src.domain.entities import Team
 
 
@@ -31,10 +32,6 @@ class APIFootballClient:
     
     BASE_URL = "https://v3.football.api-sports.io"
     
-    # Cache for teams to avoid repeated API calls
-    _team_cache: Dict[str, dict] = {}
-    _squad_cache: Dict[str, List[dict]] = {}
-    
     @classmethod
     def _get_headers(cls) -> dict:
         """Get API headers"""
@@ -49,10 +46,15 @@ class APIFootballClient:
         """
         Search for a team by name
         Returns raw API response with team data
+        Uses TTL cache to reduce API calls
         """
-        cache_key = team_name.lower()
-        if cache_key in cls._team_cache:
-            return cls._team_cache[cache_key]
+        cache_key = f"team_search:{team_name.lower()}"
+        
+        # Check cache first
+        cached_result = await team_cache.get(cache_key)
+        if cached_result is not None:
+            print(f"✅ Cache hit for team: {team_name}")
+            return cached_result
         
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
@@ -73,7 +75,8 @@ class APIFootballClient:
                     if teams:
                         # Return first match
                         team_data = teams[0]
-                        cls._team_cache[cache_key] = team_data
+                        # Cache for 2 hours (7200 seconds)
+                        await team_cache.set(cache_key, team_data, ttl=7200)
                         print(f"✅ Found team: {team_data['team']['name']} (ID: {team_data['team']['id']})")
                         return team_data
                     
@@ -99,10 +102,15 @@ class APIFootballClient:
             "position": "Midfielder",
             "photo": "url"
         }
+        Uses TTL cache (30 minutes) since squads change less frequently
         """
-        cache_key = str(team_id)
-        if cache_key in cls._squad_cache:
-            return cls._squad_cache[cache_key]
+        cache_key = f"squad:{team_id}"
+        
+        # Check cache first
+        cached_result = await squad_cache.get(cache_key)
+        if cached_result is not None:
+            print(f"✅ Cache hit for squad: {team_id}")
+            return cached_result
         
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
@@ -122,7 +130,8 @@ class APIFootballClient:
                     squads = data.get("response", [])
                     if squads and squads[0].get("players"):
                         players = squads[0]["players"]
-                        cls._squad_cache[cache_key] = players
+                        # Cache for 30 minutes (1800 seconds)
+                        await squad_cache.set(cache_key, players, ttl=1800)
                         print(f"✅ Found {len(players)} players for team {team_id}")
                         return players
                         
@@ -155,7 +164,6 @@ class APIFootballClient:
             short_name=team_info.get("code", team_info["name"][:3].upper()),
             logo_url=team_info.get("logo", ""),
             country=team_info.get("country", ""),
-            venue=venue.get("name", ""),
         )
         
         # Then get the squad

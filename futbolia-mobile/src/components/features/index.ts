@@ -3,4 +3,6 @@ export { MatchCard } from "./MatchCard";
 export { PredictionCard } from "./PredictionCard";
 export { TeamSelector } from "./TeamSelector";
 export { TeamStatsCard } from "./TeamStatsCard";
-export { DixieChat } from "./DixieChat";
+export { GoalMindChat } from "./DixieChat";
+export { LeagueTable } from "./LeagueTable";
+export { DendrogramChart } from "./DendrogramChart";
