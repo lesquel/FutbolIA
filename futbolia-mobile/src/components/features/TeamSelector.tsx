@@ -14,6 +14,7 @@ import {
   Alert,
   Image,
   Platform,
+  useWindowDimensions,
 } from "react-native";
 import { Search, X, Check, Sparkles, Loader2 } from "lucide-react-native";
 import { useTheme } from "@/src/theme";
@@ -836,7 +837,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
-    flex: 1,
   },
   teamBadge: {
     width: 44,
