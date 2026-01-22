@@ -13,9 +13,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  useWindowDimensions,
   Platform,
-  SafeAreaView,
 } from "react-native";
 import { Search, X, Check, Sparkles, Loader2 } from "lucide-react-native";
 import { useTheme } from "@/src/theme";
@@ -413,7 +411,7 @@ export const TeamSelector = memo(function TeamSelector({
           Alert.alert(
             "Búsqueda",
             response.error ||
-              "No se encontraron equipos. Intenta con otro nombre.",
+            "No se encontraron equipos. Intenta con otro nombre."
           );
         }
       } catch (error: any) {
@@ -640,8 +638,11 @@ export const TeamSelector = memo(function TeamSelector({
       </View>
 
       <TouchableOpacity
-        onPress={() => setModalVisible(true)}
-        activeOpacity={0.7}
+        onPress={() => {
+          console.log("Abriendo selector de equipos...");
+          setModalVisible(true);
+        }}
+        activeOpacity={0.6}
         style={[
           styles.selector,
           {
@@ -649,17 +650,16 @@ export const TeamSelector = memo(function TeamSelector({
             borderColor: selectedTeam
               ? theme.colors.primary
               : theme.colors.border,
+            // @ts-ignore
+            cursor: "pointer",
           },
         ]}
       >
         <View style={styles.selectorContent}>
           {selectedTeam ? (
             <View style={styles.selectedTeam}>
-              {/* Find team data to show logo and league - prioritize POPULAR_TEAMS for logos */}
               {(() => {
-                // First get logo from POPULAR_TEAMS (most reliable)
                 const logoUrl = getTeamLogo(selectedTeam, undefined);
-                // Then get other team data from teams list
                 const teamData = teams.find((t) => t.name === selectedTeam);
                 const league =
                   teamData?.league ||
@@ -692,7 +692,7 @@ export const TeamSelector = memo(function TeamSelector({
                       )}
                     </View>
                     <View style={{ flex: 1 }}>
-                      <ThemedText weight="semibold">{selectedTeam}</ThemedText>
+                      <ThemedText weight="semibold" numberOfLines={1}>{selectedTeam}</ThemedText>
                       {league ? (
                         <ThemedText variant="muted" size="xs">
                           {league}
@@ -706,25 +706,23 @@ export const TeamSelector = memo(function TeamSelector({
           ) : (
             <ThemedText variant="muted">Seleccionar equipo...</ThemedText>
           )}
-          <ThemedText variant="muted">▼</ThemedText>
+          <ThemedText variant="muted" style={{ marginLeft: 8 }}>▼</ThemedText>
         </View>
       </TouchableOpacity>
 
-      {/* Team Selection Modal */}
+      {/* MODAL CORREGIDO */}
       <Modal
         visible={modalVisible}
         transparent
-        animationType={isLargeScreen ? "fade" : "slide"}
-        onRequestClose={() => setModalVisible(false)}
+        animationType="slide"
+        onRequestClose={handleCloseModal}
         statusBarTranslucent
       >
         <Pressable
-          style={[
-            styles.modalOverlay,
-            isLargeScreen && styles.modalOverlayCenter,
-          ]}
-          onPress={() => setModalVisible(false)}
+          style={styles.modalOverlay}
+          onPress={handleCloseModal}
         >
+          {/* Prevenir que los toques en el contenido cierren el modal */}
           <Pressable
             style={[
               styles.modalContent,
@@ -750,31 +748,14 @@ export const TeamSelector = memo(function TeamSelector({
               <ThemedText size={isLargeScreen ? "2xl" : "xl"} weight="bold">
                 Seleccionar Equipo
               </ThemedText>
-              <TouchableOpacity
-                onPress={() => setModalVisible(false)}
-                style={[
-                  styles.closeButton,
-                  isLargeScreen && styles.closeButtonLarge,
-                ]}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Icon icon={X} size={isLargeScreen ? 28 : 24} variant="muted" />
+              <TouchableOpacity onPress={handleCloseModal}>
+                <Icon icon={X} size={24} variant="muted" />
               </TouchableOpacity>
             </View>
 
-            {/* Search Input with Button */}
-            <View
-              style={[
-                styles.searchContainer,
-                isLargeScreen && styles.searchContainerLarge,
-              ]}
-            >
-              <View
-                style={[
-                  styles.searchInputRow,
-                  isLargeScreen && styles.searchInputRowLarge,
-                ]}
-              >
+            {/* Search */}
+            <View style={styles.searchContainer}>
+              <View style={styles.searchInputRow}>
                 <View style={styles.searchInputWrapper}>
                   <Input
                     placeholder="Buscar equipo..."
@@ -797,13 +778,6 @@ export const TeamSelector = memo(function TeamSelector({
                   ]}
                 />
               </View>
-              {loading && (
-                <ActivityIndicator
-                  style={styles.searchLoader}
-                  color={theme.colors.primary}
-                  size={isLargeScreen ? "large" : "small"}
-                />
-              )}
             </View>
 
             {/* Team List */}
@@ -812,61 +786,14 @@ export const TeamSelector = memo(function TeamSelector({
               keyExtractor={(item, index) => item.id || `team-${index}`}
               renderItem={renderTeamItem}
               style={styles.teamList}
-              contentContainerStyle={
-                isLargeScreen && styles.teamListContentLarge
-              }
-              showsVerticalScrollIndicator={true}
-              numColumns={isDesktop ? 2 : 1}
-              key={isDesktop ? "two-columns" : "one-column"}
-              columnWrapperStyle={isDesktop ? styles.columnWrapper : undefined}
-              ListHeaderComponent={
-                hasSearched && teams.length > 0 ? (
-                  <View style={styles.searchResultsHeader}>
-                    <Icon icon={Check} size={16} variant="success" />
-                    <ThemedText variant="muted" size="sm">
-                      {teams.length} equipo(s) encontrado(s)
-                    </ThemedText>
-                  </View>
-                ) : null
-              }
               ListEmptyComponent={
                 !loading ? (
                   <View style={styles.emptyContainer}>
                     <ThemedText variant="muted" style={styles.emptyText}>
-                      {hasSearched && searchQuery.length > 0
-                        ? `No se encontró "${searchQuery}" en la base de datos.`
-                        : "Escribe el nombre del equipo y presiona buscar."}
+                      {hasSearched
+                        ? `No se encontró "${searchQuery}".`
+                        : "Escribe el nombre del equipo."}
                     </ThemedText>
-                    {hasSearched && searchQuery.length >= 2 && (
-                      <Card variant="outlined" style={styles.addCard}>
-                        <ThemedText
-                          weight="bold"
-                          style={{ marginBottom: 8 }}
-                        >{`¿Agregar ${searchQuery} con IA?`}</ThemedText>
-                        <ThemedText
-                          size="sm"
-                          variant="secondary"
-                          style={{ marginBottom: 16 }}
-                        >
-                          GoalMind buscará los jugadores reales de este equipo y
-                          los guardará en la base de datos para futuras
-                          consultas.
-                        </ThemedText>
-                        <Button
-                          title={
-                            isAdding
-                              ? "Generando jugadores..."
-                              : `Agregar ${searchQuery} con IA`
-                          }
-                          onPress={handleAddNewTeam}
-                          disabled={isAdding}
-                          loading={isAdding}
-                          icon={isAdding ? Loader2 : Sparkles}
-                          size="sm"
-                          variant="primary"
-                        />
-                      </Card>
-                    )}
                   </View>
                 ) : null
               }
@@ -892,21 +819,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   selector: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 18,
-    borderRadius: 14,
+    padding: 16,
+    borderRadius: 12,
     borderWidth: 1,
-    minHeight: 64,
+    minHeight: 60,
+    justifyContent: "center",
   },
   selectorContent: {
-    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    width: "100%",
   },
   selectedTeam: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
@@ -921,23 +847,27 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "flex-end",
+    backgroundColor: 'rgba(0,0,0,0.6)',
   },
   modalContent: {
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 32,
-    maxHeight: "92%",
-    minHeight: "65%",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    maxHeight: "80%",
+    width: "100%",
+    // Shadow para iOS
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    // Elevation para Android
+    elevation: 20,
   },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 22,
   },
   searchContainer: {
     marginBottom: 14,

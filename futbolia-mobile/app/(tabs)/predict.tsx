@@ -188,8 +188,9 @@ export default function PredictScreen() {
   return (
     <ThemedView variant="background" style={styles.container}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === "ios" ? "padding" : Platform.OS === "android" ? "height" : undefined}
         style={styles.container}
+        enabled={Platform.OS !== 'web'}
       >
         <ScrollView
           contentContainerStyle={[
@@ -514,7 +515,7 @@ const styles = StyleSheet.create({
     height: 1,
   },
   vsText: {
-    marginHorizontal: 14,
+    marginHorizontal: 16,
   },
   predictButton: {
     marginTop: 8,

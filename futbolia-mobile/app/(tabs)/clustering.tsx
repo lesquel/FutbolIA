@@ -394,7 +394,6 @@ export default function ClusteringScreen() {
                 </ThemedText>
                 <DendrogramChart
                   data={clusteringData.dendrogram}
-                  clusterInfo={clusteringData.cluster_info}
                 />
               </View>
             )}
@@ -427,25 +426,17 @@ export default function ClusteringScreen() {
                         Cluster {cluster.cluster_id} - {cluster.n_teams} equipos
                       </ThemedText>
                     </View>
-                    <ThemedText
-                      size="xs"
-                      variant="secondary"
-                      style={styles.clusterDescription}
-                    >
+                    <ThemedText size="sm" weight="semibold" style={styles.clusterDescription}>
                       {cluster.description}
                     </ThemedText>
-                    <ThemedText
-                      size="xs"
-                      variant="muted"
-                      style={styles.clusterTeams}
-                    >
+                    <ThemedText size="xs" variant="secondary" style={styles.clusterTeams}>
                       Equipos: {cluster.teams.join(", ")}
                     </ThemedText>
                     <View style={styles.clusterStats}>
-                      <ThemedText size="xs" variant="muted">
+                      <ThemedText size="xs" weight="medium">
                         Puntos promedio: {cluster.avg_points.toFixed(1)}
                       </ThemedText>
-                      <ThemedText size="xs" variant="muted">
+                      <ThemedText size="xs" weight="medium">
                         DG promedio: {cluster.avg_goal_difference.toFixed(1)}
                       </ThemedText>
                     </View>
@@ -592,10 +583,9 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   clusterDescription: {
-    padding: 12,
-    paddingTop: 10,
-    fontStyle: "italic",
-    lineHeight: 20,
+    padding: 10,
+    paddingTop: 8,
+    paddingBottom: 4,
   },
   clusterTeams: {
     paddingHorizontal: 12,

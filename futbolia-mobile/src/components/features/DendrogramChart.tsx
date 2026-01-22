@@ -3,12 +3,7 @@
  * Muestra la estructura jerárquica de clusters de equipos
  */
 import React, { useMemo } from "react";
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  useWindowDimensions,
-} from "react-native";
+import { View, StyleSheet, Dimensions } from "react-native";
 import Svg, { Line, Text as SvgText, Circle, Rect } from "react-native-svg";
 import { useTheme } from "@/src/theme";
 import { ThemedText } from "@/src/components/ui";
@@ -23,15 +18,9 @@ interface DendrogramData {
 
 interface DendrogramChartProps {
   data: DendrogramData;
-  clusterInfo?: Array<{
-    cluster_id: number;
-    n_teams: number;
-    description: string;
-    teams: string[];
-  }>;
 }
 
-export function DendrogramChart({ data, clusterInfo }: DendrogramChartProps) {
+export function DendrogramChart({ data }: DendrogramChartProps) {
   const { theme } = useTheme();
   const { width: screenWidth } = useWindowDimensions();
 
@@ -125,14 +114,10 @@ export function DendrogramChart({ data, clusterInfo }: DendrogramChartProps) {
       const dcoord = data.dcoord[idx];
       if (icoord.length === 4 && dcoord.length === 4) {
         // Invertir Y para girar 180 grados: las hojas arriba, raíz abajo
-        const y0 =
-          CHART_HEIGHT - MARGIN_BOTTOM - (dcoord[0] - offsetY) * scaleY;
-        const y1 =
-          CHART_HEIGHT - MARGIN_BOTTOM - (dcoord[1] - offsetY) * scaleY;
-        const y2 =
-          CHART_HEIGHT - MARGIN_BOTTOM - (dcoord[2] - offsetY) * scaleY;
-        const y3 =
-          CHART_HEIGHT - MARGIN_BOTTOM - (dcoord[3] - offsetY) * scaleY;
+        const y0 = CHART_HEIGHT - MARGIN_BOTTOM - (dcoord[0] - offsetY) * scaleY;
+        const y1 = CHART_HEIGHT - MARGIN_BOTTOM - (dcoord[1] - offsetY) * scaleY;
+        const y2 = CHART_HEIGHT - MARGIN_BOTTOM - (dcoord[2] - offsetY) * scaleY;
+        const y3 = CHART_HEIGHT - MARGIN_BOTTOM - (dcoord[3] - offsetY) * scaleY;
 
         // Mapear las posiciones X originales a las nuevas posiciones distribuidas uniformemente
         const leafIdx0 = mapXToLeafIndex(icoord[0]);
@@ -193,10 +178,9 @@ export function DendrogramChart({ data, clusterInfo }: DendrogramChartProps) {
         const uniqueX = Array.from(new Set(allXValues)).sort((a, b) => a - b);
 
         data.leaves.forEach((leafIdx, posIdx) => {
-          leafXMap[leafIdx] =
-            uniqueX[posIdx] !== undefined
-              ? uniqueX[posIdx]
-              : posIdx * (maxX / data.leaves.length);
+          leafXMap[leafIdx] = uniqueX[posIdx] !== undefined
+            ? uniqueX[posIdx]
+            : (posIdx * (maxX / data.leaves.length));
         });
       }
 
@@ -280,11 +264,9 @@ export function DendrogramChart({ data, clusterInfo }: DendrogramChartProps) {
 
           {/* Renderizar etiquetas de equipos en la parte inferior con texto inclinado */}
           {normalizedCoords.labels.map((label, idx) => {
-            const maxLength = isDesktop ? 25 : isTablet ? 22 : 20;
-            const shortName =
-              label.text.length > maxLength
-                ? label.text.substring(0, maxLength) + "..."
-                : label.text;
+            const shortName = label.text.length > 20
+              ? label.text.substring(0, 20) + "..."
+              : label.text;
 
             // Calcular posición Y de la hoja (parte inferior del dendrograma)
             const leafY = CHART_HEIGHT - MARGIN_BOTTOM;
@@ -344,80 +326,7 @@ export function DendrogramChart({ data, clusterInfo }: DendrogramChartProps) {
         </View>
       </View>
 
-      {/* Información de clusters */}
-      {clusterInfo && clusterInfo.length > 0 && (
-        <View
-          style={[styles.clusterInfo, isLargeScreen && styles.clusterInfoLarge]}
-        >
-          <ThemedText
-            size={isLargeScreen ? "xl" : "lg"}
-            weight="bold"
-            style={[
-              styles.sectionTitle,
-              isLargeScreen && styles.sectionTitleLarge,
-            ]}
-          >
-            Análisis de Clusters
-          </ThemedText>
-          <ScrollView
-            horizontal={!isDesktop}
-            showsHorizontalScrollIndicator={false}
-            style={styles.clusterScroll}
-            contentContainerStyle={isDesktop && styles.clusterScrollDesktop}
-          >
-            {clusterInfo.map((cluster) => (
-              <View
-                key={cluster.cluster_id}
-                style={[
-                  styles.clusterCard,
-                  isLargeScreen && styles.clusterCardLarge,
-                  {
-                    backgroundColor: theme.colors.surface,
-                    borderColor: theme.colors.border,
-                  },
-                ]}
-              >
-                <View
-                  style={[
-                    styles.clusterBadge,
-                    isLargeScreen && styles.clusterBadgeLarge,
-                    { backgroundColor: theme.colors.primary + "20" },
-                  ]}
-                >
-                  <ThemedText
-                    size={isLargeScreen ? "base" : "sm"}
-                    weight="bold"
-                    style={{ color: theme.colors.primary }}
-                  >
-                    Cluster {cluster.cluster_id}
-                  </ThemedText>
-                </View>
-                <ThemedText
-                  size={isLargeScreen ? "sm" : "xs"}
-                  variant="muted"
-                  style={[
-                    styles.clusterDesc,
-                    isLargeScreen && styles.clusterDescLarge,
-                  ]}
-                >
-                  {cluster.description}
-                </ThemedText>
-                <ThemedText
-                  size={isLargeScreen ? "sm" : "xs"}
-                  style={[
-                    styles.clusterTeams,
-                    isLargeScreen && styles.clusterTeamsLarge,
-                  ]}
-                >
-                  {cluster.n_teams} equipos:{" "}
-                  {cluster.teams.slice(0, isDesktop ? 5 : 3).join(", ")}
-                  {cluster.teams.length > (isDesktop ? 5 : 3) && "..."}
-                </ThemedText>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-      )}
+
     </View>
   );
 }
@@ -443,89 +352,5 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 20,
     paddingHorizontal: 8,
-  },
-  clusterInfo: {
-    marginTop: 12,
-  },
-  sectionTitle: {
-    marginBottom: 14,
-  },
-  clusterScroll: {
-    flexDirection: "row",
-    paddingVertical: 4,
-  },
-  clusterCard: {
-    minWidth: 220,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    marginRight: 14,
-  },
-  clusterBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
-    marginBottom: 10,
-    alignSelf: "flex-start",
-  },
-  clusterDesc: {
-    marginBottom: 10,
-    lineHeight: 20,
-  },
-  clusterTeams: {
-    fontSize: 12,
-    opacity: 0.8,
-    lineHeight: 18,
-  },
-  // ==========================================
-  // RESPONSIVE STYLES FOR TABLETS AND DESKTOP
-  // ==========================================
-  containerLarge: {
-    alignItems: "center",
-  },
-  chartContainerLarge: {
-    borderRadius: 18,
-    padding: 24,
-    marginBottom: 24,
-  },
-  chartInfoLarge: {
-    marginTop: 18,
-    paddingTop: 18,
-  },
-  infoTextLarge: {
-    lineHeight: 24,
-    paddingHorizontal: 16,
-  },
-  clusterInfoLarge: {
-    marginTop: 20,
-    width: "100%",
-  },
-  sectionTitleLarge: {
-    marginBottom: 20,
-  },
-  clusterScrollDesktop: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 16,
-  },
-  clusterCardLarge: {
-    minWidth: 280,
-    padding: 20,
-    borderRadius: 16,
-    marginRight: 18,
-  },
-  clusterBadgeLarge: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 8,
-    marginBottom: 14,
-  },
-  clusterDescLarge: {
-    marginBottom: 14,
-    lineHeight: 24,
-  },
-  clusterTeamsLarge: {
-    fontSize: 14,
-    lineHeight: 22,
   },
 });
