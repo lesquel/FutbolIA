@@ -10,21 +10,31 @@ import {
   TouchableOpacity,
   Alert,
   Image,
+  useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "@/src/theme";
 import { useAuth } from "@/src/context";
-import { ThemedView, ThemedText, Card, Button, Icon } from "@/src/components/ui";
+import {
+  ThemedView,
+  ThemedText,
+  Card,
+  Button,
+  Icon,
+} from "@/src/components/ui";
 import { BarChart3, Trophy, Settings } from "lucide-react-native";
 
 export default function ProfileScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const { user, isAuthenticated, logout } =
-    useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const router = useRouter();
+  const { width: screenWidth } = useWindowDimensions();
+  const isTablet = screenWidth >= 768;
+  const isDesktop = screenWidth >= 1024;
+  const isLargeScreen = isTablet || isDesktop;
 
   const [stats] = useState({
     totalPredictions: 47,
@@ -52,7 +62,6 @@ export default function ProfileScreen() {
       },
     ]);
   };
-
 
   // If not authenticated, show login prompt
   if (!isAuthenticated) {
@@ -172,7 +181,6 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-
         {/* Account Actions */}
         <View style={styles.section}>
           <View style={styles.statsTitleRow}>
@@ -236,81 +244,87 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 40,
   },
   notAuthContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 32,
+    paddingHorizontal: 32,
+    paddingVertical: 48,
   },
   notAuthEmoji: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   notAuthTitle: {
-    marginBottom: 8,
+    marginBottom: 12,
     textAlign: "center",
   },
   notAuthSubtitle: {
-    marginBottom: 24,
+    marginBottom: 28,
     textAlign: "center",
+    lineHeight: 22,
   },
   loginButton: {
-    marginBottom: 16,
-    minWidth: 200,
+    marginBottom: 18,
+    minWidth: 220,
   },
   profileCard: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   avatarContainer: {
     flexDirection: "row",
     alignItems: "center",
   },
   avatar: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 16,
+    marginRight: 18,
   },
   userInfo: {
     flex: 1,
   },
   memberBadge: {
-    marginTop: 4,
+    marginTop: 6,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 28,
   },
   sectionTitle: {
-    marginBottom: 12,
+    marginBottom: 14,
     flex: 1,
   },
   statsTitleRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    marginBottom: 12,
+    gap: 10,
+    marginBottom: 14,
   },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 14,
   },
   statsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 12,
+    gap: 14,
   },
   statCard: {
     flex: 1,
     minWidth: "45%",
     alignItems: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 12,
   },
   teamsList: {
-    gap: 8,
+    gap: 10,
   },
   teamCard: {
     marginBottom: 0,
@@ -320,35 +334,37 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   teamLogo: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 12,
+    marginRight: 14,
   },
   teamLogoImage: {
-    width: 32,
-    height: 32,
+    width: 36,
+    height: 36,
   },
   teamInfo: {
     flex: 1,
   },
   removeButton: {
-    padding: 8,
+    padding: 10,
   },
   emptyTeams: {
     alignItems: "center",
-    gap: 12,
+    gap: 14,
+    paddingVertical: 20,
   },
   emptyText: {
     textAlign: "center",
+    lineHeight: 22,
   },
   actionRow: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
-    gap: 12,
+    padding: 18,
+    gap: 14,
   },
   actionText: {
     flex: 1,
@@ -356,4 +372,7 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
   },
+  // ==========================================
+  // RESPONSIVE STYLES FOR TABLETS AND DESKTOP
+  // ==========================================
 });
