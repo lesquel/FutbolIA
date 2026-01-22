@@ -28,7 +28,7 @@ interface ButtonProps extends TouchableOpacityProps {
 // Lucide icons are function components, so if it's a function, treat it as Lucide icon
 const isLucideIcon = (icon: any): icon is LucideIcon => {
   return icon && typeof icon === "function";
-}
+};
 
 export function Button({
   title,
@@ -78,11 +78,11 @@ export function Button({
   const getPadding = () => {
     switch (size) {
       case "sm":
-        return { paddingVertical: 8, paddingHorizontal: 16 };
+        return { paddingVertical: 10, paddingHorizontal: 18 };
       case "md":
-        return { paddingVertical: 12, paddingHorizontal: 24 };
+        return { paddingVertical: 14, paddingHorizontal: 26 };
       case "lg":
-        return { paddingVertical: 16, paddingHorizontal: 32 };
+        return { paddingVertical: 18, paddingHorizontal: 34 };
     }
   };
 
@@ -111,13 +111,14 @@ export function Button({
       style={[
         {
           backgroundColor: getBackgroundColor(),
-          borderRadius: 12,
+          borderRadius: 14,
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "center",
-          gap: 8,
+          gap: 10,
           width: fullWidth ? "100%" : undefined,
           opacity: disabled ? 0.6 : 1,
+          minHeight: size === "sm" ? 42 : size === "md" ? 50 : 58,
           ...getPadding(),
           ...borderStyle,
         },
@@ -129,13 +130,13 @@ export function Button({
         <ActivityIndicator color={getTextColor()} size="small" />
       ) : (
         <>
-          {icon && iconPosition === "left" && (
-            isLucideIcon(icon) ? (
+          {icon &&
+            iconPosition === "left" &&
+            (isLucideIcon(icon) ? (
               <Icon icon={icon} size={getFontSize()} color={getTextColor()} />
             ) : React.isValidElement(icon) ? (
               icon
-            ) : null
-          )}
+            ) : null)}
           <ThemedText
             style={{
               color: getTextColor(),
@@ -145,13 +146,13 @@ export function Button({
           >
             {title}
           </ThemedText>
-          {icon && iconPosition === "right" && (
-            isLucideIcon(icon) ? (
+          {icon &&
+            iconPosition === "right" &&
+            (isLucideIcon(icon) ? (
               <Icon icon={icon} size={getFontSize()} color={getTextColor()} />
             ) : React.isValidElement(icon) ? (
               icon
-            ) : null
-          )}
+            ) : null)}
         </>
       )}
     </TouchableOpacity>

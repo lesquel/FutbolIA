@@ -108,28 +108,32 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 40,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 48,
   },
   centerContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingTop: 100,
+    paddingTop: 80,
+    paddingHorizontal: 24,
   },
   loadingText: {
-    marginTop: 16,
+    marginTop: 20,
+    textAlign: "center",
   },
   errorText: {
-    marginTop: 16,
+    marginTop: 20,
     textAlign: "center",
-    marginBottom: 24,
+    marginBottom: 28,
+    lineHeight: 22,
   },
   retryButton: {
-    minWidth: 150,
+    minWidth: 160,
   },
   backButton: {
-    marginLeft: 8,
-    padding: 4,
+    marginLeft: 10,
+    padding: 6,
   },
 });

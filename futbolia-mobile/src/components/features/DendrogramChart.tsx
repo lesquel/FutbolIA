@@ -8,14 +8,6 @@ import Svg, { Line, Text as SvgText, Circle, Rect } from "react-native-svg";
 import { useTheme } from "@/src/theme";
 import { ThemedText } from "@/src/components/ui";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const CHART_WIDTH = SCREEN_WIDTH - 32; // Menos padding para más espacio
-const CHART_HEIGHT = 550; // Más altura para mejor visualización
-const MARGIN_LEFT = 10;
-const MARGIN_TOP = 20;
-const MARGIN_BOTTOM = 120; // Más espacio para etiquetas abajo
-const MARGIN_RIGHT = 10;
-
 interface DendrogramData {
   icoord: number[][];
   dcoord: number[][];
@@ -30,6 +22,44 @@ interface DendrogramChartProps {
 
 export function DendrogramChart({ data }: DendrogramChartProps) {
   const { theme } = useTheme();
+  const { width: screenWidth } = useWindowDimensions();
+
+  // Responsive breakpoints
+  const isTablet = screenWidth >= 768;
+  const isDesktop = screenWidth >= 1024;
+  const isLargeScreen = isTablet || isDesktop;
+
+  // Responsive chart dimensions
+  const chartDimensions = useMemo(() => {
+    const padding = isDesktop ? 64 : isTablet ? 48 : 32;
+    const chartWidth = Math.min(
+      screenWidth - padding,
+      isDesktop ? 900 : isTablet ? 700 : screenWidth - padding,
+    );
+    const chartHeight = isDesktop ? 650 : isTablet ? 600 : 550;
+    const marginLeft = isLargeScreen ? 15 : 10;
+    const marginTop = isLargeScreen ? 25 : 20;
+    const marginBottom = isDesktop ? 140 : isTablet ? 130 : 120;
+    const marginRight = isLargeScreen ? 15 : 10;
+
+    return {
+      chartWidth,
+      chartHeight,
+      marginLeft,
+      marginTop,
+      marginBottom,
+      marginRight,
+    };
+  }, [screenWidth, isTablet, isDesktop, isLargeScreen]);
+
+  const {
+    chartWidth: CHART_WIDTH,
+    chartHeight: CHART_HEIGHT,
+    marginLeft: MARGIN_LEFT,
+    marginTop: MARGIN_TOP,
+    marginBottom: MARGIN_BOTTOM,
+    marginRight: MARGIN_RIGHT,
+  } = chartDimensions;
 
   // Normalizar coordenadas del dendrograma para el viewport
   const normalizedCoords = useMemo(() => {
@@ -176,14 +206,26 @@ export function DendrogramChart({ data }: DendrogramChartProps) {
     }
 
     return { lines, labels };
-  }, [data]);
+  }, [
+    data,
+    CHART_WIDTH,
+    CHART_HEIGHT,
+    MARGIN_LEFT,
+    MARGIN_TOP,
+    MARGIN_BOTTOM,
+    MARGIN_RIGHT,
+  ]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isLargeScreen && styles.containerLarge]}>
       <View
         style={[
           styles.chartContainer,
-          { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+          isLargeScreen && styles.chartContainerLarge,
+          {
+            backgroundColor: theme.colors.surface,
+            borderColor: theme.colors.border,
+          },
         ]}
       >
         <Svg width={CHART_WIDTH} height={CHART_HEIGHT}>
@@ -196,7 +238,7 @@ export function DendrogramChart({ data }: DendrogramChartProps) {
               x2={line.x2}
               y2={line.y2}
               stroke={theme.colors.primary}
-              strokeWidth={2.5}
+              strokeWidth={isLargeScreen ? 3 : 2.5}
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -212,10 +254,10 @@ export function DendrogramChart({ data }: DendrogramChartProps) {
                 key={`point-${idx}`}
                 cx={label.x}
                 cy={leafY}
-                r={5}
+                r={isLargeScreen ? 6 : 5}
                 fill={theme.colors.primary}
                 stroke={theme.colors.background}
-                strokeWidth={2.5}
+                strokeWidth={isLargeScreen ? 3 : 2.5}
               />
             );
           })}
@@ -236,31 +278,31 @@ export function DendrogramChart({ data }: DendrogramChartProps) {
                   x1={label.x}
                   y1={leafY}
                   x2={label.x}
-                  y2={label.y - 25}
+                  y2={label.y - (isLargeScreen ? 30 : 25)}
                   stroke={theme.colors.primary}
-                  strokeWidth={1.5}
-                  strokeDasharray="4,4"
+                  strokeWidth={isLargeScreen ? 2 : 1.5}
+                  strokeDasharray={isLargeScreen ? "5,5" : "4,4"}
                   opacity={0.4}
                 />
                 {/* Fondo transparente */}
                 <Rect
-                  x={label.x - 55}
-                  y={label.y - 18}
-                  width={110}
-                  height={36}
-                  rx={6}
+                  x={label.x - (isLargeScreen ? 70 : 55)}
+                  y={label.y - (isLargeScreen ? 22 : 18)}
+                  width={isLargeScreen ? 140 : 110}
+                  height={isLargeScreen ? 44 : 36}
+                  rx={isLargeScreen ? 8 : 6}
                   fill="transparent"
                 />
                 {/* Texto del equipo inclinado (-45 grados) */}
                 <SvgText
                   x={label.x}
-                  y={label.y + 8}
-                  fontSize={12}
+                  y={label.y + (isLargeScreen ? 10 : 8)}
+                  fontSize={isDesktop ? 14 : isTablet ? 13 : 12}
                   fontWeight="600"
                   fill={theme.colors.text}
                   textAnchor="middle"
                   rotation={-45}
-                  origin={`${label.x}, ${label.y + 8}`}
+                  origin={`${label.x}, ${label.y + (isLargeScreen ? 10 : 8)}`}
                 >
                   {shortName}
                 </SvgText>
@@ -270,8 +312,14 @@ export function DendrogramChart({ data }: DendrogramChartProps) {
         </Svg>
 
         {/* Información del dendrograma */}
-        <View style={styles.chartInfo}>
-          <ThemedText size="xs" variant="muted" style={styles.infoText}>
+        <View
+          style={[styles.chartInfo, isLargeScreen && styles.chartInfoLarge]}
+        >
+          <ThemedText
+            size={isLargeScreen ? "sm" : "xs"}
+            variant="muted"
+            style={[styles.infoText, isLargeScreen && styles.infoTextLarge]}
+          >
             El dendrograma muestra la similitud entre equipos. Equipos más
             cercanos tienen características más similares.
           </ThemedText>
@@ -288,20 +336,21 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   chartContainer: {
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
-    padding: 16,
-    marginBottom: 16,
+    padding: 18,
+    marginBottom: 18,
     overflow: "visible", // Cambiado a visible para que las etiquetas no se corten
   },
   chartInfo: {
-    marginTop: 8,
-    paddingTop: 8,
+    marginTop: 12,
+    paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: "rgba(0,0,0,0.1)",
   },
   infoText: {
     textAlign: "center",
-    lineHeight: 16,
+    lineHeight: 20,
+    paddingHorizontal: 8,
   },
 });

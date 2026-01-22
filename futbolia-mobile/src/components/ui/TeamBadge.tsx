@@ -11,7 +11,7 @@ interface TeamBadgeProps {
   name: string;
   logoUrl?: string;
   form?: string;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
   showForm?: boolean;
 }
 
@@ -29,11 +29,13 @@ export const TeamBadge = memo(function TeamBadge({
   const getSizes = () => {
     switch (size) {
       case "sm":
-        return { logo: 40, font: "sm" as const };
+        return { logo: 36, font: "xs" as const, maxWidth: 80 };
       case "md":
-        return { logo: 60, font: "base" as const };
+        return { logo: 50, font: "sm" as const, maxWidth: 100 };
       case "lg":
-        return { logo: 80, font: "lg" as const };
+        return { logo: 70, font: "base" as const, maxWidth: 120 };
+      case "xl":
+        return { logo: 100, font: "xl" as const, maxWidth: 160 };
     }
   };
 
@@ -124,7 +126,7 @@ export const TeamBadge = memo(function TeamBadge({
       <ThemedText
         size={sizes.font}
         weight="semibold"
-        style={styles.name}
+        style={[styles.name, { maxWidth: sizes.maxWidth }]}
         numberOfLines={2}
       >
         {name || "Unknown Team"}
@@ -149,26 +151,27 @@ export const TeamBadge = memo(function TeamBadge({
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
+    paddingHorizontal: 4,
   },
   logoContainer: {
     borderRadius: 50,
     borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   name: {
     textAlign: "center",
-    maxWidth: 100,
+    lineHeight: 18,
   },
   formContainer: {
     flexDirection: "row",
-    gap: 4,
-    marginTop: 8,
+    gap: 5,
+    marginTop: 10,
   },
   formDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
 });
