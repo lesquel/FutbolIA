@@ -301,3 +301,4 @@ Este proyecto fue creado para **Casa Abierta ULEAM 2025** - Minería de Datos - 
 </div>
 
 uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+
