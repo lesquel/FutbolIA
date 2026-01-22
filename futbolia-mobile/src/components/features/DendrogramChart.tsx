@@ -3,8 +3,8 @@
  * Muestra la estructura jerárquica de clusters de equipos
  */
 import React, { useMemo } from "react";
-import { View, StyleSheet, Dimensions } from "react-native";
-import Svg, { Line, Text as SvgText, Circle, Rect } from "react-native-svg";
+import { View, StyleSheet, Dimensions, useWindowDimensions } from "react-native";
+import Svg, { Line, Text as SvgText, Circle, Rect, G } from "react-native-svg";
 import { useTheme } from "@/src/theme";
 import { ThemedText } from "@/src/components/ui";
 
@@ -294,18 +294,21 @@ export function DendrogramChart({ data }: DendrogramChartProps) {
                   fill="transparent"
                 />
                 {/* Texto del equipo inclinado (-45 grados) */}
-                <SvgText
-                  x={label.x}
-                  y={label.y + (isLargeScreen ? 10 : 8)}
-                  fontSize={isDesktop ? 14 : isTablet ? 13 : 12}
-                  fontWeight="600"
-                  fill={theme.colors.text}
-                  textAnchor="middle"
+                <G
+                  origin={[label.x, label.y + (isLargeScreen ? 10 : 8)]}
                   rotation={-45}
-                  origin={`${label.x}, ${label.y + (isLargeScreen ? 10 : 8)}`}
                 >
-                  {shortName}
-                </SvgText>
+                  <SvgText
+                    x={label.x}
+                    y={label.y + (isLargeScreen ? 10 : 8)}
+                    fontSize={isDesktop ? 14 : isTablet ? 13 : 12}
+                    fontWeight="600"
+                    fill={theme.colors.text}
+                    textAnchor="middle"
+                  >
+                    {shortName}
+                  </SvgText>
+                </G>
               </React.Fragment>
             );
           })}

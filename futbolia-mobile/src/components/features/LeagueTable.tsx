@@ -16,6 +16,7 @@ import {
   useWindowDimensions,
   ScrollView,
   Animated,
+  Platform,
 } from "react-native";
 import {
   X,
@@ -413,6 +414,18 @@ export function LeagueTable({ visible, onClose }: LeagueTableProps) {
                 maxHeight: modalDimensions.maxHeight,
                 minHeight: modalDimensions.minHeight,
               },
+              Platform.select({
+                web: {
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+                },
+                default: {
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 12,
+                  elevation: 10,
+                },
+              }),
             ],
             { backgroundColor: theme.colors.background },
           ]}
@@ -720,11 +733,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 10,
   },
   modalHeaderLarge: {
     paddingHorizontal: 28,

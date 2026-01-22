@@ -728,6 +728,18 @@ export const TeamSelector = memo(function TeamSelector({
             style={[
               styles.modalContent,
               { backgroundColor: theme.colors.background },
+              Platform.select({
+                web: {
+                  boxShadow: "0 -2px 10px rgba(0, 0, 0, 0.25)",
+                },
+                default: {
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: -2 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 10,
+                  elevation: 20,
+                },
+              }),
               isLargeScreen && [
                 styles.modalContentCenter,
                 {
@@ -735,6 +747,18 @@ export const TeamSelector = memo(function TeamSelector({
                   maxHeight: modalDimensions.maxHeight,
                   minHeight: modalDimensions.minHeight,
                 },
+                Platform.select({
+                  web: {
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+                  },
+                  default: {
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 12,
+                    elevation: 10,
+                  },
+                }),
               ],
             ]}
             onPress={(e) => e.stopPropagation()}
@@ -856,13 +880,6 @@ const styles = StyleSheet.create({
     padding: 20,
     maxHeight: "80%",
     width: "100%",
-    // Shadow para iOS
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    // Elevation para Android
-    elevation: 20,
   },
   modalHeader: {
     flexDirection: "row",
@@ -963,11 +980,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 10,
   },
   modalHeaderLarge: {
     marginBottom: 28,

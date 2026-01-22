@@ -86,7 +86,7 @@ export const GoalMindChat = memo(function GoalMindChat({
           ]}
         >
           <Image
-            source={require("@/assets/images/GoalMind.png")}
+            source={require("../../../assets/images/GoalMind.png")}
             style={[
               styles.compactAvatar,
               isLargeScreen && styles.compactAvatarLarge,
@@ -129,7 +129,7 @@ export const GoalMindChat = memo(function GoalMindChat({
         {/* GoalMind Avatar */}
         <View style={[styles.header, isLargeScreen && styles.headerLarge]}>
           <Image
-            source={require("@/assets/images/GoalMind.png")}
+            source={require("../../../assets/images/GoalMind.png")}
             style={[
               styles.avatar,
               isLargeScreen && styles.avatarLarge,
