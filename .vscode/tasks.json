@@ -1,0 +1,318 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    // ───────────── Setup ─────────────
+    {
+      "label": "Setup: Install All Dependencies",
+      "type": "shell",
+      "command": "bash",
+      "args": ["scripts/setup.sh"],
+      "group": "build",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": [],
+      "detail": "Install backend (uv sync) + frontend (bun install) dependencies"
+    },
+    {
+      "label": "Setup: Backend Only",
+      "type": "shell",
+      "command": "uv",
+      "args": ["sync"],
+      "options": { "cwd": "${workspaceFolder}/futbolia-backend" },
+      "group": "build",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": [],
+      "detail": "Install Python backend dependencies with uv"
+    },
+    {
+      "label": "Setup: Frontend Only",
+      "type": "shell",
+      "command": "bun",
+      "args": ["install"],
+      "options": { "cwd": "${workspaceFolder}/futbolia-mobile" },
+      "group": "build",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": [],
+      "detail": "Install React Native frontend dependencies with bun"
+    },
+
+    // ───────────── Dev Servers ─────────────
+    {
+      "label": "Dev: Backend + Frontend",
+      "dependsOn": ["Dev: Backend", "Dev: Frontend"],
+      "dependsOrder": "parallel",
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": [],
+      "detail": "Start both backend and frontend dev servers in parallel"
+    },
+    {
+      "label": "Dev: Backend",
+      "type": "shell",
+      "command": "uv",
+      "args": [
+        "run", "python", "-m", "uvicorn",
+        "src.main:app",
+        "--reload",
+        "--host", "0.0.0.0",
+        "--port", "8000"
+      ],
+      "options": { "cwd": "${workspaceFolder}/futbolia-backend" },
+      "isBackground": true,
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "dev"
+      },
+      "problemMatcher": {
+        "pattern": { "regexp": ".", "file": 1, "location": 2, "message": 3 },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^INFO:",
+          "endsPattern": "Application startup complete"
+        }
+      },
+      "detail": "FastAPI server at http://localhost:8000"
+    },
+    {
+      "label": "Dev: Frontend",
+      "type": "shell",
+      "command": "bun",
+      "args": ["start"],
+      "options": { "cwd": "${workspaceFolder}/futbolia-mobile" },
+      "isBackground": true,
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "dev"
+      },
+      "problemMatcher": {
+        "pattern": { "regexp": ".", "file": 1, "location": 2, "message": 3 },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Starting",
+          "endsPattern": "Logs for your project"
+        }
+      },
+      "detail": "Expo dev server at http://localhost:8081"
+    },
+    {
+      "label": "Dev: Frontend Web",
+      "type": "shell",
+      "command": "bun",
+      "args": ["run", "web"],
+      "options": { "cwd": "${workspaceFolder}/futbolia-mobile" },
+      "isBackground": true,
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "dev"
+      },
+      "problemMatcher": [],
+      "detail": "Start Expo for web only"
+    },
+
+    // ───────────── Testing ─────────────
+    {
+      "label": "Test: All",
+      "type": "shell",
+      "command": "bash",
+      "args": ["scripts/test.sh"],
+      "group": { "kind": "test", "isDefault": true },
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": [],
+      "detail": "Run all tests + lint checks (backend + frontend)"
+    },
+    {
+      "label": "Test: Backend (pytest)",
+      "type": "shell",
+      "command": "uv",
+      "args": ["run", "pytest", "tests/", "-v", "--tb=short"],
+      "options": { "cwd": "${workspaceFolder}/futbolia-backend" },
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": [],
+      "detail": "Run backend Python tests with pytest"
+    },
+    {
+      "label": "Test: Backend (pytest watch)",
+      "type": "shell",
+      "command": "uv",
+      "args": ["run", "pytest", "tests/", "-v", "--tb=short", "-f"],
+      "options": { "cwd": "${workspaceFolder}/futbolia-backend" },
+      "isBackground": true,
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": [],
+      "detail": "Run backend tests in watch mode (re-runs on file changes)"
+    },
+    {
+      "label": "Test: Frontend",
+      "type": "shell",
+      "command": "bun",
+      "args": ["test"],
+      "options": { "cwd": "${workspaceFolder}/futbolia-mobile" },
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": [],
+      "detail": "Run frontend Jest tests"
+    },
+
+    // ───────────── Linting & Formatting ─────────────
+    {
+      "label": "Lint: Backend (Ruff)",
+      "type": "shell",
+      "command": "uv",
+      "args": ["run", "ruff", "check", "."],
+      "options": { "cwd": "${workspaceFolder}/futbolia-backend" },
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": {
+        "owner": "ruff",
+        "fileLocation": ["relative", "${workspaceFolder}/futbolia-backend"],
+        "pattern": {
+          "regexp": "^(.+):(\\d+):(\\d+): (\\w+) (.+)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "code": 4,
+          "message": 5
+        }
+      },
+      "detail": "Check Python code with Ruff linter"
+    },
+    {
+      "label": "Lint: Frontend (ESLint)",
+      "type": "shell",
+      "command": "bun",
+      "args": ["run", "lint"],
+      "options": { "cwd": "${workspaceFolder}/futbolia-mobile" },
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": ["$eslint-stylish"],
+      "detail": "Check TypeScript code with ESLint"
+    },
+    {
+      "label": "Format: Backend (Ruff)",
+      "type": "shell",
+      "command": "uv",
+      "args": ["run", "ruff", "format", "."],
+      "options": { "cwd": "${workspaceFolder}/futbolia-backend" },
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": [],
+      "detail": "Auto-format Python code with Ruff"
+    },
+    {
+      "label": "Format: Frontend (Prettier)",
+      "type": "shell",
+      "command": "bun",
+      "args": ["run", "format"],
+      "options": { "cwd": "${workspaceFolder}/futbolia-mobile" },
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": [],
+      "detail": "Auto-format TypeScript code with Prettier"
+    },
+    {
+      "label": "Format: All",
+      "dependsOn": ["Format: Backend (Ruff)", "Format: Frontend (Prettier)"],
+      "dependsOrder": "parallel",
+      "problemMatcher": [],
+      "detail": "Auto-format all code (Python + TypeScript)"
+    },
+    {
+      "label": "Lint: All",
+      "dependsOn": ["Lint: Backend (Ruff)", "Lint: Frontend (ESLint)"],
+      "dependsOrder": "parallel",
+      "problemMatcher": [],
+      "detail": "Lint all code (Python + TypeScript)"
+    },
+
+    // ───────────── Docker ─────────────
+    {
+      "label": "Docker: Start Full Stack",
+      "type": "shell",
+      "command": "docker",
+      "args": ["compose", "up", "--build", "-d"],
+      "group": "build",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": [],
+      "detail": "Build & start backend + frontend + MongoDB with Docker"
+    },
+    {
+      "label": "Docker: Stop",
+      "type": "shell",
+      "command": "docker",
+      "args": ["compose", "down"],
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": [],
+      "detail": "Stop all Docker services"
+    },
+    {
+      "label": "Docker: Logs",
+      "type": "shell",
+      "command": "docker",
+      "args": ["compose", "logs", "-f", "--tail", "100"],
+      "isBackground": true,
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": [],
+      "detail": "Follow Docker container logs"
+    },
+    {
+      "label": "Docker: Backend Only",
+      "type": "shell",
+      "command": "docker",
+      "args": ["compose", "-f", "futbolia-backend/docker-compose.yml", "up", "--build", "-d"],
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": [],
+      "detail": "Start backend + MongoDB only (using backend docker-compose)"
+    },
+
+    // ───────────── Utilities ─────────────
+    {
+      "label": "Clean: All Artifacts",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null; find . -type d -name .pytest_cache -exec rm -rf {} + 2>/dev/null; find . -type d -name node_modules -exec rm -rf {} + 2>/dev/null; echo '✅ Cleaned'"
+      ],
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": [],
+      "detail": "Remove __pycache__, .pytest_cache, node_modules"
+    },
+    {
+      "label": "TypeCheck: Frontend",
+      "type": "shell",
+      "command": "bun",
+      "args": ["run", "typecheck"],
+      "options": { "cwd": "${workspaceFolder}/futbolia-mobile" },
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": ["$tsc"],
+      "detail": "Run TypeScript type checking on frontend"
+    },
+    {
+      "label": "Pre-commit: Run All Hooks",
+      "type": "shell",
+      "command": "pre-commit",
+      "args": ["run", "--all-files"],
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": [],
+      "detail": "Run all pre-commit hooks on all files"
+    },
+    {
+      "label": "API Docs: Open Swagger",
+      "type": "shell",
+      "command": "xdg-open",
+      "args": ["http://localhost:8000/docs"],
+      "linux": { "command": "xdg-open", "args": ["http://localhost:8000/docs"] },
+      "windows": { "command": "start", "args": ["http://localhost:8000/docs"] },
+      "osx": { "command": "open", "args": ["http://localhost:8000/docs"] },
+      "presentation": { "reveal": "silent" },
+      "problemMatcher": [],
+      "detail": "Open API docs in browser (backend must be running)"
+    }
+  ]
+}
