@@ -16,7 +16,9 @@ class TestSettings:
         """Settings should load with development defaults"""
         from src.core.config import Settings
 
-        settings = Settings()
+        # Explicitly pass development values since dataclass field defaults
+        # are evaluated at import time and may pick up CI env vars
+        settings = Settings(ENVIRONMENT="development", DEBUG=True, JWT_SECRET_KEY="")
         assert settings.ENVIRONMENT == "development"
         assert settings.DEBUG is True
         assert settings.APP_NAME == "GoalMind"
@@ -26,32 +28,25 @@ class TestSettings:
         """JWT secret should be auto-generated in development"""
         from src.core.config import Settings
 
-        with patch.dict(os.environ, {"JWT_SECRET_KEY": ""}, clear=False):
-            settings = Settings()
-            assert settings.JWT_SECRET_KEY != ""
-            assert len(settings.JWT_SECRET_KEY) == 64  # hex of 32 bytes
+        settings = Settings(ENVIRONMENT="development", JWT_SECRET_KEY="")
+        assert settings.JWT_SECRET_KEY != ""
+        assert len(settings.JWT_SECRET_KEY) == 64  # hex of 32 bytes
 
     def test_jwt_secret_required_in_production(self):
         """JWT secret must be set in production"""
         from src.core.config import Settings
 
-        with (
-            patch.dict(
-                os.environ,
-                {"ENVIRONMENT": "production", "JWT_SECRET_KEY": ""},
-                clear=False,
-            ),
-            pytest.raises(ValueError, match="JWT_SECRET_KEY"),
-        ):
-            Settings()
+        with pytest.raises(ValueError, match="JWT_SECRET_KEY"):
+            Settings(ENVIRONMENT="production", JWT_SECRET_KEY="")
 
     def test_cors_defaults_in_development(self):
         """CORS should have localhost defaults in development"""
         from src.core.config import Settings
 
-        settings = Settings()
-        assert "http://localhost:3000" in settings.CORS_ORIGINS
-        assert "http://localhost:8081" in settings.CORS_ORIGINS
+        with patch.dict(os.environ, {"CORS_ORIGINS": ""}, clear=False):
+            settings = Settings(ENVIRONMENT="development", JWT_SECRET_KEY="")
+            assert "http://localhost:3000" in settings.CORS_ORIGINS
+            assert "http://localhost:8081" in settings.CORS_ORIGINS
 
     def test_cors_from_env(self):
         """CORS should parse from environment variable"""
@@ -62,7 +57,7 @@ class TestSettings:
             {"CORS_ORIGINS": "https://example.com,https://api.example.com"},
             clear=False,
         ):
-            settings = Settings()
+            settings = Settings(ENVIRONMENT="development", JWT_SECRET_KEY="")
             assert "https://example.com" in settings.CORS_ORIGINS
             assert "https://api.example.com" in settings.CORS_ORIGINS
 
@@ -70,10 +65,9 @@ class TestSettings:
         """Validate should warn about missing DEEPSEEK_API_KEY"""
         from src.core.config import Settings
 
-        with patch.dict(os.environ, {"DEEPSEEK_API_KEY": ""}, clear=False):
-            settings = Settings()
-            warnings = settings.validate()
-            assert any("DEEPSEEK_API_KEY" in w for w in warnings)
+        settings = Settings(ENVIRONMENT="development", JWT_SECRET_KEY="", DEEPSEEK_API_KEY="")
+        warnings = settings.validate()
+        assert any("DEEPSEEK_API_KEY" in w for w in warnings)
 
 
 class TestEntities:
