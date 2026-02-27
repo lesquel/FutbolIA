@@ -1,14 +1,14 @@
 # ===========================================
-# FutbolIA - Docker Compose Configuration
+# GoalMind Backend - Docker Compose Configuration
 # ===========================================
 
 services:
   # Backend API
-  futbolia-api:
+  goalmind-api:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: futbolia-api
+    container_name: goalmind-api
     restart: unless-stopped
     ports:
       - "${PORT:-8000}:8000"
@@ -21,7 +21,7 @@ services:
       
       # MongoDB
       - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017}
-      - MONGODB_DATABASE=${MONGODB_DATABASE:-futbolia}
+      - MONGODB_DATABASE=${MONGODB_DATABASE:-goalmind}
       
       # ChromaDB
       - CHROMADB_PATH=/app/data/chromadb
@@ -61,17 +61,17 @@ services:
       start_period: 10s
     
     networks:
-      - futbolia-network
+      - goalmind-network
 
   # MongoDB Database
   mongodb:
     image: mongo:7
-    container_name: futbolia-mongodb
+    container_name: goalmind-mongodb
     restart: unless-stopped
     ports:
       - "${MONGODB_PORT:-27017}:27017"
     environment:
-      - MONGO_INITDB_DATABASE=${MONGODB_DATABASE:-futbolia}
+      - MONGO_INITDB_DATABASE=${MONGODB_DATABASE:-goalmind}
     volumes:
       - mongodb-data:/data/db
     healthcheck:
@@ -81,17 +81,17 @@ services:
       retries: 5
       start_period: 30s
     networks:
-      - futbolia-network
+      - goalmind-network
 
 # Volumes for data persistence
 volumes:
   mongodb-data:
-    name: futbolia-mongodb-data
+    name: goalmind-mongodb-data
   chromadb-data:
-    name: futbolia-chromadb-data
+    name: goalmind-chromadb-data
 
 # Custom network
 networks:
-  futbolia-network:
-    name: futbolia-network
+  goalmind-network:
+    name: goalmind-network
     driver: bridge

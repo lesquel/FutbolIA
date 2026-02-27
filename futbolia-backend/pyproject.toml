@@ -1,7 +1,7 @@
 [project]
-name = "futbolia-backend"
+name = "goalmind-backend"
 version = "1.0.0"
-description = "FutbolIA Backend - API de predicciones deportivas con IA (Dixie)"
+description = "GoalMind Backend - AI-powered football prediction API with Dixie"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -26,4 +26,46 @@ dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
     "httpx>=0.28.1",
+    "ruff>=0.9.0",
+    "pre-commit>=4.0.0",
 ]
+
+# ===========================================
+# Ruff - Python Linter & Formatter
+# ===========================================
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort (import sorting)
+    "UP",  # pyupgrade (modern Python)
+    "B",   # flake8-bugbear
+    "SIM", # flake8-simplify
+    "N",   # pep8-naming
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+    "B008",  # do not perform function call in argument defaults (FastAPI Depends)
+    "N818",  # exception name should end in Error
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+# ===========================================
+# Pytest
+# ===========================================
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+python_files = ["test_*.py"]
+python_functions = ["test_*"]

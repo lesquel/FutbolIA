@@ -1,9 +1,9 @@
 """
-FutbolIA Domain Entities
+GoalMind Domain Entities
 Core business objects that represent the football prediction domain
 """
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List
 from enum import Enum
 
@@ -32,7 +32,7 @@ class User:
     username: str = ""
     hashed_password: str = ""
     is_active: bool = True
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     language: str = "es"  # Default language
     theme: str = "dark"   # Default theme
     
@@ -137,7 +137,7 @@ class Match:
     id: str = ""
     home_team: Optional[Team] = None
     away_team: Optional[Team] = None
-    date: datetime = field(default_factory=datetime.utcnow)
+    date: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     venue: str = ""
     league: str = ""
     status: MatchStatus = MatchStatus.SCHEDULED
@@ -179,7 +179,7 @@ class Prediction:
     user_id: str = ""
     match: Optional[Match] = None
     result: Optional[PredictionResult] = None
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     is_correct: Optional[bool] = None  # Verified after match ends
     language: str = "es"
     

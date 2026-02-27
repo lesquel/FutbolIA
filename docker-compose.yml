@@ -1,0 +1,123 @@
+# ===========================================
+# GoalMind - Full Stack Docker Compose
+# ===========================================
+# Start everything: docker compose up --build
+# Stop everything:  docker compose down
+
+services:
+  # -------------------------------------------
+  # Backend API (FastAPI + Python)
+  # -------------------------------------------
+  backend:
+    build:
+      context: ./futbolia-backend
+      dockerfile: Dockerfile
+    container_name: goalmind-backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    environment:
+      # Server
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - HOST=0.0.0.0
+      - PORT=8000
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      # MongoDB
+      - MONGODB_URI=mongodb://mongodb:27017
+      - MONGODB_DATABASE=${MONGODB_DATABASE:-goalmind}
+      # ChromaDB
+      - CHROMADB_PATH=/app/data/chromadb
+      - CHROMADB_COLLECTION=${CHROMADB_COLLECTION:-player_attributes}
+      # DeepSeek AI (Dixie)
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - DEEPSEEK_BASE_URL=${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      - DEEPSEEK_MODEL=${DEEPSEEK_MODEL:-deepseek-chat}
+      # Football API
+      - FOOTBALL_DATA_API_KEY=${FOOTBALL_DATA_API_KEY:-}
+      # JWT
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:?JWT_SECRET_KEY is required. Generate with: openssl rand -hex 32}
+      - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+      - JWT_EXPIRATION_MINUTES=${JWT_EXPIRATION_MINUTES:-10080}
+      # Rate Limiting
+      - RATE_LIMIT_PER_MINUTE=${RATE_LIMIT_PER_MINUTE:-60}
+      # CORS
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://localhost:8081}
+    volumes:
+      - chromadb-data:/app/data/chromadb
+      - backend-logs:/app/logs
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - goalmind-network
+
+  # -------------------------------------------
+  # Frontend (Expo Web - Static via Nginx)
+  # -------------------------------------------
+  frontend:
+    build:
+      context: ./futbolia-mobile
+      dockerfile: Dockerfile
+      args:
+        - EXPO_PUBLIC_API_URL=${EXPO_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+    container_name: goalmind-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - goalmind-network
+
+  # -------------------------------------------
+  # MongoDB Database
+  # -------------------------------------------
+  mongodb:
+    image: mongo:7
+    container_name: goalmind-mongodb
+    restart: unless-stopped
+    ports:
+      - "${MONGODB_PORT:-27017}:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=${MONGODB_DATABASE:-goalmind}
+    volumes:
+      - mongodb-data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - goalmind-network
+
+# -------------------------------------------
+# Volumes
+# -------------------------------------------
+volumes:
+  mongodb-data:
+    name: goalmind-mongodb-data
+  chromadb-data:
+    name: goalmind-chromadb-data
+  backend-logs:
+    name: goalmind-backend-logs
+
+# -------------------------------------------
+# Networks
+# -------------------------------------------
+networks:
+  goalmind-network:
+    name: goalmind-network
+    driver: bridge

@@ -1,10 +1,87 @@
-# Python
-futbolia-backend/__pycache__/
-futbolia-backend/venv/
-futbolia-backend/*.py[cod]
-futbolia-backend/$py.class
+# ===========================================
+# GoalMind - Root .gitignore
+# ===========================================
 
-# Node / Mobile
-futbolia-mobile/node_modules/
-futbolia-mobile/.expo/
-futbolia-mobile/dist/
+# -------------------------------------------
+# Python
+# -------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+wheels/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# -------------------------------------------
+# Node.js / JavaScript / TypeScript
+# -------------------------------------------
+node_modules/
+.expo/
+web-build/
+*.tsbuildinfo
+.turbo/
+.next/
+out/
+
+# -------------------------------------------
+# Environment files
+# -------------------------------------------
+.env
+.env.local
+.env.*.local
+.env.prod
+.env.production
+!.env.example
+
+# -------------------------------------------
+# Data & Databases
+# -------------------------------------------
+*.sqlite3
+data/
+logs/
+
+# -------------------------------------------
+# OS files
+# -------------------------------------------
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+
+# -------------------------------------------
+# IDE / Editor
+# -------------------------------------------
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.iml
+*.sublime-project
+*.sublime-workspace
+
+# -------------------------------------------
+# Docker
+# -------------------------------------------
+docker-compose.override.yml
+
+# -------------------------------------------
+# Misc
+# -------------------------------------------
+*.log
+*.bak
+*.tmp
+*.temp

@@ -1,304 +1,300 @@
-# ⚽ FutbolIA - Predicciones Deportivas con IA
+# GoalMind
 
 <div align="center">
 
-![FutbolIA Logo](https://img.shields.io/badge/FutbolIA-🏆-00ff9d?style=for-the-badge)
-![Version](https://img.shields.io/badge/version-1.0.0-blue?style=for-the-badge)
-![Python](https://img.shields.io/badge/Python-3.13+-yellow?style=for-the-badge&logo=python)
-![React Native](https://img.shields.io/badge/React_Native-Expo-61DAFB?style=for-the-badge&logo=react)
+![GoalMind](https://img.shields.io/badge/GoalMind-⚽🤖-00ff9d?style=for-the-badge)
+![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
+![Python](https://img.shields.io/badge/Python-3.13+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![React Native](https://img.shields.io/badge/React_Native-Expo_54-61DAFB?style=for-the-badge&logo=react)
+![MongoDB](https://img.shields.io/badge/MongoDB-7-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
+![CI](https://img.shields.io/github/actions/workflow/status/OWNER/GoalMind/ci.yml?style=for-the-badge&label=CI)
 
-**Tu oráculo deportivo impulsado por Inteligencia Artificial**
+**AI-powered football prediction platform**
 
-[🚀 Demo](#-inicio-rápido) • [📖 Documentación](#-documentación) • [🤝 Contribuir](#-contribuir)
+[Quick Start](#-quick-start) · [Architecture](#-architecture) · [Contributing](CONTRIBUTING.md) · [Docs](#-documentation)
 
 </div>
 
 ---
 
-## 🎯 ¿Qué es FutbolIA?
+## What is GoalMind?
 
-FutbolIA es una plataforma de predicciones deportivas que utiliza **Dixie**, una IA analista de élite, para predecir resultados de partidos de fútbol combinando:
+GoalMind is an open-source football prediction platform powered by **Dixie**, an elite AI sports analyst. It combines:
 
-- 🧠 **DeepSeek V3** - Modelo de lenguaje avanzado
-- **ChromaDB RAG** - Base de datos vectorial con atributos de jugadores tipo FIFA
-- ⚽ **Datos en tiempo real** - Integración con APIs de fútbol
-- 📱 **App Multiplataforma** - iOS, Android y Web
+- **DeepSeek AI** — Advanced LLM for tactical analysis and match predictions
+- **ChromaDB RAG** — Vector database with FIFA-style player attributes
+- **Live Data** — Real-time stats from Football-Data.org API
+- **Cross-Platform App** — iOS, Android & Web with React Native + Expo
+
+Supporting **50+ leagues worldwide**: Premier League, La Liga, Serie A, Bundesliga, Liga Pro Ecuador, MLS, Champions League, and more.
 
 ---
 
-## 📂 Estructura del Monorepo
+## Monorepo Structure
 
 ```
-FutbolIA/
-├── futbolia-backend/      # 🖥️ API FastAPI + Python
+GoalMind/
+├── futbolia-backend/       # FastAPI + Python backend
 │   ├── src/
-│   │   ├── core/          # Configuración
-│   │   ├── domain/        # Entidades
-│   │   ├── infrastructure/# DB, LLM, APIs
-│   │   ├── use_cases/     # Lógica de negocio
-│   │   └── presentation/  # Rutas API
-│   ├── .env.template      # ⚙️ Variables de entorno
-│   └── README.md          # 📖 Documentación backend
+│   │   ├── core/           # Config, logging, cache
+│   │   ├── domain/         # Entities (User, Team, Match, Prediction)
+│   │   ├── infrastructure/ # MongoDB, ChromaDB, DeepSeek, APIs
+│   │   ├── use_cases/      # Auth, Prediction logic
+│   │   └── presentation/   # API routes
+│   └── tests/              # Test suite
 │
-└── futbolia-mobile/       # 📱 App React Native + Expo
-    ├── app/               # Pantallas (Expo Router)
-    ├── src/
-    │   ├── components/    # UI Components
-    │   ├── services/      # API Client
-    │   ├── theme/         # Estilos
-    │   └── i18n/          # Traducciones
-    ├── .env.template      # ⚙️ Variables de entorno
-    └── README.md          # 📖 Documentación frontend
+├── futbolia-mobile/        # React Native + Expo frontend
+│   ├── app/                # Screens (Expo Router)
+│   └── src/
+│       ├── components/     # UI components
+│       ├── services/       # API client
+│       ├── theme/          # Styling
+│       └── i18n/           # i18n (ES/EN)
+│
+├── scripts/                # Cross-platform setup & dev scripts
+├── docs/                   # Architecture & troubleshooting docs
+├── docker-compose.yml      # Full-stack Docker deployment
+├── Makefile                # Task runner (Linux/macOS)
+└── Taskfile.yml            # Task runner (cross-platform)
 ```
 
 ---
 
-## 🚀 Inicio Rápido
+## Quick Start
 
-### Prerrequisitos
+### Prerequisites
 
-- **Python 3.13+** con [uv](https://docs.astral.sh/uv/)
-- **Node.js 18+** con [Bun](https://bun.sh/)
-- **MongoDB** (local o [Atlas](https://www.mongodb.com/atlas))
-- **DeepSeek API Key** ([obtener aquí](https://platform.deepseek.com/))
+| Tool | Version | Installation |
+|------|---------|-------------|
+| Python | 3.13+ | [python.org](https://python.org) |
+| uv | latest | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
+| Node.js | 22+ | [nodejs.org](https://nodejs.org) |
+| Bun | latest | `curl -fsSL https://bun.sh/install \| bash` |
+| MongoDB | 7+ | [mongodb.com](https://mongodb.com) or use Docker |
 
-### 1️⃣ Clonar el proyecto
+### Option A: Automated Setup
 
 ```bash
-git clone https://github.com/tu-usuario/futbolia.git
-cd FutbolIA
+git clone https://github.com/OWNER/GoalMind.git
+cd GoalMind
+
+# Linux/macOS
+make setup
+make dev
+
+# Windows (PowerShell)
+.\scripts\setup.ps1
+.\scripts\dev.ps1
+
+# Cross-platform (requires Task: https://taskfile.dev)
+task setup
+task dev
 ```
 
-### 2️⃣ Configurar Backend
+### Option B: Docker (one command)
 
 ```bash
+git clone https://github.com/OWNER/GoalMind.git
+cd GoalMind
+
+cp .env.docker.example .env
+# Edit .env — set JWT_SECRET_KEY (required)
+
+docker compose up --build
+```
+
+### Option C: Manual Setup
+
+```bash
+# Backend
 cd futbolia-backend
-
-# Instalar dependencias
+cp .env.example .env    # Edit with your API keys
 uv sync
-
-# Configurar variables de entorno
-cp .env.template .env
-# Editar .env con tus valores (especialmente JWT_SECRET_KEY y DEEPSEEK_API_KEY)
-
-# Iniciar servidor
 uv run python -m uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
-```
 
-### 3️⃣ Configurar Frontend
-
-```bash
+# Frontend (in another terminal)
 cd futbolia-mobile
-
-# Instalar dependencias
+cp .env.example .env
 bun install
-
-# Configurar variables de entorno
-cp .env.template .env
-# Editar EXPO_PUBLIC_API_URL con tu IP local
-
-# Iniciar app
 bun start
 ```
 
-### 4️⃣ ¡Listo! 🎉
+### Access Points
 
-- **Backend API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
-- **Frontend Web**: http://localhost:8081
-- **Expo Go**: Escanear QR code
-
----
-
-## ⚙️ Configuración de Variables de Entorno
-
-### Backend (`.env`)
-
-```env
-# 🔐 SEGURIDAD - OBLIGATORIO CAMBIAR EN PRODUCCIÓN
-JWT_SECRET_KEY=tu_clave_secreta_generada_aqui
-
-# 🤖 IA - Para predicciones reales
-DEEPSEEK_API_KEY=tu_api_key_de_deepseek
-
-# 🗄️ BASE DE DATOS
-MONGODB_URI=mongodb://localhost:27017
-MONGODB_DATABASE=futbolia
-
-# 🌐 SERVIDOR
-ENVIRONMENT=development
-PORT=8000
-```
-
-### Frontend (`.env`)
-
-```env
-# 🌐 API
-EXPO_PUBLIC_API_URL=http://TU_IP_LOCAL:8000/api/v1
-
-# 🎨 PREFERENCIAS
-EXPO_PUBLIC_DEFAULT_LANGUAGE=es
-EXPO_PUBLIC_DEFAULT_THEME=dark
-```
+| Service | URL |
+|---------|-----|
+| Backend API | http://localhost:8000 |
+| API Docs (Swagger) | http://localhost:8000/docs |
+| Frontend (Expo) | http://localhost:8081 |
+| Frontend (Docker) | http://localhost:3000 |
 
 ---
 
-## 🔄 Flujo de la Aplicación
+## Architecture
+
+```mermaid
+graph TB
+    subgraph "Frontend"
+        A[React Native + Expo] --> B[API Client]
+    end
+
+    subgraph "Backend - Clean Architecture"
+        B --> C[FastAPI Routes]
+        C --> D[Use Cases]
+        D --> E[Domain Entities]
+        D --> F[Infrastructure]
+    end
+
+    subgraph "Infrastructure"
+        F --> G[(MongoDB)]
+        F --> H[(ChromaDB)]
+        F --> I[DeepSeek AI]
+        F --> J[Football-Data API]
+    end
+
+    style A fill:#61DAFB,color:#000
+    style G fill:#47A248,color:#fff
+    style H fill:#FF6B6B,color:#fff
+    style I fill:#7C3AED,color:#fff
+```
+
+### Prediction Flow
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    FLUJO DE PREDICCIÓN                       │
-└─────────────────────────────────────────────────────────────┘
+User selects teams → Backend fetches player data from ChromaDB (RAG)
+    → Sends context to DeepSeek AI (Dixie)
+    → Dixie generates tactical analysis + prediction
+    → Result saved to MongoDB → Displayed in app
 
-  📱 Usuario                  🖥️ Backend                 🤖 Dixie
-      │                           │                         │
-      │  1. Selecciona equipos    │                         │
-      │─────────────────────────▶│                         │
-      │                           │                         │
-      │                           │  2. Busca jugadores     │
-      │                           │     en ChromaDB (RAG)   │
-      │                           │─────────────────────▶  │
-      │                           │                         │
-      │                           │  3. Genera análisis     │
-      │                           │◀─────────────────────  │
-      │                           │                         │
-      │                           │  4. Guarda en MongoDB   │
-      │                           │                         │
-      │  5. Muestra predicción    │                         │
-      │◀─────────────────────────│                         │
-      │                           │                         │
-      │  • Ganador: Real Madrid   │                         │
-      │  • Marcador: 2-1          │                         │
-      │  • Confianza: 75%         │                         │
-      │  • Análisis táctico       │                         │
+Output: Winner, Score, Confidence %, Tactical Analysis, Key Factors
 ```
+
+### Tech Stack
+
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| **Frontend** | React Native, Expo 54, NativeWind | Cross-platform UI |
+| **Backend** | FastAPI, Python 3.13, uv | REST API |
+| **Database** | MongoDB 7 + Motor | User data, predictions |
+| **Vector DB** | ChromaDB | Player attributes (RAG) |
+| **AI** | DeepSeek (OpenAI-compatible) | Match analysis |
+| **Football Data** | Football-Data.org (free) | Live stats |
+| **Auth** | JWT (HS256) | Secure authentication |
+| **i18n** | i18next | Spanish & English |
 
 ---
 
-## 🏗️ Arquitectura Técnica
+## Available Commands
 
-### Backend - Clean Architecture
-
-```
-┌────────────────────────────────────────────┐
-│              PRESENTATION                   │
-│         (FastAPI Routes)                   │
-├────────────────────────────────────────────┤
-│               USE CASES                     │
-│      (AuthUseCase, PredictionUseCase)      │
-├────────────────────────────────────────────┤
-│             INFRASTRUCTURE                  │
-│  ┌─────────┐ ┌─────────┐ ┌─────────┐     │
-│  │ MongoDB │ │ChromaDB │ │DeepSeek │     │
-│  └─────────┘ └─────────┘ └─────────┘     │
-├────────────────────────────────────────────┤
-│                 DOMAIN                      │
-│    (User, Team, Player, Prediction)        │
-└────────────────────────────────────────────┘
-```
-
-### Frontend - Component Architecture
-
-```
-┌────────────────────────────────────────────┐
-│                 SCREENS                     │
-│    (Home, Predict, History, Settings)      │
-├────────────────────────────────────────────┤
-│              COMPONENTS                     │
-│  ┌─────────────┐  ┌─────────────────────┐ │
-│  │     UI      │  │      Features       │ │
-│  │ ThemedView  │  │ PredictionCard     │ │
-│  │ Button      │  │ TeamSelector       │ │
-│  │ Card        │  │ DixieChat          │ │
-│  └─────────────┘  └─────────────────────┘ │
-├────────────────────────────────────────────┤
-│              SERVICES                       │
-│           (API Client)                     │
-├────────────────────────────────────────────┤
-│            PROVIDERS                        │
-│    (Theme, i18n, Navigation)              │
-└────────────────────────────────────────────┘
-```
-
----
-
-## 📱 Capturas de Pantalla
-
-| Home                       | Predict                       | History             | Settings                 |
-| -------------------------- | ----------------------------- | ------------------- | ------------------------ |
-| Home - Partidos destacados | Predict - Selector de equipos | History - Historial | Settings - Configuración |
-
----
-
-## Tecnologías
-
-### Backend
-
-- **FastAPI** - Framework web moderno y rápido
-- **MongoDB + Motor** - Base de datos NoSQL async
-- **ChromaDB** - Vector database para RAG
-- **DeepSeek** - LLM para análisis (Dixie)
-- **JWT** - Autenticación segura
-- **Pydantic** - Validación de datos
-
-### Frontend
-
-- **React Native** - Framework para aplicaciones móviles
-- **Expo SDK 54** - React Native framework
-- **Expo Router** - Navegación basada en archivos
-- **NativeWind** - Tailwind CSS para React Native
-- **i18next** - Internacionalización
-- **AsyncStorage** - Almacenamiento local
-
----
-
-## 📖 Documentación
-
-- [Backend README](./futbolia-backend/README.md) - Documentación completa del API
-- [Frontend README](./futbolia-mobile/README.md) - Documentación de la app
-- [API Docs](http://localhost:8000/docs) - Swagger UI (cuando el servidor está corriendo)
-
----
-
-## 🧪 Testing
+### Make (Linux/macOS)
 
 ```bash
-# Backend tests
-cd futbolia-backend
-uv run pytest
+make help           # Show all commands
+make setup          # Install all dependencies
+make dev            # Start backend + frontend
+make dev-backend    # Start backend only
+make dev-frontend   # Start frontend only
+make test           # Run all tests + lint
+make lint           # Check code quality
+make format         # Auto-format all code
+make docker-up      # Start full stack (Docker)
+make docker-down    # Stop Docker services
+make clean          # Remove build artifacts
+make install-hooks  # Install pre-commit hooks
+```
 
-# Frontend tests
-cd futbolia-mobile
-bun test
+### Task (Windows/Linux/macOS)
+
+```bash
+task               # Show all commands
+task setup         # Install all dependencies
+task dev           # Start backend + frontend
+task test          # Run all tests
+task lint          # Check code quality
+task format        # Auto-format code
+task docker-up     # Start full stack (Docker)
+```
+
+### PowerShell (Windows)
+
+```powershell
+.\scripts\setup.ps1              # Setup
+.\scripts\dev.ps1                # Dev servers
+.\scripts\dev.ps1 -Backend       # Backend only
+.\scripts\dev.ps1 -Frontend      # Frontend only
+.\scripts\test.ps1               # Run tests
 ```
 
 ---
 
-## 🤝 Contribuir
+## Environment Variables
 
-1. Fork el proyecto
-2. Crea tu rama (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add: nueva característica'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
+### Backend (`futbolia-backend/.env`)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `JWT_SECRET_KEY` | Production | JWT signing key (`openssl rand -hex 32`) |
+| `DEEPSEEK_API_KEY` | Optional | DeepSeek AI key ([get one](https://platform.deepseek.com/)) |
+| `FOOTBALL_DATA_API_KEY` | Optional | Football data ([register free](https://www.football-data.org/client/register)) |
+| `MONGODB_URI` | No | MongoDB URI (default: `localhost:27017`) |
+| `ENVIRONMENT` | No | `development` / `production` |
+
+### Frontend (`futbolia-mobile/.env`)
+
+| Variable | Description |
+|----------|-------------|
+| `EXPO_PUBLIC_API_URL` | Backend URL (default: `http://localhost:8000/api/v1`) |
+| `EXPO_PUBLIC_DEFAULT_LANGUAGE` | `es` or `en` |
+| `EXPO_PUBLIC_DEFAULT_THEME` | `dark`, `light`, or `system` |
+
+See `.env.example` files for the complete list.
 
 ---
 
-## 📄 Licencia
+## Documentation
 
-Este proyecto fue creado para **Casa Abierta ULEAM 2025** - Minería de Datos - 5to Semestre
+| Document | Description |
+|----------|-------------|
+| [Backend README](futbolia-backend/README.md) | Backend API documentation |
+| [Frontend README](futbolia-mobile/README.md) | Mobile app documentation |
+| [Contributing Guide](CONTRIBUTING.md) | How to contribute |
+| [Security Policy](SECURITY.md) | Vulnerability reporting |
+| [Code of Conduct](CODE_OF_CONDUCT.md) | Community guidelines |
+| [Architecture Docs](docs/) | Technical deep-dives |
 
 ---
 
-## 👥 Equipo
+## Contributing
+
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for:
+
+- Development setup
+- Coding standards (Ruff for Python, ESLint + Prettier for TypeScript)
+- Commit conventions (Conventional Commits)
+- Pull request process
+
+```bash
+# Quick contribution workflow
+git checkout -b feat/your-feature
+make format    # Auto-format code
+make test      # Verify everything passes
+git commit -m "feat(backend): add your feature"
+```
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+---
 
 <div align="center">
 
-**FutbolIA - Proyecto Dixie**
+**GoalMind** — AI-powered football predictions
 
-🏆 _Tu oráculo deportivo de élite_
+Built for **Casa Abierta ULEAM 2025** — Data Mining — 5th Semester
 
 </div>
-
-uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 

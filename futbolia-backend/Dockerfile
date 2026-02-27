@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile:1
 
 # ===========================================
-# FutbolIA Backend - Dockerfile OPTIMIZADO
-# Build time reducido con uv package manager
+# GoalMind Backend - Optimized Dockerfile
+# Build time optimized with uv package manager
 # ===========================================
 
 # ---------------------------------------------
@@ -40,8 +40,8 @@ RUN .venv/bin/python -c "import fastapi; print('fastapi ok')"
 FROM python:3.13-slim AS production
 
 # Metadata
-LABEL maintainer="FutbolIA Team"
-LABEL description="FutbolIA Backend - API de predicciones de fútbol con IA Dixie"
+LABEL maintainer="GoalMind Team"
+LABEL description="GoalMind Backend - AI-powered football prediction API"
 LABEL version="1.0.0"
 
 # Crear usuario NO-root ANTES de copiar archivos

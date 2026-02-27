@@ -1,5 +1,5 @@
 {
-  "name": "futbolia-mobile",
+  "name": "goalmind-mobile",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
@@ -7,7 +7,12 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "build:web": "bunx expo export -p web"
+    "build:web": "bunx expo export -p web",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,json,md}\"",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -40,6 +45,11 @@
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
+    "eslint": "^8.57.0",
+    "eslint-config-expo": "~9.0.0",
+    "eslint-config-prettier": "^10.0.0",
+    "eslint-plugin-prettier": "^5.2.0",
+    "prettier": "^3.4.0",
     "react-test-renderer": "19.1.0",
     "typescript": "~5.9.2"
   },

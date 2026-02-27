@@ -1,0 +1,167 @@
+# ===========================================
+# GoalMind - CI Pipeline
+# ===========================================
+# Runs on every push to main and on PRs
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # -------------------------------------------
+  # Backend: Lint (Ruff)
+  # -------------------------------------------
+  backend-lint:
+    name: Backend Lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: futbolia-backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Ruff lint
+        run: uv run ruff check .
+
+      - name: Ruff format check
+        run: uv run ruff format --check .
+
+  # -------------------------------------------
+  # Backend: Tests (pytest)
+  # -------------------------------------------
+  backend-test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    needs: backend-lint
+    defaults:
+      run:
+        working-directory: futbolia-backend
+
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd="echo 'db.runCommand(\"ping\").ok' | mongosh localhost:27017/test --quiet"
+          --health-interval=10s
+          --health-timeout=10s
+          --health-retries=5
+          --health-start-period=20s
+
+    env:
+      MONGODB_URI: mongodb://localhost:27017
+      MONGODB_DATABASE: goalmind_test
+      ENVIRONMENT: test
+      JWT_SECRET_KEY: test-secret-key-for-ci-only
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Create data directory
+        run: mkdir -p data/chromadb
+
+      - name: Run tests
+        run: uv run pytest tests/ -v --tb=short
+
+  # -------------------------------------------
+  # Frontend: Lint (ESLint + Prettier)
+  # -------------------------------------------
+  frontend-lint:
+    name: Frontend Lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: futbolia-mobile
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: ESLint
+        run: bun run lint
+
+      - name: Prettier check
+        run: bun run format:check
+
+  # -------------------------------------------
+  # Frontend: Build (verify compilation)
+  # -------------------------------------------
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    needs: frontend-lint
+    defaults:
+      run:
+        working-directory: futbolia-mobile
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: TypeScript check
+        run: bun run typecheck
+
+      - name: Build web export
+        run: bun run build:web
+        env:
+          EXPO_PUBLIC_API_URL: http://localhost:8000/api/v1
+
+  # -------------------------------------------
+  # Docker: Build images (verify Dockerfiles)
+  # -------------------------------------------
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: [backend-lint, frontend-lint]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend image
+        run: docker build -t goalmind-backend ./futbolia-backend
+
+      - name: Build frontend image
+        run: docker build -t goalmind-frontend ./futbolia-mobile

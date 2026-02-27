@@ -1,8 +1,9 @@
 """
-FutbolIA Configuration Module
+GoalMind Configuration Module
 Manages all environment variables and application settings
 """
 import os
+import secrets
 from dataclasses import dataclass, field
 from typing import List, Dict
 from dotenv import load_dotenv
@@ -136,7 +137,7 @@ class Settings:
     """Application settings loaded from environment variables"""
     
     # Application
-    APP_NAME: str = "FutPredicIA - Dixie"
+    APP_NAME: str = "GoalMind"
     APP_VERSION: str = "1.0.0"
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
     DEBUG: bool = os.getenv("ENVIRONMENT", "development") == "development"
@@ -148,7 +149,7 @@ class Settings:
     
     # MongoDB
     MONGODB_URL: str = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
-    MONGODB_DB_NAME: str = os.getenv("MONGODB_DATABASE", "futbolia")
+    MONGODB_DB_NAME: str = os.getenv("MONGODB_DATABASE", "goalmind")
     
     # ChromaDB
     CHROMA_PERSIST_DIR: str = os.getenv("CHROMADB_PATH", "./data/chromadb")
@@ -166,7 +167,9 @@ class Settings:
     FOOTBALL_DATA_API_KEY: str = os.getenv("FOOTBALL_DATA_API_KEY", "")
     
     # JWT Authentication
-    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "futbolia-super-secret-key-change-in-production")
+    # In development, a random key is generated if not set.
+    # In production, JWT_SECRET_KEY env var MUST be set explicitly.
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "")
     JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
     JWT_EXPIRE_MINUTES: int = int(os.getenv("JWT_EXPIRATION_MINUTES", "10080"))  # 7 days default
     
@@ -177,10 +180,21 @@ class Settings:
     RATE_LIMIT_PER_MINUTE: int = int(os.getenv("RATE_LIMIT_PER_MINUTE", "60"))
     
     def __post_init__(self):
+        # Generate a random JWT secret for development if not provided
+        if not self.JWT_SECRET_KEY:
+            if self.is_production():
+                raise ValueError(
+                    "JWT_SECRET_KEY environment variable is REQUIRED in production. "
+                    "Generate one with: openssl rand -hex 32"
+                )
+            self.JWT_SECRET_KEY = secrets.token_hex(32)
+
         # Parse CORS origins from environment
         cors_env = os.getenv("CORS_ORIGINS", "")
         if cors_env:
             self.CORS_ORIGINS = [origin.strip() for origin in cors_env.split(",")]
+        elif self.is_production():
+            self.CORS_ORIGINS = []  # Must be set explicitly in production
         else:
             self.CORS_ORIGINS = [
                 "http://localhost:3000",
@@ -188,8 +202,7 @@ class Settings:
                 "http://localhost:19006",
                 "exp://localhost:8081",
                 "http://127.0.0.1:8081",
-                "http://192.168.1.101:8081",  # IP local común
-                "*",  # Permite todas las conexiones en desarrollo
+                "*",  # Allow all origins in development
             ]
     
     def is_production(self) -> bool:
@@ -199,13 +212,16 @@ class Settings:
     def validate(self) -> List[str]:
         """Validate critical settings and return list of warnings"""
         warnings = []
-        
+
         if self.is_production():
-            if "change-in-production" in self.JWT_SECRET_KEY:
-                warnings.append("⚠️ JWT_SECRET_KEY debe cambiarse en producción!")
             if not self.DEEPSEEK_API_KEY:
-                warnings.append("⚠️ DEEPSEEK_API_KEY no configurada - Dixie usará respuestas mock")
-        
+                warnings.append("⚠️ DEEPSEEK_API_KEY not set - Dixie will use mock responses")
+            if not self.CORS_ORIGINS:
+                warnings.append("⚠️ CORS_ORIGINS not set - no origins will be allowed")
+        else:
+            if not self.DEEPSEEK_API_KEY:
+                warnings.append("ℹ️ DEEPSEEK_API_KEY not set - Dixie will use mock responses")
+
         return warnings
 
 

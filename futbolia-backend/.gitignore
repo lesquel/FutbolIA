@@ -9,5 +9,21 @@ wheels/
 # Virtual environments
 .venv
 
+# Environment
 .env
 .env.prod
+.env.production
+!.env.example
+
+# Data & databases
+data/
+logs/
+*.sqlite3
+
+# Testing / Quality
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml

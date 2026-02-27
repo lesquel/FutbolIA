@@ -1,5 +1,5 @@
 """
-FutbolIA Backend - Main Application
+GoalMind Backend - Main Application
 FastAPI server with Clean Architecture
 """
 from contextlib import asynccontextmanager
@@ -27,7 +27,7 @@ logger = get_logger(__name__)
 async def lifespan(app: FastAPI):
     """Startup and shutdown events"""
     # Startup
-    log_info("Starting FutbolIA Backend...", 
+    log_info("Starting GoalMind Backend...", 
              app=settings.APP_NAME, 
              version=settings.APP_VERSION,
              environment=settings.ENVIRONMENT)
@@ -52,7 +52,7 @@ async def lifespan(app: FastAPI):
     yield
     
     # Shutdown
-    log_info("Shutting down FutbolIA Backend...")
+    log_info("Shutting down GoalMind Backend...")
     await MongoDB.disconnect()
     log_info("Goodbye!")
 
@@ -61,23 +61,23 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.APP_NAME,
     description="""
-    🏆 **FutPredicIA - El Oráculo Deportivo**
+    🏆 **GoalMind - AI-Powered Football Predictions**
     
-    Una plataforma de predicciones de fútbol impulsada por IA que combina:
-    - 📊 Estadísticas en vivo (API-Football)
-    - 🧠 Análisis de atributos de jugadores (ChromaDB/FIFA)
-    - 🤖 IA experta "Dixie" (DeepSeek)
+    A football prediction platform powered by AI that combines:
+    - 📊 Live statistics (Football-Data API)
+    - 🧠 Player attribute analysis (ChromaDB/FIFA)
+    - 🤖 Expert AI analyst "Dixie" (DeepSeek)
     
     ---
     
-    **Características:**
-    - Predicciones de partidos con análisis táctico
-    - Historial de predicciones por usuario
-    - Comparación de equipos y jugadores
-    - Estadísticas de precisión de Dixie
-    - Búsqueda inteligente de equipos (fuzzy search)
-    - Rate limiting para protección de API
-    - Soporte multiidioma (ES/EN)
+    **Features:**
+    - Match predictions with tactical analysis
+    - Per-user prediction history
+    - Team and player comparison
+    - Dixie accuracy statistics
+    - Intelligent team search (fuzzy search)
+    - Rate limiting for API protection
+    - Multi-language support (ES/EN)
     """,
     version=settings.APP_VERSION,
     lifespan=lifespan,
@@ -141,7 +141,7 @@ async def root():
         "app": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "status": "online",
-        "message": "🏆 ¡Bienvenido a FutPredicIA! Tu oráculo deportivo con IA.",
+        "message": "🏆 Welcome to GoalMind! Your AI-powered football oracle.",
         "docs": "/docs",
         "endpoints": {
             "auth": "/api/v1/auth",

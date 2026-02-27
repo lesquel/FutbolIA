@@ -1,0 +1,169 @@
+# ===========================================
+# GoalMind - Taskfile (Cross-Platform)
+# ===========================================
+# Install Task: https://taskfile.dev/installation/
+# Usage: task <command>
+# Windows: task dev
+# Linux:   task dev
+
+version: '3'
+
+vars:
+  BACKEND_DIR: futbolia-backend
+  FRONTEND_DIR: futbolia-mobile
+
+tasks:
+  default:
+    desc: Show available commands
+    cmds:
+      - task --list
+    silent: true
+
+  # -------------------------------------------
+  # Setup
+  # -------------------------------------------
+  setup:
+    desc: Install all dependencies (backend + frontend)
+    cmds:
+      - task: setup-backend
+      - task: setup-frontend
+
+  setup-backend:
+    desc: Setup backend only
+    dir: '{{.BACKEND_DIR}}'
+    cmds:
+      - cmd: cp .env.example .env
+        ignore_error: true
+      - uv sync
+      - cmd: mkdir -p data/chromadb
+        platforms: [linux, darwin]
+      - cmd: if not exist data\chromadb mkdir data\chromadb
+        platforms: [windows]
+
+  setup-frontend:
+    desc: Setup frontend only
+    dir: '{{.FRONTEND_DIR}}'
+    cmds:
+      - cmd: cp .env.example .env
+        ignore_error: true
+      - bun install
+
+  # -------------------------------------------
+  # Development
+  # -------------------------------------------
+  dev:
+    desc: Start backend + frontend dev servers
+    deps: [dev-backend, dev-frontend]
+
+  dev-backend:
+    desc: Start backend dev server
+    dir: '{{.BACKEND_DIR}}'
+    cmds:
+      - uv run python -m uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+
+  dev-frontend:
+    desc: Start frontend dev server
+    dir: '{{.FRONTEND_DIR}}'
+    cmds:
+      - bun start
+
+  # -------------------------------------------
+  # Testing & Quality
+  # -------------------------------------------
+  test:
+    desc: Run all tests
+    cmds:
+      - task: test-backend
+      - task: lint
+
+  test-backend:
+    desc: Run backend tests
+    dir: '{{.BACKEND_DIR}}'
+    cmds:
+      - uv run pytest tests/ -v --tb=short
+
+  lint:
+    desc: Check all code quality
+    cmds:
+      - task: lint-backend
+      - task: lint-frontend
+
+  lint-backend:
+    desc: Lint backend code
+    dir: '{{.BACKEND_DIR}}'
+    cmds:
+      - uv run ruff check .
+      - uv run ruff format --check .
+
+  lint-frontend:
+    desc: Lint frontend code
+    dir: '{{.FRONTEND_DIR}}'
+    cmds:
+      - bun run lint
+      - bun run format:check
+
+  format:
+    desc: Auto-format all code
+    cmds:
+      - task: format-backend
+      - task: format-frontend
+
+  format-backend:
+    desc: Format backend code
+    dir: '{{.BACKEND_DIR}}'
+    cmds:
+      - uv run ruff format .
+      - uv run ruff check --fix .
+
+  format-frontend:
+    desc: Format frontend code
+    dir: '{{.FRONTEND_DIR}}'
+    cmds:
+      - bun run format
+      - bun run lint:fix
+
+  # -------------------------------------------
+  # Docker
+  # -------------------------------------------
+  docker-up:
+    desc: Start full stack with Docker Compose
+    cmds:
+      - docker compose up --build -d
+      - echo "✅ GoalMind running at http://localhost:8000"
+
+  docker-down:
+    desc: Stop Docker Compose services
+    cmds:
+      - docker compose down
+
+  docker-logs:
+    desc: Show Docker Compose logs
+    cmds:
+      - docker compose logs -f
+
+  # -------------------------------------------
+  # Maintenance
+  # -------------------------------------------
+  clean:
+    desc: Remove build artifacts and caches
+    cmds:
+      - cmd: find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+        platforms: [linux, darwin]
+      - cmd: find . -type d -name .pytest_cache -exec rm -rf {} + 2>/dev/null || true
+        platforms: [linux, darwin]
+      - cmd: find . -type d -name .ruff_cache -exec rm -rf {} + 2>/dev/null || true
+        platforms: [linux, darwin]
+      - cmd: find . -type d -name node_modules -exec rm -rf {} + 2>/dev/null || true
+        platforms: [linux, darwin]
+      - cmd: powershell -Command "Get-ChildItem -Recurse -Directory -Filter __pycache__ | Remove-Item -Recurse -Force"
+        platforms: [windows]
+        ignore_error: true
+      - cmd: powershell -Command "Get-ChildItem -Recurse -Directory -Filter node_modules | Remove-Item -Recurse -Force"
+        platforms: [windows]
+        ignore_error: true
+
+  install-hooks:
+    desc: Install pre-commit hooks
+    dir: '{{.BACKEND_DIR}}'
+    cmds:
+      - uv run pre-commit install

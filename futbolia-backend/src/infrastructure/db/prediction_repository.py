@@ -3,7 +3,7 @@ Prediction Repository
 Handles prediction CRUD operations with MongoDB
 """
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from bson import ObjectId
 
 from src.domain.entities import Prediction, Match, PredictionResult, Team, MatchStatus
@@ -34,7 +34,7 @@ class PredictionRepository:
                 "star_player_home": prediction.result.star_player_home,
                 "star_player_away": prediction.result.star_player_away,
             } if prediction.result else None,
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.now(timezone.utc),
             "is_correct": prediction.is_correct,
             "language": prediction.language,
         }
@@ -103,7 +103,7 @@ class PredictionRepository:
                 id=match_doc.get("id", ""),
                 home_team=home_team,
                 away_team=away_team,
-                date=datetime.fromisoformat(match_doc.get("date", datetime.utcnow().isoformat())),
+                date=datetime.fromisoformat(match_doc.get("date", datetime.now(timezone.utc).isoformat())),
                 venue=match_doc.get("venue", ""),
                 league=match_doc.get("league", ""),
                 status=MatchStatus(match_doc.get("status", "scheduled")),
@@ -127,7 +127,7 @@ class PredictionRepository:
             user_id=doc.get("user_id", ""),
             match=match,
             result=result,
-            created_at=doc.get("created_at", datetime.utcnow()),
+            created_at=doc.get("created_at", datetime.now(timezone.utc)),
             is_correct=doc.get("is_correct"),
             language=doc.get("language", "es"),
         )
