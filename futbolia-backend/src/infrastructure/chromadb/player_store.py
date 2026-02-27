@@ -3,6 +3,8 @@ ChromaDB Vector Store
 Stores and retrieves player attributes for RAG-based predictions
 """
 
+from __future__ import annotations
+
 import os
 
 import chromadb

@@ -339,4 +339,20 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     paddingHorizontal: 8,
   },
+  containerLarge: {
+    width: '100%',
+  },
+  chartContainerLarge: {
+    borderRadius: 18,
+    padding: 24,
+    marginBottom: 24,
+  },
+  chartInfoLarge: {
+    marginTop: 16,
+    paddingTop: 16,
+  },
+  infoTextLarge: {
+    lineHeight: 24,
+    paddingHorizontal: 12,
+  },
 });

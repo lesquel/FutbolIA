@@ -6,7 +6,7 @@ import { useTheme } from '@/src/theme';
 
 interface CardProps extends ViewProps {
   variant?: 'default' | 'elevated' | 'outlined';
-  padding?: 'none' | 'sm' | 'md' | 'lg';
+  padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
 }
 
 export function Card({
@@ -31,6 +31,8 @@ export function Card({
         return isLargeScreen ? 16 : 12;
       case 'lg':
         return isLargeScreen ? 24 : 14;
+      case 'xl':
+        return isLargeScreen ? 32 : 20;
     }
   };
 

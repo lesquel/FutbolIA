@@ -6,7 +6,7 @@ import { useTheme } from '@/src/theme';
 
 interface ThemedTextProps extends TextProps {
   variant?: 'default' | 'secondary' | 'muted' | 'primary' | 'error';
-  size?: 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl' | '3xl';
+  size?: 'xs' | 'sm' | 'base' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl';
   weight?: 'normal' | 'medium' | 'semibold' | 'bold';
 }
 
@@ -31,10 +31,12 @@ export function ThemedText({
     xs: 12,
     sm: 14,
     base: 16,
+    md: 16,
     lg: 18,
     xl: 20,
     '2xl': 24,
     '3xl': 30,
+    '4xl': 36,
   };
 
   const weights = {

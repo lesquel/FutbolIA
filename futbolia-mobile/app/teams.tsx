@@ -274,7 +274,7 @@ export default function TeamsScreen() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [teamToAdd, setTeamToAdd] = useState<FavoriteTeam | null>(null);
   const [isAddingTeam, setIsAddingTeam] = useState(false);
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Convert API team to FavoriteTeam format
   const apiTeamToFavorite = (apiTeam: TeamSearchResult): FavoriteTeam => ({
