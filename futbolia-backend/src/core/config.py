@@ -5,11 +5,13 @@ Manages all environment variables and application settings
 import os
 import secrets
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import List, Dict
 from dotenv import load_dotenv
 
-# Load .env file
-load_dotenv()
+# Load .env file from the backend project root (two levels up from this file)
+_backend_root = Path(__file__).resolve().parent.parent.parent
+load_dotenv(_backend_root / ".env")
 
 
 # =============================================================================
