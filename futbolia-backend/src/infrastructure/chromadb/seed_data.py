@@ -2,95 +2,487 @@
 Seed Data for ChromaDB
 Sample FIFA 25 player data for demonstration
 """
+
 from src.domain.entities import PlayerAttributes
 from src.infrastructure.chromadb.player_store import PlayerVectorStore
 
-
 # Sample FIFA 25 Player Data - Updated for 2025/2026 season
 SAMPLE_PLAYERS = [
-   
     # Manchester City (11 players)
-    PlayerAttributes(player_id="mc_1", name="Erling Haaland", team="Manchester City", position="ST", overall_rating=94, pace=89, shooting=94, passing=66, dribbling=80, defending=45, physical=90),
-    PlayerAttributes(player_id="mc_2", name="Kevin De Bruyne", team="Manchester City", position="CM", overall_rating=91, pace=72, shooting=86, passing=94, dribbling=84, defending=58, physical=72),
-    PlayerAttributes(player_id="mc_3", name="Rodri", team="Manchester City", position="CDM", overall_rating=91, pace=64, shooting=74, passing=86, dribbling=81, defending=87, physical=82),
-    PlayerAttributes(player_id="mc_4", name="Phil Foden", team="Manchester City", position="RW", overall_rating=89, pace=84, shooting=82, passing=84, dribbling=90, defending=42, physical=62),
-    PlayerAttributes(player_id="mc_5", name="Rúben Dias", team="Manchester City", position="CB", overall_rating=89, pace=68, shooting=42, passing=68, dribbling=62, defending=90, physical=84),
-    PlayerAttributes(player_id="mc_6", name="Bernardo Silva", team="Manchester City", position="RW", overall_rating=88, pace=74, shooting=78, passing=86, dribbling=92, defending=54, physical=56),
-    PlayerAttributes(player_id="mc_7", name="Kyle Walker", team="Manchester City", position="RB", overall_rating=85, pace=92, shooting=58, passing=70, dribbling=74, defending=80, physical=82),
-    PlayerAttributes(player_id="mc_8", name="Ederson", team="Manchester City", position="GK", overall_rating=88, pace=56, shooting=14, passing=78, dribbling=22, defending=18, physical=82),
-    PlayerAttributes(player_id="mc_9", name="John Stones", team="Manchester City", position="CB", overall_rating=85, pace=62, shooting=48, passing=72, dribbling=68, defending=84, physical=78),
-    PlayerAttributes(player_id="mc_10", name="Jack Grealish", team="Manchester City", position="LW", overall_rating=84, pace=80, shooting=72, passing=82, dribbling=88, defending=38, physical=68),
-    PlayerAttributes(player_id="mc_11", name="Joško Gvardiol", team="Manchester City", position="LB", overall_rating=85, pace=78, shooting=52, passing=68, dribbling=72, defending=84, physical=82),
-  
-    
+    PlayerAttributes(
+        player_id="mc_1",
+        name="Erling Haaland",
+        team="Manchester City",
+        position="ST",
+        overall_rating=94,
+        pace=89,
+        shooting=94,
+        passing=66,
+        dribbling=80,
+        defending=45,
+        physical=90,
+    ),
+    PlayerAttributes(
+        player_id="mc_2",
+        name="Kevin De Bruyne",
+        team="Manchester City",
+        position="CM",
+        overall_rating=91,
+        pace=72,
+        shooting=86,
+        passing=94,
+        dribbling=84,
+        defending=58,
+        physical=72,
+    ),
+    PlayerAttributes(
+        player_id="mc_3",
+        name="Rodri",
+        team="Manchester City",
+        position="CDM",
+        overall_rating=91,
+        pace=64,
+        shooting=74,
+        passing=86,
+        dribbling=81,
+        defending=87,
+        physical=82,
+    ),
+    PlayerAttributes(
+        player_id="mc_4",
+        name="Phil Foden",
+        team="Manchester City",
+        position="RW",
+        overall_rating=89,
+        pace=84,
+        shooting=82,
+        passing=84,
+        dribbling=90,
+        defending=42,
+        physical=62,
+    ),
+    PlayerAttributes(
+        player_id="mc_5",
+        name="Rúben Dias",
+        team="Manchester City",
+        position="CB",
+        overall_rating=89,
+        pace=68,
+        shooting=42,
+        passing=68,
+        dribbling=62,
+        defending=90,
+        physical=84,
+    ),
+    PlayerAttributes(
+        player_id="mc_6",
+        name="Bernardo Silva",
+        team="Manchester City",
+        position="RW",
+        overall_rating=88,
+        pace=74,
+        shooting=78,
+        passing=86,
+        dribbling=92,
+        defending=54,
+        physical=56,
+    ),
+    PlayerAttributes(
+        player_id="mc_7",
+        name="Kyle Walker",
+        team="Manchester City",
+        position="RB",
+        overall_rating=85,
+        pace=92,
+        shooting=58,
+        passing=70,
+        dribbling=74,
+        defending=80,
+        physical=82,
+    ),
+    PlayerAttributes(
+        player_id="mc_8",
+        name="Ederson",
+        team="Manchester City",
+        position="GK",
+        overall_rating=88,
+        pace=56,
+        shooting=14,
+        passing=78,
+        dribbling=22,
+        defending=18,
+        physical=82,
+    ),
+    PlayerAttributes(
+        player_id="mc_9",
+        name="John Stones",
+        team="Manchester City",
+        position="CB",
+        overall_rating=85,
+        pace=62,
+        shooting=48,
+        passing=72,
+        dribbling=68,
+        defending=84,
+        physical=78,
+    ),
+    PlayerAttributes(
+        player_id="mc_10",
+        name="Jack Grealish",
+        team="Manchester City",
+        position="LW",
+        overall_rating=84,
+        pace=80,
+        shooting=72,
+        passing=82,
+        dribbling=88,
+        defending=38,
+        physical=68,
+    ),
+    PlayerAttributes(
+        player_id="mc_11",
+        name="Joško Gvardiol",
+        team="Manchester City",
+        position="LB",
+        overall_rating=85,
+        pace=78,
+        shooting=52,
+        passing=68,
+        dribbling=72,
+        defending=84,
+        physical=82,
+    ),
     # Liverpool (11 players)
-    PlayerAttributes(player_id="liv_1", name="Mohamed Salah", team="Liverpool", position="RW", overall_rating=89, pace=89, shooting=87, passing=80, dribbling=88, defending=45, physical=74),
-    PlayerAttributes(player_id="liv_2", name="Virgil van Dijk", team="Liverpool", position="CB", overall_rating=89, pace=72, shooting=62, passing=72, dribbling=68, defending=91, physical=86),
-    PlayerAttributes(player_id="liv_3", name="Trent Alexander-Arnold", team="Liverpool", position="RB", overall_rating=87, pace=76, shooting=72, passing=90, dribbling=78, defending=78, physical=68),
-    PlayerAttributes(player_id="liv_4", name="Alisson Becker", team="Liverpool", position="GK", overall_rating=89, pace=48, shooting=14, passing=62, dribbling=18, defending=20, physical=86),
-    PlayerAttributes(player_id="liv_5", name="Darwin Núñez", team="Liverpool", position="ST", overall_rating=85, pace=92, shooting=84, passing=62, dribbling=78, defending=42, physical=82),
-    PlayerAttributes(player_id="liv_6", name="Luis Díaz", team="Liverpool", position="LW", overall_rating=86, pace=92, shooting=78, passing=76, dribbling=88, defending=42, physical=72),
-    PlayerAttributes(player_id="liv_7", name="Dominik Szoboszlai", team="Liverpool", position="CAM", overall_rating=84, pace=76, shooting=78, passing=82, dribbling=82, defending=58, physical=76),
-    PlayerAttributes(player_id="liv_8", name="Alexis Mac Allister", team="Liverpool", position="CM", overall_rating=85, pace=68, shooting=76, passing=84, dribbling=82, defending=72, physical=72),
-    PlayerAttributes(player_id="liv_9", name="Cody Gakpo", team="Liverpool", position="LW", overall_rating=84, pace=84, shooting=80, passing=78, dribbling=84, defending=42, physical=76),
-    PlayerAttributes(player_id="liv_10", name="Ibrahima Konaté", team="Liverpool", position="CB", overall_rating=85, pace=82, shooting=42, passing=58, dribbling=52, defending=86, physical=86),
-    PlayerAttributes(player_id="liv_11", name="Andrew Robertson", team="Liverpool", position="LB", overall_rating=84, pace=82, shooting=58, passing=82, dribbling=76, defending=80, physical=76),
-    
+    PlayerAttributes(
+        player_id="liv_1",
+        name="Mohamed Salah",
+        team="Liverpool",
+        position="RW",
+        overall_rating=89,
+        pace=89,
+        shooting=87,
+        passing=80,
+        dribbling=88,
+        defending=45,
+        physical=74,
+    ),
+    PlayerAttributes(
+        player_id="liv_2",
+        name="Virgil van Dijk",
+        team="Liverpool",
+        position="CB",
+        overall_rating=89,
+        pace=72,
+        shooting=62,
+        passing=72,
+        dribbling=68,
+        defending=91,
+        physical=86,
+    ),
+    PlayerAttributes(
+        player_id="liv_3",
+        name="Trent Alexander-Arnold",
+        team="Liverpool",
+        position="RB",
+        overall_rating=87,
+        pace=76,
+        shooting=72,
+        passing=90,
+        dribbling=78,
+        defending=78,
+        physical=68,
+    ),
+    PlayerAttributes(
+        player_id="liv_4",
+        name="Alisson Becker",
+        team="Liverpool",
+        position="GK",
+        overall_rating=89,
+        pace=48,
+        shooting=14,
+        passing=62,
+        dribbling=18,
+        defending=20,
+        physical=86,
+    ),
+    PlayerAttributes(
+        player_id="liv_5",
+        name="Darwin Núñez",
+        team="Liverpool",
+        position="ST",
+        overall_rating=85,
+        pace=92,
+        shooting=84,
+        passing=62,
+        dribbling=78,
+        defending=42,
+        physical=82,
+    ),
+    PlayerAttributes(
+        player_id="liv_6",
+        name="Luis Díaz",
+        team="Liverpool",
+        position="LW",
+        overall_rating=86,
+        pace=92,
+        shooting=78,
+        passing=76,
+        dribbling=88,
+        defending=42,
+        physical=72,
+    ),
+    PlayerAttributes(
+        player_id="liv_7",
+        name="Dominik Szoboszlai",
+        team="Liverpool",
+        position="CAM",
+        overall_rating=84,
+        pace=76,
+        shooting=78,
+        passing=82,
+        dribbling=82,
+        defending=58,
+        physical=76,
+    ),
+    PlayerAttributes(
+        player_id="liv_8",
+        name="Alexis Mac Allister",
+        team="Liverpool",
+        position="CM",
+        overall_rating=85,
+        pace=68,
+        shooting=76,
+        passing=84,
+        dribbling=82,
+        defending=72,
+        physical=72,
+    ),
+    PlayerAttributes(
+        player_id="liv_9",
+        name="Cody Gakpo",
+        team="Liverpool",
+        position="LW",
+        overall_rating=84,
+        pace=84,
+        shooting=80,
+        passing=78,
+        dribbling=84,
+        defending=42,
+        physical=76,
+    ),
+    PlayerAttributes(
+        player_id="liv_10",
+        name="Ibrahima Konaté",
+        team="Liverpool",
+        position="CB",
+        overall_rating=85,
+        pace=82,
+        shooting=42,
+        passing=58,
+        dribbling=52,
+        defending=86,
+        physical=86,
+    ),
+    PlayerAttributes(
+        player_id="liv_11",
+        name="Andrew Robertson",
+        team="Liverpool",
+        position="LB",
+        overall_rating=84,
+        pace=82,
+        shooting=58,
+        passing=82,
+        dribbling=76,
+        defending=80,
+        physical=76,
+    ),
     # Arsenal (11 players)
-    PlayerAttributes(player_id="ars_1", name="Bukayo Saka", team="Arsenal", position="RW", overall_rating=88, pace=86, shooting=80, passing=82, dribbling=88, defending=52, physical=68),
-    PlayerAttributes(player_id="ars_2", name="Martin Ødegaard", team="Arsenal", position="CAM", overall_rating=89, pace=72, shooting=82, passing=90, dribbling=88, defending=58, physical=62),
-    PlayerAttributes(player_id="ars_3", name="Declan Rice", team="Arsenal", position="CDM", overall_rating=88, pace=72, shooting=72, passing=80, dribbling=78, defending=86, physical=82),
-    PlayerAttributes(player_id="ars_4", name="William Saliba", team="Arsenal", position="CB", overall_rating=87, pace=78, shooting=36, passing=62, dribbling=62, defending=88, physical=82),
-    PlayerAttributes(player_id="ars_5", name="Gabriel Jesus", team="Arsenal", position="ST", overall_rating=84, pace=84, shooting=80, passing=72, dribbling=86, defending=42, physical=68),
-    PlayerAttributes(player_id="ars_6", name="David Raya", team="Arsenal", position="GK", overall_rating=86, pace=48, shooting=12, passing=58, dribbling=16, defending=18, physical=78),
-    PlayerAttributes(player_id="ars_7", name="Gabriel Magalhães", team="Arsenal", position="CB", overall_rating=85, pace=72, shooting=52, passing=58, dribbling=52, defending=86, physical=84),
-    PlayerAttributes(player_id="ars_8", name="Ben White", team="Arsenal", position="RB", overall_rating=84, pace=78, shooting=48, passing=72, dribbling=72, defending=82, physical=76),
-    PlayerAttributes(player_id="ars_9", name="Kai Havertz", team="Arsenal", position="ST", overall_rating=84, pace=72, shooting=78, passing=78, dribbling=82, defending=48, physical=76),
-    PlayerAttributes(player_id="ars_10", name="Gabriel Martinelli", team="Arsenal", position="LW", overall_rating=84, pace=92, shooting=78, passing=74, dribbling=84, defending=38, physical=72),
-    PlayerAttributes(player_id="ars_11", name="Jurriën Timber", team="Arsenal", position="RB", overall_rating=82, pace=78, shooting=52, passing=72, dribbling=74, defending=82, physical=76),
-  
+    PlayerAttributes(
+        player_id="ars_1",
+        name="Bukayo Saka",
+        team="Arsenal",
+        position="RW",
+        overall_rating=88,
+        pace=86,
+        shooting=80,
+        passing=82,
+        dribbling=88,
+        defending=52,
+        physical=68,
+    ),
+    PlayerAttributes(
+        player_id="ars_2",
+        name="Martin Ødegaard",
+        team="Arsenal",
+        position="CAM",
+        overall_rating=89,
+        pace=72,
+        shooting=82,
+        passing=90,
+        dribbling=88,
+        defending=58,
+        physical=62,
+    ),
+    PlayerAttributes(
+        player_id="ars_3",
+        name="Declan Rice",
+        team="Arsenal",
+        position="CDM",
+        overall_rating=88,
+        pace=72,
+        shooting=72,
+        passing=80,
+        dribbling=78,
+        defending=86,
+        physical=82,
+    ),
+    PlayerAttributes(
+        player_id="ars_4",
+        name="William Saliba",
+        team="Arsenal",
+        position="CB",
+        overall_rating=87,
+        pace=78,
+        shooting=36,
+        passing=62,
+        dribbling=62,
+        defending=88,
+        physical=82,
+    ),
+    PlayerAttributes(
+        player_id="ars_5",
+        name="Gabriel Jesus",
+        team="Arsenal",
+        position="ST",
+        overall_rating=84,
+        pace=84,
+        shooting=80,
+        passing=72,
+        dribbling=86,
+        defending=42,
+        physical=68,
+    ),
+    PlayerAttributes(
+        player_id="ars_6",
+        name="David Raya",
+        team="Arsenal",
+        position="GK",
+        overall_rating=86,
+        pace=48,
+        shooting=12,
+        passing=58,
+        dribbling=16,
+        defending=18,
+        physical=78,
+    ),
+    PlayerAttributes(
+        player_id="ars_7",
+        name="Gabriel Magalhães",
+        team="Arsenal",
+        position="CB",
+        overall_rating=85,
+        pace=72,
+        shooting=52,
+        passing=58,
+        dribbling=52,
+        defending=86,
+        physical=84,
+    ),
+    PlayerAttributes(
+        player_id="ars_8",
+        name="Ben White",
+        team="Arsenal",
+        position="RB",
+        overall_rating=84,
+        pace=78,
+        shooting=48,
+        passing=72,
+        dribbling=72,
+        defending=82,
+        physical=76,
+    ),
+    PlayerAttributes(
+        player_id="ars_9",
+        name="Kai Havertz",
+        team="Arsenal",
+        position="ST",
+        overall_rating=84,
+        pace=72,
+        shooting=78,
+        passing=78,
+        dribbling=82,
+        defending=48,
+        physical=76,
+    ),
+    PlayerAttributes(
+        player_id="ars_10",
+        name="Gabriel Martinelli",
+        team="Arsenal",
+        position="LW",
+        overall_rating=84,
+        pace=92,
+        shooting=78,
+        passing=74,
+        dribbling=84,
+        defending=38,
+        physical=72,
+    ),
+    PlayerAttributes(
+        player_id="ars_11",
+        name="Jurriën Timber",
+        team="Arsenal",
+        position="RB",
+        overall_rating=82,
+        pace=78,
+        shooting=52,
+        passing=72,
+        dribbling=74,
+        defending=82,
+        physical=76,
+    ),
 ]
 
 
 def seed_players(force: bool = False) -> int:
     """
     Seed the ChromaDB with sample player data
-    
+
     Args:
         force: If True, clears existing data and re-seeds
     """
     PlayerVectorStore.initialize()
-    
+
     # Check if already seeded
     current_count = PlayerVectorStore.count()
-    
+
     if force:
         print(f"🔄 Forcing re-seed. Clearing {current_count} existing players...")
         PlayerVectorStore.clear_all()
     elif current_count >= len(SAMPLE_PLAYERS):
         print(f"✅ Database already has {current_count} players. Skipping seed.")
-        print(f"   Use force=True to re-seed with updated data.")
+        print("   Use force=True to re-seed with updated data.")
         return current_count
-    
+
     # Add all players
     PlayerVectorStore.add_players_batch(SAMPLE_PLAYERS)
-    
+
     final_count = PlayerVectorStore.count()
     print(f"🌱 Seeded {final_count} players into ChromaDB")
-    
+
     # Print summary by team
     teams = {}
     for player in SAMPLE_PLAYERS:
         teams[player.team] = teams.get(player.team, 0) + 1
-    
+
     print("\n📊 Players per team:")
     for team, count in sorted(teams.items()):
         print(f"   - {team}: {count} players")
-    
+
     return final_count
 
 
 if __name__ == "__main__":
     import sys
+
     force = "--force" in sys.argv or "-f" in sys.argv
     seed_players(force=force)

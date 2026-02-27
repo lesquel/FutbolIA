@@ -3,11 +3,13 @@ Data Transformer Module
 Fase TRANSFORM del pipeline ETL
 Limpieza, normalización y transformación de datos
 """
-import numpy as np
-from datetime import datetime
-from typing import Dict, List, Optional, Any, Tuple
+
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
+from typing import Any
+
+import numpy as np
 
 from src.core.logger import get_logger
 
@@ -16,15 +18,17 @@ logger = get_logger(__name__)
 
 class DataQuality(Enum):
     """Niveles de calidad de datos"""
-    HIGH = "high"          # >95% completitud, sin anomalías
-    MEDIUM = "medium"      # 80-95% completitud, algunas anomalías
-    LOW = "low"            # <80% completitud, muchas anomalías
-    INVALID = "invalid"    # Datos no utilizables
+
+    HIGH = "high"  # >95% completitud, sin anomalías
+    MEDIUM = "medium"  # 80-95% completitud, algunas anomalías
+    LOW = "low"  # <80% completitud, muchas anomalías
+    INVALID = "invalid"  # Datos no utilizables
 
 
 @dataclass
 class TransformationResult:
     """Resultado de una transformación"""
+
     data: Any
     quality: DataQuality
     rows_input: int
@@ -32,9 +36,9 @@ class TransformationResult:
     rows_dropped: int
     nulls_filled: int
     outliers_detected: int
-    warnings: List[str]
-    
-    def to_dict(self) -> Dict:
+    warnings: list[str]
+
+    def to_dict(self) -> dict:
         return {
             "quality": self.quality.value,
             "rows_input": self.rows_input,
@@ -49,7 +53,7 @@ class TransformationResult:
 class DataTransformer:
     """
     Transformador de datos con técnicas de minería de datos
-    
+
     Operaciones de transformación:
     1. Limpieza de datos (nulls, duplicados, inconsistencias)
     2. Normalización (StandardScaler, MinMaxScaler)
@@ -58,19 +62,18 @@ class DataTransformer:
     5. Feature engineering
     6. Agregaciones y cálculos derivados
     """
-    
+
     # =========================================================================
     # TRANSFORMACIÓN DE STANDINGS (TABLA DE POSICIONES)
     # =========================================================================
-    
+
     @staticmethod
     def transform_standings(
-        raw_data: List[Dict],
-        source: str = "thesportsdb"
+        raw_data: list[dict], source: str = "thesportsdb"
     ) -> TransformationResult:
         """
         Transformar datos raw de standings al formato estándar
-        
+
         Incluye:
         - Normalización de campos
         - Cálculo de métricas derivadas
@@ -80,7 +83,7 @@ class DataTransformer:
         warnings = []
         nulls_filled = 0
         outliers = 0
-        
+
         if not raw_data:
             return TransformationResult(
                 data=[],
@@ -90,11 +93,11 @@ class DataTransformer:
                 rows_dropped=0,
                 nulls_filled=0,
                 outliers_detected=0,
-                warnings=["No hay datos para transformar"]
+                warnings=["No hay datos para transformar"],
             )
-        
+
         transformed = []
-        
+
         for idx, entry in enumerate(raw_data):
             try:
                 # Mapeo de campos según fuente
@@ -104,26 +107,30 @@ class DataTransformer:
                     record = DataTransformer._transform_footballdata_standing(entry, idx)
                 else:
                     record = entry  # Pasar sin transformar
-                
+
                 # Validar campos requeridos
                 required_fields = ["position", "team", "playedGames", "points"]
                 missing = [f for f in required_fields if f not in record or record[f] is None]
-                
+
                 if missing:
                     warnings.append(f"Fila {idx}: campos faltantes {missing}")
                     continue
-                
+
                 # Imputar valores nulos
                 numeric_defaults = {
-                    "won": 0, "draw": 0, "lost": 0,
-                    "goalsFor": 0, "goalsAgainst": 0, "goalDifference": 0
+                    "won": 0,
+                    "draw": 0,
+                    "lost": 0,
+                    "goalsFor": 0,
+                    "goalsAgainst": 0,
+                    "goalDifference": 0,
                 }
-                
+
                 for field, default in numeric_defaults.items():
                     if record.get(field) is None:
                         record[field] = default
                         nulls_filled += 1
-                
+
                 # Calcular métricas derivadas
                 played = max(record.get("playedGames", 1), 1)
                 record["metrics"] = {
@@ -135,28 +142,32 @@ class DataTransformer:
                     "draw_rate": round(record["draw"] / played * 100, 2),
                     "loss_rate": round(record["lost"] / played * 100, 2),
                 }
-                
+
                 # Detectar anomalías
                 if record["points"] > played * 3:
-                    warnings.append(f"Fila {idx}: puntos ({record['points']}) > máximo posible ({played * 3})")
+                    warnings.append(
+                        f"Fila {idx}: puntos ({record['points']}) > máximo posible ({played * 3})"
+                    )
                     outliers += 1
-                
+
                 if record["won"] + record["draw"] + record["lost"] != played:
                     diff = played - (record["won"] + record["draw"] + record["lost"])
-                    warnings.append(f"Fila {idx}: W+D+L no coincide con partidos jugados (diff: {diff})")
+                    warnings.append(
+                        f"Fila {idx}: W+D+L no coincide con partidos jugados (diff: {diff})"
+                    )
                     # Intentar corregir
                     if diff > 0:
                         record["draw"] += diff
                         nulls_filled += 1
-                
+
                 transformed.append(record)
-                
+
             except Exception as e:
                 warnings.append(f"Fila {idx}: Error de transformación - {str(e)}")
-        
+
         # Determinar calidad de datos
         completeness = len(transformed) / len(raw_data) if raw_data else 0
-        
+
         if completeness >= 0.95 and outliers == 0:
             quality = DataQuality.HIGH
         elif completeness >= 0.80:
@@ -165,7 +176,7 @@ class DataTransformer:
             quality = DataQuality.LOW
         else:
             quality = DataQuality.INVALID
-        
+
         return TransformationResult(
             data=transformed,
             quality=quality,
@@ -174,11 +185,11 @@ class DataTransformer:
             rows_dropped=len(raw_data) - len(transformed),
             nulls_filled=nulls_filled,
             outliers_detected=outliers,
-            warnings=warnings
+            warnings=warnings,
         )
-    
+
     @staticmethod
-    def _transform_thesportsdb_standing(entry: Dict, idx: int) -> Dict:
+    def _transform_thesportsdb_standing(entry: dict, idx: int) -> dict:
         """Transformar entrada de TheSportsDB al formato estándar"""
         return {
             "position": int(entry.get("intRank", idx + 1)),
@@ -197,9 +208,9 @@ class DataTransformer:
             "goalDifference": int(entry.get("intGoalDifference", 0)),
             "form": entry.get("strForm", ""),
         }
-    
+
     @staticmethod
-    def _transform_footballdata_standing(entry: Dict, idx: int) -> Dict:
+    def _transform_footballdata_standing(entry: dict, idx: int) -> dict:
         """Transformar entrada de Football-Data.org al formato estándar"""
         team_info = entry.get("team", {})
         return {
@@ -219,22 +230,21 @@ class DataTransformer:
             "goalDifference": entry.get("goalDifference", 0),
             "form": entry.get("form", ""),
         }
-    
+
     # =========================================================================
     # TRANSFORMACIÓN DE PARTIDOS
     # =========================================================================
-    
+
     @staticmethod
     def transform_matches(
-        raw_data: List[Dict],
-        source: str = "thesportsdb"
+        raw_data: list[dict], source: str = "thesportsdb"
     ) -> TransformationResult:
         """
         Transformar datos raw de partidos al formato estándar
         """
         warnings = []
         nulls_filled = 0
-        
+
         if not raw_data:
             return TransformationResult(
                 data=[],
@@ -244,11 +254,11 @@ class DataTransformer:
                 rows_dropped=0,
                 nulls_filled=0,
                 outliers_detected=0,
-                warnings=["No hay datos para transformar"]
+                warnings=["No hay datos para transformar"],
             )
-        
+
         transformed = []
-        
+
         for idx, entry in enumerate(raw_data):
             try:
                 if source == "thesportsdb":
@@ -257,12 +267,12 @@ class DataTransformer:
                     record = DataTransformer._transform_footballdata_match(entry)
                 else:
                     record = entry
-                
+
                 # Validar campos básicos
                 if not record.get("homeTeam") or not record.get("awayTeam"):
                     warnings.append(f"Partido {idx}: equipos faltantes")
                     continue
-                
+
                 # Normalizar fecha
                 if record.get("date"):
                     try:
@@ -274,39 +284,45 @@ class DataTransformer:
                         record["datetime_parsed"] = datetime.strptime(date_str, "%Y-%m-%d")
                     except ValueError:
                         record["datetime_parsed"] = None
-                
+
                 # Determinar estado del partido
                 score = record.get("score", {})
                 if score.get("home") is not None and score.get("away") is not None:
                     record["status"] = "FINISHED"
-                    
+
                     # Calcular resultado
                     home_goals = score["home"]
                     away_goals = score["away"]
-                    
+
                     if home_goals > away_goals:
                         record["result"] = "HOME_WIN"
                     elif away_goals > home_goals:
                         record["result"] = "AWAY_WIN"
                     else:
                         record["result"] = "DRAW"
-                    
+
                     record["total_goals"] = home_goals + away_goals
                 else:
                     record["status"] = record.get("status", "SCHEDULED")
                     record["result"] = None
                     record["total_goals"] = None
-                
+
                 transformed.append(record)
-                
+
             except Exception as e:
                 warnings.append(f"Partido {idx}: Error - {str(e)}")
-        
+
         completeness = len(transformed) / len(raw_data) if raw_data else 0
-        quality = DataQuality.HIGH if completeness >= 0.95 else \
-                  DataQuality.MEDIUM if completeness >= 0.80 else \
-                  DataQuality.LOW if completeness >= 0.50 else DataQuality.INVALID
-        
+        quality = (
+            DataQuality.HIGH
+            if completeness >= 0.95
+            else DataQuality.MEDIUM
+            if completeness >= 0.80
+            else DataQuality.LOW
+            if completeness >= 0.50
+            else DataQuality.INVALID
+        )
+
         return TransformationResult(
             data=transformed,
             quality=quality,
@@ -315,15 +331,15 @@ class DataTransformer:
             rows_dropped=len(raw_data) - len(transformed),
             nulls_filled=nulls_filled,
             outliers_detected=0,
-            warnings=warnings
+            warnings=warnings,
         )
-    
+
     @staticmethod
-    def _transform_thesportsdb_match(entry: Dict) -> Dict:
+    def _transform_thesportsdb_match(entry: dict) -> dict:
         """Transformar partido de TheSportsDB"""
         home_score = entry.get("intHomeScore")
         away_score = entry.get("intAwayScore")
-        
+
         return {
             "id": entry.get("idEvent"),
             "date": entry.get("dateEvent"),
@@ -346,18 +362,20 @@ class DataTransformer:
             "venue": entry.get("strVenue"),
             "status": "FINISHED" if home_score is not None else "SCHEDULED",
         }
-    
+
     @staticmethod
-    def _transform_footballdata_match(entry: Dict) -> Dict:
+    def _transform_footballdata_match(entry: dict) -> dict:
         """Transformar partido de Football-Data.org"""
         score = entry.get("score", {}).get("fullTime", {})
         home_team = entry.get("homeTeam", {})
         away_team = entry.get("awayTeam", {})
-        
+
         return {
             "id": entry.get("id"),
             "date": entry.get("utcDate", "").split("T")[0] if entry.get("utcDate") else None,
-            "time": entry.get("utcDate", "").split("T")[1][:5] if "T" in entry.get("utcDate", "") else "00:00",
+            "time": entry.get("utcDate", "").split("T")[1][:5]
+            if "T" in entry.get("utcDate", "")
+            else "00:00",
             "round": entry.get("matchday"),
             "homeTeam": {
                 "id": home_team.get("id"),
@@ -376,19 +394,16 @@ class DataTransformer:
             "venue": None,  # Football-Data no incluye venue en matches
             "status": entry.get("status", "SCHEDULED"),
         }
-    
+
     # =========================================================================
     # TRANSFORMACIÓN DE EQUIPOS
     # =========================================================================
-    
+
     @staticmethod
-    def transform_teams(
-        raw_data: List[Dict],
-        source: str = "thesportsdb"
-    ) -> TransformationResult:
+    def transform_teams(raw_data: list[dict], source: str = "thesportsdb") -> TransformationResult:
         """Transformar datos de equipos"""
         warnings = []
-        
+
         if not raw_data:
             return TransformationResult(
                 data=[],
@@ -398,11 +413,11 @@ class DataTransformer:
                 rows_dropped=0,
                 nulls_filled=0,
                 outliers_detected=0,
-                warnings=["No hay datos"]
+                warnings=["No hay datos"],
             )
-        
+
         transformed = []
-        
+
         for entry in raw_data:
             if source == "thesportsdb":
                 record = {
@@ -420,15 +435,15 @@ class DataTransformer:
                 }
             else:
                 record = entry
-            
+
             if record.get("name"):
                 transformed.append(record)
             else:
                 warnings.append(f"Equipo sin nombre: {entry.get('id', 'unknown')}")
-        
+
         completeness = len(transformed) / len(raw_data) if raw_data else 0
         quality = DataQuality.HIGH if completeness >= 0.95 else DataQuality.MEDIUM
-        
+
         return TransformationResult(
             data=transformed,
             quality=quality,
@@ -437,11 +452,11 @@ class DataTransformer:
             rows_dropped=len(raw_data) - len(transformed),
             nulls_filled=0,
             outliers_detected=0,
-            warnings=warnings
+            warnings=warnings,
         )
-    
+
     @staticmethod
-    def _safe_int(value) -> Optional[int]:
+    def _safe_int(value) -> int | None:
         """Convertir a int de forma segura"""
         if value is None:
             return None
@@ -449,107 +464,107 @@ class DataTransformer:
             return int(value)
         except (ValueError, TypeError):
             return None
-    
+
     # =========================================================================
     # NORMALIZACIÓN Y FEATURE ENGINEERING
     # =========================================================================
-    
+
     @staticmethod
     def normalize_features(
-        data: List[Dict],
-        features: List[str],
-        method: str = "standard"  # 'standard', 'minmax', 'robust'
-    ) -> Tuple[List[Dict], Dict[str, Dict]]:
+        data: list[dict],
+        features: list[str],
+        method: str = "standard",  # 'standard', 'minmax', 'robust'
+    ) -> tuple[list[dict], dict[str, dict]]:
         """
         Normalizar features numéricas para ML
-        
+
         Args:
             data: Lista de diccionarios con datos
             features: Lista de nombres de features a normalizar
             method: Método de normalización
-            
+
         Returns:
             Tuple con datos normalizados y estadísticas de normalización
         """
         if not data:
             return [], {}
-        
+
         stats = {}
-        
+
         for feature in features:
             values = [d.get(feature) for d in data if d.get(feature) is not None]
-            
+
             if not values:
                 continue
-            
+
             values_array = np.array(values, dtype=float)
-            
+
             if method == "standard":
                 mean = np.mean(values_array)
                 std = np.std(values_array)
                 std = std if std > 0 else 1
-                
+
                 stats[feature] = {"mean": mean, "std": std, "method": "standard"}
-                
+
                 for d in data:
                     if d.get(feature) is not None:
                         d[f"{feature}_normalized"] = (d[feature] - mean) / std
-                        
+
             elif method == "minmax":
                 min_val = np.min(values_array)
                 max_val = np.max(values_array)
                 range_val = max_val - min_val if max_val != min_val else 1
-                
+
                 stats[feature] = {"min": min_val, "max": max_val, "method": "minmax"}
-                
+
                 for d in data:
                     if d.get(feature) is not None:
                         d[f"{feature}_normalized"] = (d[feature] - min_val) / range_val
-                        
+
             elif method == "robust":
                 median = np.median(values_array)
                 q1 = np.percentile(values_array, 25)
                 q3 = np.percentile(values_array, 75)
                 iqr = q3 - q1 if q3 != q1 else 1
-                
+
                 stats[feature] = {"median": median, "iqr": iqr, "method": "robust"}
-                
+
                 for d in data:
                     if d.get(feature) is not None:
                         d[f"{feature}_normalized"] = (d[feature] - median) / iqr
-        
+
         return data, stats
-    
+
     @staticmethod
     def detect_outliers(
-        data: List[Dict],
-        features: List[str],
+        data: list[dict],
+        features: list[str],
         method: str = "iqr",  # 'iqr', 'zscore'
-        threshold: float = 1.5
-    ) -> Tuple[List[Dict], List[int]]:
+        threshold: float = 1.5,
+    ) -> tuple[list[dict], list[int]]:
         """
         Detectar outliers en features numéricas
-        
+
         Returns:
             Tuple con datos marcados y lista de índices con outliers
         """
         outlier_indices = []
-        
+
         for feature in features:
             values = [d.get(feature) for d in data if d.get(feature) is not None]
-            
+
             if not values:
                 continue
-            
+
             values_array = np.array(values, dtype=float)
-            
+
             if method == "iqr":
                 q1 = np.percentile(values_array, 25)
                 q3 = np.percentile(values_array, 75)
                 iqr = q3 - q1
                 lower = q1 - threshold * iqr
                 upper = q3 + threshold * iqr
-                
+
                 for idx, d in enumerate(data):
                     val = d.get(feature)
                     if val is not None and (val < lower or val > upper):
@@ -558,11 +573,11 @@ class DataTransformer:
                             outlier_indices.append(idx)
                     else:
                         d[f"{feature}_is_outlier"] = False
-                        
+
             elif method == "zscore":
                 mean = np.mean(values_array)
                 std = np.std(values_array)
-                
+
                 for idx, d in enumerate(data):
                     val = d.get(feature)
                     if val is not None and std > 0:
@@ -574,34 +589,32 @@ class DataTransformer:
                                 outlier_indices.append(idx)
                         else:
                             d[f"{feature}_is_outlier"] = False
-        
+
         return data, outlier_indices
-    
+
     @staticmethod
     def create_prediction_features(
-        standings: List[Dict],
-        home_team: str,
-        away_team: str
-    ) -> Optional[Dict]:
+        standings: list[dict], home_team: str, away_team: str
+    ) -> dict | None:
         """
         Crear features para modelo de predicción de partidos
         """
         home_data = None
         away_data = None
-        
+
         for entry in standings:
             team_name = entry.get("team", {}).get("name", "").lower()
             if home_team.lower() in team_name:
                 home_data = entry
             elif away_team.lower() in team_name:
                 away_data = entry
-        
+
         if not home_data or not away_data:
             return None
-        
+
         metrics_home = home_data.get("metrics", {})
         metrics_away = away_data.get("metrics", {})
-        
+
         return {
             # Features del equipo local
             "home_position": home_data.get("position", 0),
@@ -611,7 +624,6 @@ class DataTransformer:
             "home_gapg": metrics_home.get("goals_against_per_game", 0),
             "home_win_rate": metrics_home.get("win_rate", 0),
             "home_goal_diff": home_data.get("goalDifference", 0),
-            
             # Features del equipo visitante
             "away_position": away_data.get("position", 0),
             "away_points": away_data.get("points", 0),
@@ -620,13 +632,13 @@ class DataTransformer:
             "away_gapg": metrics_away.get("goals_against_per_game", 0),
             "away_win_rate": metrics_away.get("win_rate", 0),
             "away_goal_diff": away_data.get("goalDifference", 0),
-            
             # Features comparativas
             "position_diff": home_data.get("position", 0) - away_data.get("position", 0),
             "points_diff": home_data.get("points", 0) - away_data.get("points", 0),
-            "goal_diff_diff": home_data.get("goalDifference", 0) - away_data.get("goalDifference", 0),
-            "ppg_diff": metrics_home.get("points_per_game", 0) - metrics_away.get("points_per_game", 0),
-            
+            "goal_diff_diff": home_data.get("goalDifference", 0)
+            - away_data.get("goalDifference", 0),
+            "ppg_diff": metrics_home.get("points_per_game", 0)
+            - metrics_away.get("points_per_game", 0),
             # Ventaja de local (feature binaria)
             "home_advantage": 1,
         }

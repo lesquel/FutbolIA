@@ -10,89 +10,90 @@ Key endpoints:
 - /players/squads?team={id} - Get current squad
 - /teams?country=Ecuador - Get all Ecuadorian teams
 """
-import httpx
-from typing import List, Optional, Dict, Any
-from datetime import datetime
 
+import httpx
+
+from src.core.cache import squad_cache, team_cache
 from src.core.config import settings
-from src.core.cache import team_cache, squad_cache
 from src.domain.entities import Team
 
 
 class APIFootballClient:
     """
     Client for API-Football (api-sports.io) - Real squad data for ALL leagues
-    
+
     Covers:
     - Liga Pro Ecuador (Emelec, Barcelona SC, LDU, Independiente del Valle, etc.)
     - ALL South American leagues
     - European leagues
     - MLS, Liga MX, etc.
     """
-    
+
     BASE_URL = "https://v3.football.api-sports.io"
-    
+
     @classmethod
     def _get_headers(cls) -> dict:
         """Get API headers"""
-        api_key = getattr(settings, 'API_FOOTBALL_KEY', None) or settings.FOOTBALL_DATA_API_KEY
+        api_key = getattr(settings, "API_FOOTBALL_KEY", None) or settings.FOOTBALL_DATA_API_KEY
         return {
             "x-apisports-key": api_key,
             "x-rapidapi-host": "v3.football.api-sports.io",
         }
-    
+
     @classmethod
-    async def search_team(cls, team_name: str) -> Optional[dict]:
+    async def search_team(cls, team_name: str) -> dict | None:
         """
         Search for a team by name
         Returns raw API response with team data
         Uses TTL cache to reduce API calls
         """
         cache_key = f"team_search:{team_name.lower()}"
-        
+
         # Check cache first
         cached_result = await team_cache.get(cache_key)
         if cached_result is not None:
             print(f"✅ Cache hit for team: {team_name}")
             return cached_result
-        
+
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
                 response = await client.get(
                     f"{cls.BASE_URL}/teams",
                     headers=cls._get_headers(),
-                    params={"search": team_name}
+                    params={"search": team_name},
                 )
-                
+
                 if response.status_code == 200:
                     data = response.json()
-                    
+
                     if data.get("errors"):
                         print(f"⚠️ API-Football error: {data['errors']}")
                         return None
-                    
+
                     teams = data.get("response", [])
                     if teams:
                         # Return first match
                         team_data = teams[0]
                         # Cache for 2 hours (7200 seconds)
                         await team_cache.set(cache_key, team_data, ttl=7200)
-                        print(f"✅ Found team: {team_data['team']['name']} (ID: {team_data['team']['id']})")
+                        print(
+                            f"✅ Found team: {team_data['team']['name']} (ID: {team_data['team']['id']})"
+                        )
                         return team_data
-                    
+
                     print(f"⚠️ No teams found for: {team_name}")
-                    
+
         except Exception as e:
             print(f"❌ API-Football search error: {e}")
-        
+
         return None
-    
+
     @classmethod
-    async def get_team_squad(cls, team_id: int) -> List[dict]:
+    async def get_team_squad(cls, team_id: int) -> list[dict]:
         """
         Get current squad for a team
         Returns list of players with their info
-        
+
         Response format per player:
         {
             "id": 123,
@@ -105,28 +106,28 @@ class APIFootballClient:
         Uses TTL cache (30 minutes) since squads change less frequently
         """
         cache_key = f"squad:{team_id}"
-        
+
         # Check cache first
         cached_result = await squad_cache.get(cache_key)
         if cached_result is not None:
             print(f"✅ Cache hit for squad: {team_id}")
             return cached_result
-        
+
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
                 response = await client.get(
                     f"{cls.BASE_URL}/players/squads",
                     headers=cls._get_headers(),
-                    params={"team": team_id}
+                    params={"team": team_id},
                 )
-                
+
                 if response.status_code == 200:
                     data = response.json()
-                    
+
                     if data.get("errors"):
                         print(f"⚠️ API-Football squad error: {data['errors']}")
                         return []
-                    
+
                     squads = data.get("response", [])
                     if squads and squads[0].get("players"):
                         players = squads[0]["players"]
@@ -134,14 +135,14 @@ class APIFootballClient:
                         await squad_cache.set(cache_key, players, ttl=1800)
                         print(f"✅ Found {len(players)} players for team {team_id}")
                         return players
-                        
+
         except Exception as e:
             print(f"❌ API-Football squad error: {e}")
-        
+
         return []
-    
+
     @classmethod
-    async def get_team_with_squad(cls, team_name: str) -> Optional[dict]:
+    async def get_team_with_squad(cls, team_name: str) -> dict | None:
         """
         Get team info AND full squad in one call sequence
         Returns:
@@ -154,10 +155,10 @@ class APIFootballClient:
         team_data = await cls.search_team(team_name)
         if not team_data:
             return None
-        
+
         team_info = team_data["team"]
-        venue = team_data.get("venue", {})
-        
+        team_data.get("venue", {})
+
         team = Team(
             id=f"apif_{team_info['id']}",
             name=team_info["name"],
@@ -165,10 +166,10 @@ class APIFootballClient:
             logo_url=team_info.get("logo", ""),
             country=team_info.get("country", ""),
         )
-        
+
         # Then get the squad
         players = await cls.get_team_squad(team_info["id"])
-        
+
         # Convert to our format with estimated overall ratings
         player_list = []
         for p in players:
@@ -183,25 +184,28 @@ class APIFootballClient:
                 base_overall = 75
             elif position == "Attacker":
                 base_overall = 76
-            
+
             # Add some variation
             import random
+
             overall = base_overall + random.randint(-3, 5)
-            
-            player_list.append({
-                "name": p["name"],
-                "position": cls._map_position(position),
-                "overall": min(88, max(65, overall)),
-                "number": p.get("number"),
-                "age": p.get("age"),
-                "photo": p.get("photo"),
-            })
-        
+
+            player_list.append(
+                {
+                    "name": p["name"],
+                    "position": cls._map_position(position),
+                    "overall": min(88, max(65, overall)),
+                    "number": p.get("number"),
+                    "age": p.get("age"),
+                    "photo": p.get("photo"),
+                }
+            )
+
         return {
             "team": team,
             "players": player_list,
         }
-    
+
     @staticmethod
     def _map_position(api_position: str) -> str:
         """Map API-Football positions to our format"""
@@ -212,32 +216,30 @@ class APIFootballClient:
             "Attacker": "FW",
         }
         return position_map.get(api_position, "CM")
-    
+
     @classmethod
-    async def get_country_teams(cls, country: str = "Ecuador") -> List[dict]:
+    async def get_country_teams(cls, country: str = "Ecuador") -> list[dict]:
         """Get all teams from a specific country"""
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
                 response = await client.get(
-                    f"{cls.BASE_URL}/teams",
-                    headers=cls._get_headers(),
-                    params={"country": country}
+                    f"{cls.BASE_URL}/teams", headers=cls._get_headers(), params={"country": country}
                 )
-                
+
                 if response.status_code == 200:
                     data = response.json()
                     return data.get("response", [])
-                    
+
         except Exception as e:
             print(f"❌ API-Football country teams error: {e}")
-        
+
         return []
-    
+
     @classmethod
-    async def get_fixtures(cls, league_id: int = 242, season: int = 2024) -> List[dict]:
+    async def get_fixtures(cls, league_id: int = 242, season: int = 2024) -> list[dict]:
         """
         Get fixtures for a league
-        
+
         Ecuador Liga Pro ID: 242
         """
         try:
@@ -249,16 +251,16 @@ class APIFootballClient:
                         "league": league_id,
                         "season": season,
                         "next": 10,  # Next 10 matches
-                    }
+                    },
                 )
-                
+
                 if response.status_code == 200:
                     data = response.json()
                     return data.get("response", [])
-                    
+
         except Exception as e:
             print(f"❌ API-Football fixtures error: {e}")
-        
+
         return []
 
 

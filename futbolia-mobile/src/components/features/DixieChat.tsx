@@ -1,7 +1,7 @@
 /**
  * GoalMindChat - The AI assistant chat component
  */
-import { useState, useRef, useEffect, memo } from "react";
+import { useState, useRef, useEffect, memo } from 'react';
 import {
   View,
   ScrollView,
@@ -10,11 +10,11 @@ import {
   ActivityIndicator,
   Image,
   useWindowDimensions,
-} from "react-native";
-import { Sparkles, Trophy } from "lucide-react-native";
-import { useTheme } from "@/src/theme";
-import { useTranslation } from "@/src/i18n/i18n";
-import { ThemedText, Card, Icon } from "@/src/components/ui";
+} from 'react-native';
+import { Sparkles, Trophy } from 'lucide-react-native';
+import { useTheme } from '@/src/theme';
+import { useTranslation } from '@/src/i18n/i18n';
+import { ThemedText, Card, Icon } from '@/src/components/ui';
 
 interface GoalMindChatProps {
   message?: string;
@@ -39,7 +39,7 @@ export const GoalMindChat = memo(function GoalMindChat({
   const isLargeScreen = isTablet || isDesktop;
 
   // Typing animation
-  const [displayedText, setDisplayedText] = useState("");
+  const [displayedText, setDisplayedText] = useState('');
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -54,7 +54,7 @@ export const GoalMindChat = memo(function GoalMindChat({
   // Typing effect for messages
   useEffect(() => {
     if (message && !isLoading) {
-      setDisplayedText("");
+      setDisplayedText('');
       let index = 0;
       const interval = setInterval(() => {
         if (index < message.length) {
@@ -69,7 +69,7 @@ export const GoalMindChat = memo(function GoalMindChat({
     }
   }, [message, isLoading]);
 
-  const greeting = t("dixie.greeting");
+  const greeting = t('dixie.greeting');
 
   // Modo compacto: una sola línea horizontal
   if (compact) {
@@ -86,7 +86,7 @@ export const GoalMindChat = memo(function GoalMindChat({
           ]}
         >
           <Image
-            source={require("../../../assets/images/GoalMind.png")}
+            source={require('../../../assets/images/GoalMind.png')}
             style={[
               styles.compactAvatar,
               isLargeScreen && styles.compactAvatarLarge,
@@ -94,15 +94,11 @@ export const GoalMindChat = memo(function GoalMindChat({
             ]}
           />
           <View style={styles.compactInfo}>
-            <ThemedText weight="semibold" size={isLargeScreen ? "base" : "sm"}>
+            <ThemedText weight="semibold" size={isLargeScreen ? 'base' : 'sm'}>
               GoalMind
             </ThemedText>
-            <ThemedText
-              variant="muted"
-              size={isLargeScreen ? "sm" : "xs"}
-              numberOfLines={1}
-            >
-              {isLoading ? t("dixie.analyzing") : message || greeting}
+            <ThemedText variant="muted" size={isLargeScreen ? 'sm' : 'xs'} numberOfLines={1}>
+              {isLoading ? t('dixie.analyzing') : message || greeting}
             </ThemedText>
           </View>
           <View
@@ -119,42 +115,30 @@ export const GoalMindChat = memo(function GoalMindChat({
 
   return (
     <Animated.View
-      style={[
-        styles.container,
-        isLargeScreen && styles.containerLarge,
-        { opacity: fadeAnim },
-      ]}
+      style={[styles.container, isLargeScreen && styles.containerLarge, { opacity: fadeAnim }]}
     >
       <Card variant="outlined" padding="md">
         {/* GoalMind Avatar */}
         <View style={[styles.header, isLargeScreen && styles.headerLarge]}>
           <Image
-            source={require("../../../assets/images/GoalMind.png")}
+            source={require('../../../assets/images/GoalMind.png')}
             style={[
               styles.avatar,
               isLargeScreen && styles.avatarLarge,
               {
                 backgroundColor: isDark
-                  ? theme.colors.primary + "20"
-                  : theme.colors.primaryLight + "30",
+                  ? theme.colors.primary + '20'
+                  : theme.colors.primaryLight + '30',
                 borderColor: theme.colors.primary,
               },
             ]}
           />
 
           <View style={styles.headerInfo}>
-            <ThemedText
-              weight="bold"
-              size={isLargeScreen ? "xl" : "lg"}
-              numberOfLines={1}
-            >
+            <ThemedText weight="bold" size={isLargeScreen ? 'xl' : 'lg'} numberOfLines={1}>
               GoalMind
             </ThemedText>
-            <ThemedText
-              variant="primary"
-              size={isLargeScreen ? "sm" : "xs"}
-              numberOfLines={1}
-            >
+            <ThemedText variant="primary" size={isLargeScreen ? 'sm' : 'xs'} numberOfLines={1}>
               Analista Deportivo IA
             </ThemedText>
           </View>
@@ -168,7 +152,7 @@ export const GoalMindChat = memo(function GoalMindChat({
                 { backgroundColor: theme.colors.success },
               ]}
             />
-            <ThemedText variant="muted" size={isLargeScreen ? "sm" : "xs"}>
+            <ThemedText variant="muted" size={isLargeScreen ? 'sm' : 'xs'}>
               Online
             </ThemedText>
           </View>
@@ -190,38 +174,30 @@ export const GoalMindChat = memo(function GoalMindChat({
             <View style={styles.loadingContainer}>
               <ActivityIndicator
                 color={theme.colors.primary}
-                size={isLargeScreen ? "large" : "small"}
+                size={isLargeScreen ? 'large' : 'small'}
               />
               <ThemedText
                 variant="muted"
-                size={isLargeScreen ? "base" : "sm"}
+                size={isLargeScreen ? 'base' : 'sm'}
                 style={styles.loadingText}
               >
-                {t("dixie.analyzing")}
+                {t('dixie.analyzing')}
               </ThemedText>
             </View>
           ) : (
             <View style={styles.chatContent}>
               {showGreeting && !message && (
                 <View style={styles.greetingIcon}>
-                  <Icon
-                    icon={Trophy}
-                    size={isLargeScreen ? 20 : 16}
-                    variant="primary"
-                  />
+                  <Icon icon={Trophy} size={isLargeScreen ? 20 : 16} variant="primary" />
                 </View>
               )}
               <ThemedText
                 variant="secondary"
-                size={isLargeScreen ? "base" : "sm"}
+                size={isLargeScreen ? 'base' : 'sm'}
                 style={[styles.chatText, isLargeScreen && styles.chatTextLarge]}
                 numberOfLines={undefined}
               >
-                {message
-                  ? displayedText
-                  : showGreeting
-                    ? greeting
-                    : t("dixie.ready")}
+                {message ? displayedText : showGreeting ? greeting : t('dixie.ready')}
                 {message && displayedText.length < message.length && (
                   <ThemedText variant="primary">▋</ThemedText>
                 )}
@@ -239,8 +215,8 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 8,
   },
   avatar: {
@@ -248,16 +224,16 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     borderWidth: 2,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerInfo: {
     flex: 1,
     marginLeft: 12,
   },
   onlineIndicator: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 6,
   },
   onlineDot: {
@@ -272,8 +248,8 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   chatContent: {
-    flexDirection: "row",
-    alignItems: "flex-start",
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     gap: 8,
   },
   greetingIcon: {
@@ -284,20 +260,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   loadingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
   },
   loadingText: {
-    fontStyle: "italic",
+    fontStyle: 'italic',
   },
   // Estilos compactos
   compactContainer: {
     marginBottom: 6,
   },
   compactCard: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     borderRadius: 10,
     borderWidth: 1,
     padding: 8,

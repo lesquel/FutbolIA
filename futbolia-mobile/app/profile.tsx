@@ -2,7 +2,7 @@
  * FutbolIA - Profile Screen
  * User profile management with favorite teams
  */
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -11,20 +11,14 @@ import {
   Alert,
   Image,
   useWindowDimensions,
-} from "react-native";
-import { useRouter } from "expo-router";
-import { useTranslation } from "react-i18next";
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
-import { useTheme } from "@/src/theme";
-import { useAuth } from "@/src/context";
-import {
-  ThemedView,
-  ThemedText,
-  Card,
-  Button,
-  Icon,
-} from "@/src/components/ui";
-import { BarChart3, Trophy, Settings } from "lucide-react-native";
+import { useTheme } from '@/src/theme';
+import { useAuth } from '@/src/context';
+import { ThemedView, ThemedText, Card, Button, Icon } from '@/src/components/ui';
+import { BarChart3, Trophy, Settings } from 'lucide-react-native';
 
 export default function ProfileScreen() {
   const { theme } = useTheme();
@@ -40,7 +34,7 @@ export default function ProfileScreen() {
     totalPredictions: 47,
     correctPredictions: 32,
     streak: 5,
-    favoriteLeague: "La Liga",
+    favoriteLeague: 'La Liga',
   });
 
   const accuracy =
@@ -49,14 +43,14 @@ export default function ProfileScreen() {
       : 0;
 
   const handleLogout = () => {
-    Alert.alert(t("profile.logoutTitle"), t("profile.logoutMessage"), [
-      { text: t("common.cancel"), style: "cancel" },
+    Alert.alert(t('profile.logoutTitle'), t('profile.logoutMessage'), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: t("profile.logout"),
-        style: "destructive",
+        text: t('profile.logout'),
+        style: 'destructive',
         onPress: () => {
           void logout().then(() => {
-            router.replace("/login");
+            router.replace('/login');
           });
         },
       },
@@ -72,21 +66,21 @@ export default function ProfileScreen() {
             👤
           </ThemedText>
           <ThemedText size="xl" weight="semibold" style={styles.notAuthTitle}>
-            {t("profile.notLoggedIn")}
+            {t('profile.notLoggedIn')}
           </ThemedText>
           <ThemedText variant="secondary" style={styles.notAuthSubtitle}>
-            {t("profile.loginPrompt")}
+            {t('profile.loginPrompt')}
           </ThemedText>
           <Button
-            title={t("auth.login")}
+            title={t('auth.login')}
             variant="primary"
             size="lg"
-            onPress={() => router.push("/login")}
+            onPress={() => router.push('/login')}
             style={styles.loginButton}
           />
-          <TouchableOpacity onPress={() => router.push("/register")}>
+          <TouchableOpacity onPress={() => router.push('/register')}>
             <ThemedText variant="primary">
-              {t("auth.noAccount")} {t("auth.registerNow")}
+              {t('auth.noAccount')} {t('auth.registerNow')}
             </ThemedText>
           </TouchableOpacity>
         </View>
@@ -100,23 +94,19 @@ export default function ProfileScreen() {
         {/* Profile Header */}
         <Card variant="elevated" padding="lg" style={styles.profileCard}>
           <View style={styles.avatarContainer}>
-            <View
-              style={[styles.avatar, { backgroundColor: theme.colors.primary }]}
-            >
-              <ThemedText size="3xl" weight="bold" style={{ color: "#fff" }}>
-                {user?.username?.[0]?.toUpperCase() || "U"}
+            <View style={[styles.avatar, { backgroundColor: theme.colors.primary }]}>
+              <ThemedText size="3xl" weight="bold" style={{ color: '#fff' }}>
+                {user?.username?.[0]?.toUpperCase() || 'U'}
               </ThemedText>
             </View>
             <View style={styles.userInfo}>
               <ThemedText size="xl" weight="bold">
-                {user?.username || "Usuario"}
+                {user?.username || 'Usuario'}
               </ThemedText>
-              <ThemedText variant="secondary">
-                {user?.email || "email@example.com"}
-              </ThemedText>
+              <ThemedText variant="secondary">{user?.email || 'email@example.com'}</ThemedText>
               <View style={styles.memberBadge}>
                 <ThemedText size="xs" style={{ color: theme.colors.primary }}>
-                  ⭐ {t("profile.member")}
+                  ⭐ {t('profile.member')}
                 </ThemedText>
               </View>
             </View>
@@ -128,47 +118,35 @@ export default function ProfileScreen() {
           <View style={styles.statsTitleRow}>
             <Icon icon={BarChart3} size={18} variant="primary" />
             <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
-              {t("profile.statistics")}
+              {t('profile.statistics')}
             </ThemedText>
           </View>
 
           <View style={styles.statsGrid}>
             <Card variant="outlined" padding="md" style={styles.statCard}>
-              <ThemedText
-                size="2xl"
-                weight="bold"
-                style={{ color: theme.colors.primary }}
-              >
+              <ThemedText size="2xl" weight="bold" style={{ color: theme.colors.primary }}>
                 {stats.totalPredictions}
               </ThemedText>
               <ThemedText variant="secondary" size="sm">
-                {t("profile.totalPredictions")}
+                {t('profile.totalPredictions')}
               </ThemedText>
             </Card>
 
             <Card variant="outlined" padding="md" style={styles.statCard}>
-              <ThemedText
-                size="2xl"
-                weight="bold"
-                style={{ color: theme.colors.success }}
-              >
+              <ThemedText size="2xl" weight="bold" style={{ color: theme.colors.success }}>
                 {accuracy}%
               </ThemedText>
               <ThemedText variant="secondary" size="sm">
-                {t("profile.accuracy")}
+                {t('profile.accuracy')}
               </ThemedText>
             </Card>
 
             <Card variant="outlined" padding="md" style={styles.statCard}>
-              <ThemedText
-                size="2xl"
-                weight="bold"
-                style={{ color: theme.colors.warning }}
-              >
+              <ThemedText size="2xl" weight="bold" style={{ color: theme.colors.warning }}>
                 🔥 {stats.streak}
               </ThemedText>
               <ThemedText variant="secondary" size="sm">
-                {t("profile.streak")}
+                {t('profile.streak')}
               </ThemedText>
             </Card>
 
@@ -186,7 +164,7 @@ export default function ProfileScreen() {
           <View style={styles.statsTitleRow}>
             <Icon icon={Settings} size={18} variant="primary" />
             <ThemedText size="lg" weight="semibold" style={styles.sectionTitle}>
-              {t("profile.account")}
+              {t('profile.account')}
             </ThemedText>
           </View>
 
@@ -198,37 +176,24 @@ export default function ProfileScreen() {
               }}
             >
               <ThemedText>✏️</ThemedText>
-              <ThemedText style={styles.actionText}>
-                {t("profile.editProfile")}
-              </ThemedText>
+              <ThemedText style={styles.actionText}>{t('profile.editProfile')}</ThemedText>
               <ThemedText variant="muted">→</ThemedText>
             </TouchableOpacity>
 
-            <View
-              style={[styles.divider, { backgroundColor: theme.colors.border }]}
-            />
+            <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
-            <TouchableOpacity
-              style={styles.actionRow}
-              onPress={() => router.push("/settings")}
-            >
+            <TouchableOpacity style={styles.actionRow} onPress={() => router.push('/settings')}>
               <Icon icon={Settings} size={20} variant="primary" />
-              <ThemedText style={styles.actionText}>
-                {t("profile.settings")}
-              </ThemedText>
+              <ThemedText style={styles.actionText}>{t('profile.settings')}</ThemedText>
               <ThemedText variant="muted">→</ThemedText>
             </TouchableOpacity>
 
-            <View
-              style={[styles.divider, { backgroundColor: theme.colors.border }]}
-            />
+            <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
             <TouchableOpacity style={styles.actionRow} onPress={handleLogout}>
               <ThemedText>🚪</ThemedText>
-              <ThemedText
-                style={[styles.actionText, { color: theme.colors.error }]}
-              >
-                {t("profile.logout")}
+              <ThemedText style={[styles.actionText, { color: theme.colors.error }]}>
+                {t('profile.logout')}
               </ThemedText>
               <ThemedText style={{ color: theme.colors.error }}>→</ThemedText>
             </TouchableOpacity>
@@ -250,8 +215,8 @@ const styles = StyleSheet.create({
   },
   notAuthContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: 32,
     paddingVertical: 48,
   },
@@ -260,11 +225,11 @@ const styles = StyleSheet.create({
   },
   notAuthTitle: {
     marginBottom: 12,
-    textAlign: "center",
+    textAlign: 'center',
   },
   notAuthSubtitle: {
     marginBottom: 28,
-    textAlign: "center",
+    textAlign: 'center',
     lineHeight: 22,
   },
   loginButton: {
@@ -275,15 +240,15 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   avatarContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   avatar: {
     width: 76,
     height: 76,
     borderRadius: 38,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 18,
   },
   userInfo: {
@@ -300,26 +265,26 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statsTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
     marginBottom: 14,
   },
   sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 14,
   },
   statsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 14,
   },
   statCard: {
     flex: 1,
-    minWidth: "45%",
-    alignItems: "center",
+    minWidth: '45%',
+    alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 12,
   },
@@ -330,15 +295,15 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   teamRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   teamLogo: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 14,
   },
   teamLogoImage: {
@@ -352,17 +317,17 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   emptyTeams: {
-    alignItems: "center",
+    alignItems: 'center',
     gap: 14,
     paddingVertical: 20,
   },
   emptyText: {
-    textAlign: "center",
+    textAlign: 'center',
     lineHeight: 22,
   },
   actionRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 18,
     gap: 14,
   },

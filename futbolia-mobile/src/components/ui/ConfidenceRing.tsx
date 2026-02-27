@@ -1,10 +1,10 @@
 /**
  * ConfidenceRing - Circular progress indicator for prediction confidence
  */
-import { View, StyleSheet } from "react-native";
-import Svg, { Circle, G } from "react-native-svg";
-import { useTheme } from "@/src/theme";
-import { ThemedText } from "./ThemedText";
+import { View, StyleSheet } from 'react-native';
+import Svg, { Circle, G } from 'react-native-svg';
+import { useTheme } from '@/src/theme';
+import { ThemedText } from './ThemedText';
 
 interface ConfidenceRingProps {
   percentage: number;
@@ -35,10 +35,7 @@ export function ConfidenceRing({
   return (
     <View style={styles.container}>
       <Svg width={size} height={size}>
-        <G 
-          rotation="-90" 
-          origin={[size / 2, size / 2]}
-        >
+        <G rotation="-90" origin={[size / 2, size / 2]}>
           {/* Background circle */}
           <Circle
             cx={size / 2}
@@ -80,13 +77,13 @@ export function ConfidenceRing({
 
 const styles = StyleSheet.create({
   container: {
-    position: "relative",
-    alignItems: "center",
-    justifyContent: "center",
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   center: {
-    position: "absolute",
-    alignItems: "center",
-    justifyContent: "center",
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

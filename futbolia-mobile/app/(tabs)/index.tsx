@@ -2,7 +2,7 @@
  * GoalMind - Home Screen
  * Dashboard principal con scroll para móvil, layout de dos columnas para tablet
  */
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -12,22 +12,15 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
-} from "react-native";
-import { useRouter } from "expo-router";
-import { useTranslation } from "react-i18next";
-import { Sparkles, Trophy, ChevronRight } from "lucide-react-native";
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import { Sparkles, Trophy, ChevronRight } from 'lucide-react-native';
 
-import { useTheme } from "@/src/theme";
-import {
-  ThemedView,
-  ThemedText,
-  Card,
-  Button,
-  Icon,
-  TeamBadge,
-} from "@/src/components/ui";
-import { GoalMindChat, LeagueTable } from "@/src/components/features";
-import { predictionsApi, Match } from "@/src/services/api";
+import { useTheme } from '@/src/theme';
+import { ThemedView, ThemedText, Card, Button, Icon, TeamBadge } from '@/src/components/ui';
+import { GoalMindChat, LeagueTable } from '@/src/components/features';
+import { predictionsApi, Match } from '@/src/services/api';
 
 export default function HomeScreen() {
   const { theme } = useTheme();
@@ -69,7 +62,7 @@ export default function HomeScreen() {
         setMatches(response.data.matches);
       }
     } catch (error) {
-      console.log("Error loading matches:", error);
+      console.log('Error loading matches:', error);
     } finally {
       setLoading(false);
     }
@@ -77,7 +70,7 @@ export default function HomeScreen() {
 
   const handleMatchPress = (match: Match) => {
     router.push({
-      pathname: "/predict",
+      pathname: '/predict',
       params: {
         homeTeam: match.home_team.name,
         awayTeam: match.away_team.name,
@@ -95,17 +88,17 @@ export default function HomeScreen() {
   const formatMatchDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) return "";
-      return date.toLocaleDateString("es-EC", {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-        hour: "2-digit",
-        minute: "2-digit",
-        timeZone: "America/Guayaquil",
+      if (isNaN(date.getTime())) return '';
+      return date.toLocaleDateString('es-EC', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'America/Guayaquil',
       });
     } catch {
-      return "";
+      return '';
     }
   };
 
@@ -121,9 +114,7 @@ export default function HomeScreen() {
 
   // En móvil usamos ScrollView, en tablet layout de dos columnas sin scroll
   const ContentWrapper = isLargeScreen ? View : ScrollView;
-  const contentWrapperProps = isLargeScreen
-    ? {}
-    : { showsVerticalScrollIndicator: false };
+  const contentWrapperProps = isLargeScreen ? {} : { showsVerticalScrollIndicator: false };
 
   return (
     <ThemedView variant="background" style={styles.container}>
@@ -152,7 +143,7 @@ export default function HomeScreen() {
           {/* Header */}
           <View style={[styles.header, isLargeScreen && styles.headerLarge]}>
             <Image
-              source={require("../../assets/images/GoalMind.png")}
+              source={require('../../assets/images/GoalMind.png')}
               style={{
                 width: responsiveStyles.logoSize,
                 height: responsiveStyles.logoSize,
@@ -160,14 +151,11 @@ export default function HomeScreen() {
               resizeMode="contain"
             />
             <View style={styles.headerText}>
-              <ThemedText size={isLargeScreen ? "xl" : "lg"} weight="bold">
-                {t("home.welcome")}
+              <ThemedText size={isLargeScreen ? 'xl' : 'lg'} weight="bold">
+                {t('home.welcome')}
               </ThemedText>
-              <ThemedText
-                variant="secondary"
-                size={isLargeScreen ? "sm" : "xs"}
-              >
-                {t("home.subtitle")}
+              <ThemedText variant="secondary" size={isLargeScreen ? 'sm' : 'xs'}>
+                {t('home.subtitle')}
               </ThemedText>
             </View>
           </View>
@@ -190,61 +178,44 @@ export default function HomeScreen() {
               activeOpacity={0.7}
             >
               <View style={styles.matchHeader}>
-                <ThemedText variant="muted" size={isLargeScreen ? "sm" : "xs"}>
+                <ThemedText variant="muted" size={isLargeScreen ? 'sm' : 'xs'}>
                   {featuredMatch.league}
                 </ThemedText>
-                <ThemedText variant="muted" size={isLargeScreen ? "sm" : "xs"}>
-                  {new Date(featuredMatch.date).toLocaleDateString("es-EC", {
-                    weekday: "short",
-                    day: "numeric",
-                    month: "short",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    timeZone: "America/Guayaquil",
+                <ThemedText variant="muted" size={isLargeScreen ? 'sm' : 'xs'}>
+                  {new Date(featuredMatch.date).toLocaleDateString('es-EC', {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZone: 'America/Guayaquil',
                   })}
                 </ThemedText>
               </View>
-              <View
-                style={[
-                  styles.matchTeams,
-                  isLargeScreen && styles.matchTeamsLarge,
-                ]}
-              >
+              <View style={[styles.matchTeams, isLargeScreen && styles.matchTeamsLarge]}>
                 <TeamBadge
                   name={featuredMatch.home_team.name}
                   logoUrl={featuredMatch.home_team.logo_url}
-                  size={isLargeScreen ? "lg" : "md"}
+                  size={isLargeScreen ? 'lg' : 'md'}
                 />
-                <ThemedText
-                  variant="primary"
-                  weight="bold"
-                  size={isLargeScreen ? "xl" : "lg"}
-                >
+                <ThemedText variant="primary" weight="bold" size={isLargeScreen ? 'xl' : 'lg'}>
                   VS
                 </ThemedText>
                 <TeamBadge
                   name={featuredMatch.away_team.name}
                   logoUrl={featuredMatch.away_team.logo_url}
-                  size={isLargeScreen ? "lg" : "md"}
+                  size={isLargeScreen ? 'lg' : 'md'}
                 />
               </View>
               <View
                 style={[
                   styles.predictBadge,
                   isLargeScreen && styles.predictBadgeLarge,
-                  { backgroundColor: theme.colors.primary + "20" },
+                  { backgroundColor: theme.colors.primary + '20' },
                 ]}
               >
-                <Icon
-                  icon={Sparkles}
-                  size={isLargeScreen ? 18 : 14}
-                  variant="primary"
-                />
-                <ThemedText
-                  variant="primary"
-                  size={isLargeScreen ? "sm" : "xs"}
-                  weight="semibold"
-                >
+                <Icon icon={Sparkles} size={isLargeScreen ? 18 : 14} variant="primary" />
+                <ThemedText variant="primary" size={isLargeScreen ? 'sm' : 'xs'} weight="semibold">
                   Predecir
                 </ThemedText>
               </View>
@@ -252,24 +223,19 @@ export default function HomeScreen() {
           )}
 
           {/* Botones de Acción */}
-          <View
-            style={[
-              styles.actionButtons,
-              isLargeScreen && styles.actionButtonsLarge,
-            ]}
-          >
+          <View style={[styles.actionButtons, isLargeScreen && styles.actionButtonsLarge]}>
             <Button
-              title={t("home.quickPredict")}
+              title={t('home.quickPredict')}
               variant="primary"
-              size={isLargeScreen ? "lg" : "sm"}
+              size={isLargeScreen ? 'lg' : 'sm'}
               fullWidth
-              onPress={() => router.push("/predict")}
+              onPress={() => router.push('/predict')}
               icon={Sparkles}
             />
             <Button
               title="Tabla de Posiciones"
               variant="outline"
-              size={isLargeScreen ? "lg" : "sm"}
+              size={isLargeScreen ? 'lg' : 'sm'}
               fullWidth
               onPress={() => setShowLeagueTable(true)}
               icon={Trophy}
@@ -285,14 +251,12 @@ export default function HomeScreen() {
             isDesktop && styles.sideColumnDesktop,
           ]}
         >
-          <View
-            style={[styles.sideHeader, isLargeScreen && styles.sideHeaderLarge]}
-          >
-            <ThemedText size={isLargeScreen ? "lg" : "sm"} weight="semibold">
+          <View style={[styles.sideHeader, isLargeScreen && styles.sideHeaderLarge]}>
+            <ThemedText size={isLargeScreen ? 'lg' : 'sm'} weight="semibold">
               Próximos Partidos
             </ThemedText>
-            <TouchableOpacity onPress={() => router.push("/predict")}>
-              <ThemedText variant="primary" size={isLargeScreen ? "sm" : "xs"}>
+            <TouchableOpacity onPress={() => router.push('/predict')}>
+              <ThemedText variant="primary" size={isLargeScreen ? 'sm' : 'xs'}>
                 Ver más
               </ThemedText>
             </TouchableOpacity>
@@ -314,60 +278,42 @@ export default function HomeScreen() {
             >
               <View style={styles.miniMatchInfo}>
                 <View style={styles.miniMatchHeader}>
-                  <ThemedText
-                    variant="muted"
-                    size={isLargeScreen ? "sm" : "xs"}
-                  >
+                  <ThemedText variant="muted" size={isLargeScreen ? 'sm' : 'xs'}>
                     {match.league}
                   </ThemedText>
-                  <ThemedText
-                    variant="primary"
-                    size={isLargeScreen ? "sm" : "xs"}
-                  >
+                  <ThemedText variant="primary" size={isLargeScreen ? 'sm' : 'xs'}>
                     {formatMatchDate(match.date)}
                   </ThemedText>
                 </View>
                 <View style={styles.miniMatchTeams}>
                   <ThemedText
-                    size={isLargeScreen ? "base" : "sm"}
+                    size={isLargeScreen ? 'base' : 'sm'}
                     weight="medium"
                     numberOfLines={1}
                     style={{ flex: 1 }}
                   >
-                    {match.home_team.name.replace(" FC", "")}
+                    {match.home_team.name.replace(' FC', '')}
                   </ThemedText>
-                  <ThemedText
-                    variant="primary"
-                    size={isLargeScreen ? "sm" : "xs"}
-                    weight="bold"
-                  >
+                  <ThemedText variant="primary" size={isLargeScreen ? 'sm' : 'xs'} weight="bold">
                     vs
                   </ThemedText>
                   <ThemedText
-                    size={isLargeScreen ? "base" : "sm"}
+                    size={isLargeScreen ? 'base' : 'sm'}
                     weight="medium"
                     numberOfLines={1}
-                    style={{ flex: 1, textAlign: "right" }}
+                    style={{ flex: 1, textAlign: 'right' }}
                   >
-                    {match.away_team.name.replace(" FC", "")}
+                    {match.away_team.name.replace(' FC', '')}
                   </ThemedText>
                 </View>
               </View>
-              <Icon
-                icon={ChevronRight}
-                size={isLargeScreen ? 20 : 16}
-                variant="muted"
-              />
+              <Icon icon={ChevronRight} size={isLargeScreen ? 20 : 16} variant="muted" />
             </TouchableOpacity>
           ))}
 
           {otherMatches.length === 0 && (
             <Card padding="sm">
-              <ThemedText
-                variant="muted"
-                size="xs"
-                style={{ textAlign: "center" }}
-              >
+              <ThemedText variant="muted" size="xs" style={{ textAlign: 'center' }}>
                 No hay más partidos
               </ThemedText>
             </Card>
@@ -376,10 +322,7 @@ export default function HomeScreen() {
       </ContentWrapper>
 
       {/* League Table Modal */}
-      <LeagueTable
-        visible={showLeagueTable}
-        onClose={() => setShowLeagueTable(false)}
-      />
+      <LeagueTable visible={showLeagueTable} onClose={() => setShowLeagueTable(false)} />
     </ThemedView>
   );
 }
@@ -390,18 +333,18 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   content: {
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 24,
-    flexDirection: "column",
+    flexDirection: 'column',
   },
   contentTablet: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 16,
   },
   mainColumn: {
@@ -418,8 +361,8 @@ const styles = StyleSheet.create({
     marginTop: 0,
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
     marginBottom: 12,
     paddingVertical: 4,
@@ -438,24 +381,24 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   matchHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 12,
-    flexWrap: "wrap",
+    flexWrap: 'wrap',
     gap: 4,
   },
   matchTeams: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-around",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
     marginBottom: 12,
     paddingHorizontal: 8,
   },
   predictBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 6,
     paddingVertical: 10,
     paddingHorizontal: 16,
@@ -466,15 +409,15 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sideHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 10,
     paddingHorizontal: 4,
   },
   miniMatch: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     borderRadius: 12,
     borderWidth: 1,
     padding: 12,
@@ -485,27 +428,27 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   miniMatchHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 4,
-    flexWrap: "wrap",
+    flexWrap: 'wrap',
     gap: 4,
   },
   miniMatchTeams: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
-    flexWrap: "wrap",
+    flexWrap: 'wrap',
   },
   // ==========================================
   // RESPONSIVE STYLES FOR TABLETS AND DESKTOP
   // ==========================================
   contentDesktop: {
-    flexDirection: "row",
+    flexDirection: 'row',
     maxWidth: 1400,
-    alignSelf: "center",
-    width: "100%",
+    alignSelf: 'center',
+    width: '100%',
   },
   mainColumnDesktop: {
     flex: 0.55,

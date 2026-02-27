@@ -1,42 +1,37 @@
 /**
  * Button - Themed button component with variants
  */
-import React from "react";
-import {
-  TouchableOpacity,
-  TouchableOpacityProps,
-  ActivityIndicator,
-  View,
-} from "react-native";
-import { useTheme } from "@/src/theme";
-import { ThemedText } from "./ThemedText";
+import React from 'react';
+import { TouchableOpacity, TouchableOpacityProps, ActivityIndicator, View } from 'react-native';
+import { useTheme } from '@/src/theme';
+import { ThemedText } from './ThemedText';
 
-import { LucideIcon } from "lucide-react-native";
-import { Icon } from "./Icon";
+import { LucideIcon } from 'lucide-react-native';
+import { Icon } from './Icon';
 
 interface ButtonProps extends TouchableOpacityProps {
   title: string;
-  variant?: "primary" | "secondary" | "outline" | "ghost";
-  size?: "sm" | "md" | "lg";
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   icon?: LucideIcon | React.ReactNode;
-  iconPosition?: "left" | "right";
+  iconPosition?: 'left' | 'right';
   fullWidth?: boolean;
 }
 
 // Helper to check if it's a Lucide icon component
 // Lucide icons are function components, so if it's a function, treat it as Lucide icon
 const isLucideIcon = (icon: any): icon is LucideIcon => {
-  return icon && typeof icon === "function";
+  return icon && typeof icon === 'function';
 };
 
 export function Button({
   title,
-  variant = "primary",
-  size = "md",
+  variant = 'primary',
+  size = 'md',
   loading = false,
   icon,
-  iconPosition = "left",
+  iconPosition = 'left',
   fullWidth = false,
   disabled,
   style,
@@ -47,58 +42,58 @@ export function Button({
   const getBackgroundColor = () => {
     if (disabled) return theme.colors.textMuted;
     switch (variant) {
-      case "primary":
+      case 'primary':
         return theme.colors.primary;
-      case "secondary":
+      case 'secondary':
         return theme.colors.secondary;
-      case "outline":
-      case "ghost":
-        return "transparent";
+      case 'outline':
+      case 'ghost':
+        return 'transparent';
       default:
         return theme.colors.primary;
     }
   };
 
   const getTextColor = () => {
-    if (disabled) return "#fff";
+    if (disabled) return '#fff';
     switch (variant) {
-      case "primary":
-        return isDark ? "#000" : "#fff";
-      case "secondary":
-        return "#fff";
-      case "outline":
+      case 'primary':
+        return isDark ? '#000' : '#fff';
+      case 'secondary':
+        return '#fff';
+      case 'outline':
         return theme.colors.primary;
-      case "ghost":
+      case 'ghost':
         return theme.colors.text;
       default:
-        return "#fff";
+        return '#fff';
     }
   };
 
   const getPadding = () => {
     switch (size) {
-      case "sm":
+      case 'sm':
         return { paddingVertical: 10, paddingHorizontal: 18 };
-      case "md":
+      case 'md':
         return { paddingVertical: 14, paddingHorizontal: 26 };
-      case "lg":
+      case 'lg':
         return { paddingVertical: 18, paddingHorizontal: 34 };
     }
   };
 
   const getFontSize = () => {
     switch (size) {
-      case "sm":
+      case 'sm':
         return 14;
-      case "md":
+      case 'md':
         return 16;
-      case "lg":
+      case 'lg':
         return 18;
     }
   };
 
   const borderStyle =
-    variant === "outline"
+    variant === 'outline'
       ? {
           borderWidth: 2,
           borderColor: theme.colors.primary,
@@ -112,13 +107,13 @@ export function Button({
         {
           backgroundColor: getBackgroundColor(),
           borderRadius: 14,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
           gap: 10,
-          width: fullWidth ? "100%" : undefined,
+          width: fullWidth ? '100%' : undefined,
           opacity: disabled ? 0.6 : 1,
-          minHeight: size === "sm" ? 42 : size === "md" ? 50 : 58,
+          minHeight: size === 'sm' ? 42 : size === 'md' ? 50 : 58,
           ...getPadding(),
           ...borderStyle,
         },
@@ -131,7 +126,7 @@ export function Button({
       ) : (
         <>
           {icon &&
-            iconPosition === "left" &&
+            iconPosition === 'left' &&
             (isLucideIcon(icon) ? (
               <Icon icon={icon} size={getFontSize()} color={getTextColor()} />
             ) : React.isValidElement(icon) ? (
@@ -141,13 +136,13 @@ export function Button({
             style={{
               color: getTextColor(),
               fontSize: getFontSize(),
-              fontWeight: "600",
+              fontWeight: '600',
             }}
           >
             {title}
           </ThemedText>
           {icon &&
-            iconPosition === "right" &&
+            iconPosition === 'right' &&
             (isLucideIcon(icon) ? (
               <Icon icon={icon} size={getFontSize()} color={getTextColor()} />
             ) : React.isValidElement(icon) ? (

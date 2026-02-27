@@ -2,15 +2,14 @@
 Prediction API Routes
 Handles match predictions and history
 """
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
-from typing import Optional
 
-from src.core.logger import log_info, log_warning, log_error, log_prediction, log_debug
-from src.use_cases.prediction import PredictionUseCase
-from src.presentation.auth_routes import get_current_user
+from src.core.logger import log_error, log_info, log_prediction, log_warning
 from src.infrastructure.db.dixie_stats import DixieStats
-
+from src.presentation.auth_routes import get_current_user
+from src.use_cases.prediction import PredictionUseCase
 
 router = APIRouter(prefix="/predictions", tags=["Predictions"])
 
@@ -29,44 +28,47 @@ class CompareTeamsRequest(BaseModel):
 
 # Routes
 @router.post("/predict")
-async def predict_match(
-    request: PredictMatchRequest,
-    current_user = Depends(get_current_user)
-):
+async def predict_match(request: PredictMatchRequest, current_user=Depends(get_current_user)):
     """
     🔮 Generate a match prediction using Dixie AI
-    
+
     This endpoint uses the hybrid RAG approach:
     - Fetches team data from API-Football
     - Gets player attributes from ChromaDB
     - Analyzes with DeepSeek (Dixie)
     """
-    log_info("Prediction request received",
-             home_team=request.home_team,
-             away_team=request.away_team,
-             user_id=current_user.id)
-    
+    log_info(
+        "Prediction request received",
+        home_team=request.home_team,
+        away_team=request.away_team,
+        user_id=current_user.id,
+    )
+
     result = await PredictionUseCase.predict_match(
         home_team_name=request.home_team,
         away_team_name=request.away_team,
         user_id=current_user.id,
         language=request.language,
     )
-    
+
     if not result["success"]:
-        log_warning("Prediction failed",
-                    home_team=request.home_team,
-                    away_team=request.away_team,
-                    error=result.get("error", "Unknown error"))
-        raise HTTPException(status_code=400, detail=result.get("error", "Error generating prediction"))
-    
+        log_warning(
+            "Prediction failed",
+            home_team=request.home_team,
+            away_team=request.away_team,
+            error=result.get("error", "Unknown error"),
+        )
+        raise HTTPException(
+            status_code=400, detail=result.get("error", "Error generating prediction")
+        )
+
     # Record prediction stats for Dixie
     try:
         prediction_data = result.get("data", {}).get("prediction", {})
         prediction_id = prediction_data.get("id", "")
         predicted_winner = prediction_data.get("winner", "")
         confidence = prediction_data.get("confidence", 0)
-        
+
         if prediction_id:
             await DixieStats.record_prediction(
                 prediction_id=prediction_id,
@@ -74,59 +76,56 @@ async def predict_match(
                 away_team=request.away_team,
                 predicted_winner=predicted_winner,
                 confidence=confidence,
-                user_id=current_user.id
+                user_id=current_user.id,
             )
-        
+
         log_prediction(
             home_team=request.home_team,
             away_team=request.away_team,
             winner=predicted_winner,
             confidence=confidence,
-            user_id=current_user.id
+            user_id=current_user.id,
         )
     except Exception as e:
         log_warning("Failed to record prediction stats", error=str(e))
-    
+
     return result
-
-
 
 
 @router.get("/history")
 async def get_prediction_history(
-    limit: int = Query(default=20, le=100),
-    current_user = Depends(get_current_user)
+    limit: int = Query(default=20, le=100), current_user=Depends(get_current_user)
 ):
     """
     📜 Get user's prediction history with statistics
-    
+
     Returns the user's past predictions sorted by date (newest first)
     and overall statistics (total, correct, accuracy).
     """
     from src.infrastructure.db.prediction_repository import PredictionRepository
-    
+
     try:
         # Get predictions and stats in parallel
         predictions = await PredictionRepository.find_by_user(current_user.id, limit)
         stats = await PredictionRepository.get_stats(current_user.id)
-        
+
         return {
             "success": True,
             "data": {
                 "predictions": [p.to_dict() for p in predictions],
                 "stats": stats,
-            }
+            },
         }
     except Exception as e:
         log_error("Error fetching prediction history", error=str(e))
-        raise HTTPException(status_code=500, detail="Error fetching prediction history")
+        raise HTTPException(status_code=500, detail="Error fetching prediction history") from e
 
 
 @router.get("/matches")
 async def get_upcoming_matches():
     """
     ⚽ Get next 5 upcoming matches from Premier League only (first division)
-    
+
     Returns only future matches from Premier League based on current time.
     Used for featured match and upcoming matches sections.
     """
@@ -135,14 +134,10 @@ async def get_upcoming_matches():
 
 
 @router.get("/{prediction_id}")
-async def get_prediction_detail(
-    prediction_id: str,
-    current_user = Depends(get_current_user)
-):
+async def get_prediction_detail(prediction_id: str, current_user=Depends(get_current_user)):
     """🔍 Get detailed information for a specific prediction"""
     result = await PredictionUseCase.get_prediction_by_id(
-        prediction_id=prediction_id,
-        user_id=current_user.id
+        prediction_id=prediction_id, user_id=current_user.id
     )
     if not result["success"]:
         raise HTTPException(status_code=404, detail=result["error"])
@@ -164,35 +159,41 @@ async def get_available_teams():
     """🏆 Get list of teams with player data in the system (solo de las 5 ligas principales)"""
     from src.infrastructure.chromadb.player_store import PlayerVectorStore
     from src.presentation.team_routes import ALLOWED_LEAGUES, get_team_league
-    
+
     # Get unique teams from our player database (solo de las 5 ligas)
-    teams = set()
-    
+
     # Search for players from major teams de Premier League 2025-2026
     major_teams = [
-        "Manchester City", "Liverpool", "Arsenal", "Chelsea",
-        "Tottenham Hotspur", "Manchester United", "Newcastle United",
-        "Brighton & Hove Albion", "West Ham United", "Aston Villa",
-        "Crystal Palace", "Wolverhampton Wanderers", "Fulham", "Brentford"
+        "Manchester City",
+        "Liverpool",
+        "Arsenal",
+        "Chelsea",
+        "Tottenham Hotspur",
+        "Manchester United",
+        "Newcastle United",
+        "Brighton & Hove Albion",
+        "West Ham United",
+        "Aston Villa",
+        "Crystal Palace",
+        "Wolverhampton Wanderers",
+        "Fulham",
+        "Brentford",
     ]
-    
+
     available_teams = []
     for team_name in major_teams:
         # Solo incluir equipos de las 5 ligas permitidas
         league = get_team_league(team_name)
         if league not in ALLOWED_LEAGUES:
             continue
-            
+
         players = PlayerVectorStore.search_by_team(team_name, limit=1)
         if players:
-            available_teams.append({
-                "name": team_name,
-                "player_count": len(PlayerVectorStore.search_by_team(team_name, limit=20))
-            })
-    
-    return {
-        "success": True,
-        "data": {
-            "teams": available_teams
-        }
-    }
+            available_teams.append(
+                {
+                    "name": team_name,
+                    "player_count": len(PlayerVectorStore.search_by_team(team_name, limit=20)),
+                }
+            )
+
+    return {"success": True, "data": {"teams": available_teams}}

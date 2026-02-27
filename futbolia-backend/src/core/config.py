@@ -2,11 +2,12 @@
 GoalMind Configuration Module
 Manages all environment variables and application settings
 """
+
 import os
 import secrets
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Dict
+
 from dotenv import load_dotenv
 
 # Load .env file from the backend project root (two levels up from this file)
@@ -19,17 +20,42 @@ load_dotenv(_backend_root / ".env")
 # =============================================================================
 
 # Mapeo de ligas soportadas con sus códigos de API
-SUPPORTED_LEAGUES: Dict[str, Dict[str, str]] = {
+SUPPORTED_LEAGUES: dict[str, dict[str, str]] = {
     # EUROPA - Top 5
-    "PL": {"name": "Premier League", "country": "England", "football_data": "PL", "thesportsdb": "4328"},
+    "PL": {
+        "name": "Premier League",
+        "country": "England",
+        "football_data": "PL",
+        "thesportsdb": "4328",
+    },
     "PD": {"name": "La Liga", "country": "Spain", "football_data": "PD", "thesportsdb": "4335"},
     "SA": {"name": "Serie A", "country": "Italy", "football_data": "SA", "thesportsdb": "4332"},
-    "BL1": {"name": "Bundesliga", "country": "Germany", "football_data": "BL1", "thesportsdb": "4331"},
+    "BL1": {
+        "name": "Bundesliga",
+        "country": "Germany",
+        "football_data": "BL1",
+        "thesportsdb": "4331",
+    },
     "FL1": {"name": "Ligue 1", "country": "France", "football_data": "FL1", "thesportsdb": "4334"},
     # EUROPA - Otras
-    "PPL": {"name": "Primeira Liga", "country": "Portugal", "football_data": "PPL", "thesportsdb": "4344"},
-    "DED": {"name": "Eredivisie", "country": "Netherlands", "football_data": "DED", "thesportsdb": "4337"},
-    "ELC": {"name": "EFL Championship", "country": "England", "football_data": "ELC", "thesportsdb": "4329"},
+    "PPL": {
+        "name": "Primeira Liga",
+        "country": "Portugal",
+        "football_data": "PPL",
+        "thesportsdb": "4344",
+    },
+    "DED": {
+        "name": "Eredivisie",
+        "country": "Netherlands",
+        "football_data": "DED",
+        "thesportsdb": "4337",
+    },
+    "ELC": {
+        "name": "EFL Championship",
+        "country": "England",
+        "football_data": "ELC",
+        "thesportsdb": "4329",
+    },
     "BEL": {"name": "Jupiler Pro League", "country": "Belgium", "thesportsdb": "4355"},
     "TUR": {"name": "Süper Lig", "country": "Turkey", "thesportsdb": "4339"},
     "SCO": {"name": "Scottish Premiership", "country": "Scotland", "thesportsdb": "4330"},
@@ -41,7 +67,12 @@ SUPPORTED_LEAGUES: Dict[str, Dict[str, str]] = {
     "NOR": {"name": "Eliteserien", "country": "Norway", "thesportsdb": "4358"},
     "SWE": {"name": "Allsvenskan", "country": "Sweden", "thesportsdb": "4359"},
     # SUDAMÉRICA
-    "BSA": {"name": "Brasileirão Série A", "country": "Brazil", "football_data": "BSA", "thesportsdb": "4351"},
+    "BSA": {
+        "name": "Brasileirão Série A",
+        "country": "Brazil",
+        "football_data": "BSA",
+        "thesportsdb": "4351",
+    },
     "ARG": {"name": "Liga Profesional Argentina", "country": "Argentina", "thesportsdb": "4406"},
     "ECU": {"name": "Liga Pro Ecuador", "country": "Ecuador", "thesportsdb": "4407"},
     "COL": {"name": "Liga BetPlay Dimayor", "country": "Colombia", "thesportsdb": "4410"},
@@ -60,16 +91,31 @@ SUPPORTED_LEAGUES: Dict[str, Dict[str, str]] = {
     # OCEANÍA
     "AUS": {"name": "A-League", "country": "Australia", "thesportsdb": "4396"},
     # COMPETICIONES INTERNACIONALES
-    "CL": {"name": "UEFA Champions League", "country": "Europe", "football_data": "CL", "thesportsdb": "4480"},
+    "CL": {
+        "name": "UEFA Champions League",
+        "country": "Europe",
+        "football_data": "CL",
+        "thesportsdb": "4480",
+    },
     "EL": {"name": "UEFA Europa League", "country": "Europe", "thesportsdb": "4481"},
-    "WC": {"name": "FIFA World Cup", "country": "International", "football_data": "WC", "thesportsdb": "4429"},
-    "EC": {"name": "UEFA Euro Championship", "country": "Europe", "football_data": "EC", "thesportsdb": "4424"},
+    "WC": {
+        "name": "FIFA World Cup",
+        "country": "International",
+        "football_data": "WC",
+        "thesportsdb": "4429",
+    },
+    "EC": {
+        "name": "UEFA Euro Championship",
+        "country": "Europe",
+        "football_data": "EC",
+        "thesportsdb": "4424",
+    },
     "CA": {"name": "Copa América", "country": "South America", "thesportsdb": "4477"},
     "COPA": {"name": "Copa Libertadores", "country": "South America", "thesportsdb": "4478"},
 }
 
 # Mapeo expandido para predicciones (nombre completo -> código)
-LEAGUE_MAPPING_PREDICTIONS: Dict[str, str] = {
+LEAGUE_MAPPING_PREDICTIONS: dict[str, str] = {
     # Europa Top 5
     "Premier League": "PL",
     "La Liga": "PD",
@@ -137,50 +183,50 @@ LEAGUE_MAPPING_PREDICTIONS: Dict[str, str] = {
 @dataclass
 class Settings:
     """Application settings loaded from environment variables"""
-    
+
     # Application
     APP_NAME: str = "GoalMind"
     APP_VERSION: str = "1.0.0"
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
     DEBUG: bool = os.getenv("ENVIRONMENT", "development") == "development"
-    
+
     # Server
     HOST: str = os.getenv("HOST", "0.0.0.0")
     PORT: int = int(os.getenv("PORT", "8000"))
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
-    
+
     # MongoDB
     MONGODB_URL: str = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
     MONGODB_DB_NAME: str = os.getenv("MONGODB_DATABASE", "goalmind")
-    
+
     # ChromaDB
     CHROMA_PERSIST_DIR: str = os.getenv("CHROMADB_PATH", "./data/chromadb")
     CHROMA_COLLECTION_NAME: str = os.getenv("CHROMADB_COLLECTION", "player_attributes")
-    
+
     # DeepSeek (Dixie)
     DEEPSEEK_API_KEY: str = os.getenv("DEEPSEEK_API_KEY", "")
     DEEPSEEK_BASE_URL: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
     DEEPSEEK_MODEL: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
     DEEPSEEK_TEMPERATURE: float = float(os.getenv("DEEPSEEK_TEMPERATURE", "0.7"))
     DEEPSEEK_MAX_TOKENS: int = int(os.getenv("DEEPSEEK_MAX_TOKENS", "2000"))
-    
+
     # Football-Data.org API (GRATUITA)
     # Obtener en: https://www.football-data.org/client/register
     FOOTBALL_DATA_API_KEY: str = os.getenv("FOOTBALL_DATA_API_KEY", "")
-    
+
     # JWT Authentication
     # In development, a random key is generated if not set.
     # In production, JWT_SECRET_KEY env var MUST be set explicitly.
     JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "")
     JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
     JWT_EXPIRE_MINUTES: int = int(os.getenv("JWT_EXPIRATION_MINUTES", "10080"))  # 7 days default
-    
+
     # CORS
-    CORS_ORIGINS: List[str] = field(default_factory=list)
-    
+    CORS_ORIGINS: list[str] = field(default_factory=list)
+
     # Rate Limiting
     RATE_LIMIT_PER_MINUTE: int = int(os.getenv("RATE_LIMIT_PER_MINUTE", "60"))
-    
+
     def __post_init__(self):
         # Generate a random JWT secret for development if not provided
         if not self.JWT_SECRET_KEY:
@@ -206,25 +252,29 @@ class Settings:
                 "http://127.0.0.1:8081",
                 "*",  # Allow all origins in development
             ]
-    
+
     def is_production(self) -> bool:
         """Check if running in production mode"""
         return self.ENVIRONMENT == "production"
-    
-    def validate(self) -> List[str]:
+
+    def validate(self) -> list[str]:
         """Validate critical settings and return list of warnings"""
         warnings = []
 
         if self.is_production():
             if not self.DEEPSEEK_API_KEY:
-                warnings.append("❌ DEEPSEEK_API_KEY not set - REQUIRED for AI predictions in production")
+                warnings.append(
+                    "❌ DEEPSEEK_API_KEY not set - REQUIRED for AI predictions in production"
+                )
             if not self.FOOTBALL_DATA_API_KEY:
                 warnings.append("⚠️ FOOTBALL_DATA_API_KEY not set - live stats will be unavailable")
             if not self.CORS_ORIGINS:
                 warnings.append("⚠️ CORS_ORIGINS not set - no origins will be allowed")
         else:
             if not self.DEEPSEEK_API_KEY:
-                warnings.append("ℹ️ DEEPSEEK_API_KEY not set - Dixie will use mock responses (dev mode)")
+                warnings.append(
+                    "ℹ️ DEEPSEEK_API_KEY not set - Dixie will use mock responses (dev mode)"
+                )
             if not self.FOOTBALL_DATA_API_KEY:
                 warnings.append("ℹ️ FOOTBALL_DATA_API_KEY not set - using mock team data (dev mode)")
 
@@ -256,7 +306,7 @@ I18N_STRINGS = {
         "prediction_saved": "Prediction saved",
         "error_generic": "An error occurred",
         "welcome_dixie": "Hello! I'm Dixie, your elite sports analyst 🏆",
-    }
+    },
 }
 
 

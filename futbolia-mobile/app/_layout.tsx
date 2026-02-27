@@ -2,39 +2,39 @@
  * FutbolIA - Root Layout
  * Main app layout with theme, i18n and auth providers
  */
-import "react-native-reanimated";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import 'react-native-reanimated';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import {
   DarkTheme,
   DefaultTheme,
   ThemeProvider as NavigationThemeProvider,
-} from "@react-navigation/native";
-import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
-import { LogBox, Platform } from "react-native";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import "../global.css";
+} from '@react-navigation/native';
+import { useFonts } from 'expo-font';
+import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
+import { LogBox, Platform } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import '../global.css';
 
 // i18n initialization
-import "@/src/i18n/i18n";
+import '@/src/i18n/i18n';
 
 // Silenciar warnings específicos de React Native
 const warningsToIgnore = [
-  "props.pointerEvents is deprecated",
-  "Cannot record touch end without a touch start",
-  "useNativeDriver is not supported",
-  "paddingTop was given a value",
-  "SafeAreaView has been deprecated",
+  'props.pointerEvents is deprecated',
+  'Cannot record touch end without a touch start',
+  'useNativeDriver is not supported',
+  'paddingTop was given a value',
+  'SafeAreaView has been deprecated',
 ];
 
-if (Platform.OS === "web") {
+if (Platform.OS === 'web') {
   // Silenciar warnings en Web
   const originalWarn = console.warn;
   console.warn = (...args: any[]) => {
-    const message = args[0]?.toString() || "";
-    if (warningsToIgnore.some(w => message.includes(w))) {
+    const message = args[0]?.toString() || '';
+    if (warningsToIgnore.some((w) => message.includes(w))) {
       return; // Silenciar estos warnings
     }
     originalWarn.apply(console, args);
@@ -45,22 +45,22 @@ if (Platform.OS === "web") {
 }
 
 // Theme provider
-import { ThemeProvider, useTheme } from "@/src/theme";
+import { ThemeProvider, useTheme } from '@/src/theme';
 
 // Auth provider
-import { AuthProvider } from "@/src/context";
+import { AuthProvider } from '@/src/context';
 
-export { ErrorBoundary } from "expo-router";
+export { ErrorBoundary } from 'expo-router';
 
 export const unstable_settings = {
-  initialRouteName: "(tabs)",
+  initialRouteName: '(tabs)',
 };
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
   });
 
@@ -118,47 +118,45 @@ function RootLayoutNav() {
   };
 
   return (
-    <NavigationThemeProvider
-      value={isDark ? customDarkTheme : customLightTheme}
-    >
+    <NavigationThemeProvider value={isDark ? customDarkTheme : customLightTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="login"
           options={{
-            title: "Iniciar Sesión",
+            title: 'Iniciar Sesión',
             headerShown: false,
-            presentation: "card",
+            presentation: 'card',
           }}
         />
         <Stack.Screen
           name="register"
           options={{
-            title: "Registrarse",
+            title: 'Registrarse',
             headerShown: false,
-            presentation: "card",
+            presentation: 'card',
           }}
         />
         <Stack.Screen
           name="profile"
           options={{
-            title: "Mi Perfil",
-            presentation: "card",
+            title: 'Mi Perfil',
+            presentation: 'card',
           }}
         />
         <Stack.Screen
           name="teams"
           options={{
-            title: "Equipos",
+            title: 'Equipos',
             headerShown: false,
-            presentation: "card",
+            presentation: 'card',
           }}
         />
         <Stack.Screen
           name="modal"
           options={{
-            presentation: "modal",
-            title: "Información",
+            presentation: 'modal',
+            title: 'Información',
           }}
         />
       </Stack>

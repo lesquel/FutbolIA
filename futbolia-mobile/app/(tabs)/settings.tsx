@@ -2,7 +2,7 @@
  * FutbolIA - Settings Screen
  * App preferences: theme, language, account, and about
  */
-import { useState } from "react";
+import { useState } from 'react';
 import {
   ScrollView,
   View,
@@ -11,9 +11,9 @@ import {
   TouchableOpacity,
   Alert,
   useWindowDimensions,
-} from "react-native";
-import { useTranslation } from "react-i18next";
-import { useRouter } from "expo-router";
+} from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { useRouter } from 'expo-router';
 import {
   Wrench,
   Atom,
@@ -32,12 +32,12 @@ import {
   ChevronRight,
   Check,
   type LucideIcon,
-} from "lucide-react-native";
+} from 'lucide-react-native';
 
-import { useTheme } from "@/src/theme";
-import { useAuth } from "@/src/context";
-import { changeLanguage, getCurrentLanguage } from "@/src/i18n/i18n";
-import { ThemedView, ThemedText, Card, Icon } from "@/src/components/ui";
+import { useTheme } from '@/src/theme';
+import { useAuth } from '@/src/context';
+import { changeLanguage, getCurrentLanguage } from '@/src/i18n/i18n';
+import { ThemedView, ThemedText, Card, Icon } from '@/src/components/ui';
 
 export default function SettingsScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
@@ -51,17 +51,17 @@ export default function SettingsScreen() {
 
   const [currentLang, setCurrentLang] = useState(getCurrentLanguage());
 
-  const handleLanguageChange = (lang: "es" | "en") => {
+  const handleLanguageChange = (lang: 'es' | 'en') => {
     changeLanguage(lang);
     setCurrentLang(lang);
   };
 
   const handleLogout = () => {
-    Alert.alert(t("profile.logoutTitle"), t("profile.logoutMessage"), [
-      { text: t("common.cancel"), style: "cancel" },
+    Alert.alert(t('profile.logoutTitle'), t('profile.logoutMessage'), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: t("profile.logout"),
-        style: "destructive",
+        text: t('profile.logout'),
+        style: 'destructive',
         onPress: async () => {
           await logout();
         },
@@ -75,34 +75,24 @@ export default function SettingsScreen() {
     subtitle,
     right,
     onPress,
-    iconVariant = "secondary",
+    iconVariant = 'secondary',
   }: {
     icon: LucideIcon;
     title: string;
     subtitle?: string;
     right?: React.ReactNode;
     onPress?: () => void;
-    iconVariant?: "primary" | "secondary" | "muted" | "error";
+    iconVariant?: 'primary' | 'secondary' | 'muted' | 'error';
   }) => (
-    <TouchableOpacity
-      onPress={onPress}
-      disabled={!onPress}
-      activeOpacity={onPress ? 0.7 : 1}
-    >
-      <View
-        style={[styles.settingRow, isLargeScreen && styles.settingRowLarge]}
-      >
-        <Icon
-          icon={icon}
-          size={isLargeScreen ? 26 : 22}
-          variant={iconVariant}
-        />
+    <TouchableOpacity onPress={onPress} disabled={!onPress} activeOpacity={onPress ? 0.7 : 1}>
+      <View style={[styles.settingRow, isLargeScreen && styles.settingRowLarge]}>
+        <Icon icon={icon} size={isLargeScreen ? 26 : 22} variant={iconVariant} />
         <View style={styles.settingInfo}>
-          <ThemedText weight="medium" size={isLargeScreen ? "lg" : "base"}>
+          <ThemedText weight="medium" size={isLargeScreen ? 'lg' : 'base'}>
             {title}
           </ThemedText>
           {subtitle && (
-            <ThemedText variant="muted" size={isLargeScreen ? "base" : "sm"}>
+            <ThemedText variant="muted" size={isLargeScreen ? 'base' : 'sm'}>
               {subtitle}
             </ThemedText>
           )}
@@ -124,29 +114,15 @@ export default function SettingsScreen() {
           <Card variant="default" padding="none">
             {isAuthenticated ? (
               <>
-                <TouchableOpacity
-                  onPress={() => router.push("/profile")}
-                  activeOpacity={0.7}
-                >
+                <TouchableOpacity onPress={() => router.push('/profile')} activeOpacity={0.7}>
                   <View style={styles.settingRow}>
-                    <View
-                      style={[
-                        styles.avatar,
-                        { backgroundColor: theme.colors.primary },
-                      ]}
-                    >
-                      <ThemedText
-                        size="lg"
-                        weight="bold"
-                        style={{ color: "#fff" }}
-                      >
-                        {user?.username?.[0]?.toUpperCase() || "U"}
+                    <View style={[styles.avatar, { backgroundColor: theme.colors.primary }]}>
+                      <ThemedText size="lg" weight="bold" style={{ color: '#fff' }}>
+                        {user?.username?.[0]?.toUpperCase() || 'U'}
                       </ThemedText>
                     </View>
                     <View style={styles.settingInfo}>
-                      <ThemedText weight="semibold">
-                        {user?.username}
-                      </ThemedText>
+                      <ThemedText weight="semibold">{user?.username}</ThemedText>
                       <ThemedText variant="muted" size="sm">
                         {user?.email}
                       </ThemedText>
@@ -155,16 +131,11 @@ export default function SettingsScreen() {
                   </View>
                 </TouchableOpacity>
 
-                <View
-                  style={[
-                    styles.divider,
-                    { backgroundColor: theme.colors.border },
-                  ]}
-                />
+                <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
                 <SettingRow
                   icon={LogOut}
-                  title={t("profile.logout")}
+                  title={t('profile.logout')}
                   onPress={handleLogout}
                   iconVariant="error"
                   right={<Icon icon={ChevronRight} size={18} variant="error" />}
@@ -174,24 +145,19 @@ export default function SettingsScreen() {
               <>
                 <SettingRow
                   icon={User}
-                  title={t("auth.login")}
+                  title={t('auth.login')}
                   subtitle="Inicia sesión para guardar predicciones"
-                  onPress={() => router.push("/login")}
+                  onPress={() => router.push('/login')}
                   right={<Icon icon={ChevronRight} size={18} variant="muted" />}
                 />
 
-                <View
-                  style={[
-                    styles.divider,
-                    { backgroundColor: theme.colors.border },
-                  ]}
-                />
+                <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
                 <SettingRow
                   icon={UserPlus}
-                  title={t("auth.register")}
+                  title={t('auth.register')}
                   subtitle="Crea una cuenta nueva"
-                  onPress={() => router.push("/register")}
+                  onPress={() => router.push('/register')}
                   right={<Icon icon={ChevronRight} size={18} variant="muted" />}
                 />
               </>
@@ -202,7 +168,7 @@ export default function SettingsScreen() {
         {/* Appearance Section */}
         <View style={styles.section}>
           <ThemedText variant="secondary" size="sm" style={styles.sectionTitle}>
-            {t("settings.appearance").toUpperCase()}
+            {t('settings.appearance').toUpperCase()}
           </ThemedText>
 
           <Card variant="default" padding="none">
@@ -210,7 +176,7 @@ export default function SettingsScreen() {
               <Icon icon={isDark ? Moon : Sun} size={22} variant="primary" />
               <View style={styles.settingInfo}>
                 <ThemedText weight="medium">
-                  {isDark ? t("settings.darkMode") : t("settings.lightMode")}
+                  {isDark ? t('settings.darkMode') : t('settings.lightMode')}
                 </ThemedText>
                 <ThemedText variant="muted" size="sm">
                   Cambia el tema de la aplicación
@@ -221,11 +187,9 @@ export default function SettingsScreen() {
                 onValueChange={toggleTheme}
                 trackColor={{
                   false: theme.colors.border,
-                  true: theme.colors.primary + "50",
+                  true: theme.colors.primary + '50',
                 }}
-                thumbColor={
-                  isDark ? theme.colors.primary : theme.colors.textMuted
-                }
+                thumbColor={isDark ? theme.colors.primary : theme.colors.textMuted}
               />
             </View>
           </Card>
@@ -234,64 +198,50 @@ export default function SettingsScreen() {
         {/* Language Section */}
         <View style={styles.section}>
           <ThemedText variant="secondary" size="sm" style={styles.sectionTitle}>
-            {t("settings.language").toUpperCase()}
+            {t('settings.language').toUpperCase()}
           </ThemedText>
 
           <Card variant="default" padding="none">
             <TouchableOpacity
-              onPress={() => handleLanguageChange("es")}
+              onPress={() => handleLanguageChange('es')}
               style={[
                 styles.languageOption,
-                currentLang === "es" && {
-                  backgroundColor: theme.colors.primary + "15",
+                currentLang === 'es' && {
+                  backgroundColor: theme.colors.primary + '15',
                 },
               ]}
             >
               <View style={styles.flagContainer}>
-                <ThemedText
-                  size="lg"
-                  weight="bold"
-                  style={{ color: theme.colors.primary }}
-                >
+                <ThemedText size="lg" weight="bold" style={{ color: theme.colors.primary }}>
                   ES
                 </ThemedText>
               </View>
-              <ThemedText weight={currentLang === "es" ? "semibold" : "normal"}>
-                {t("settings.spanish")}
+              <ThemedText weight={currentLang === 'es' ? 'semibold' : 'normal'}>
+                {t('settings.spanish')}
               </ThemedText>
-              {currentLang === "es" && (
-                <Icon icon={Check} size={20} variant="primary" />
-              )}
+              {currentLang === 'es' && <Icon icon={Check} size={20} variant="primary" />}
             </TouchableOpacity>
 
-            <View
-              style={[styles.divider, { backgroundColor: theme.colors.border }]}
-            />
+            <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
             <TouchableOpacity
-              onPress={() => handleLanguageChange("en")}
+              onPress={() => handleLanguageChange('en')}
               style={[
                 styles.languageOption,
-                currentLang === "en" && {
-                  backgroundColor: theme.colors.primary + "15",
+                currentLang === 'en' && {
+                  backgroundColor: theme.colors.primary + '15',
                 },
               ]}
             >
               <View style={styles.flagContainer}>
-                <ThemedText
-                  size="lg"
-                  weight="bold"
-                  style={{ color: theme.colors.primary }}
-                >
+                <ThemedText size="lg" weight="bold" style={{ color: theme.colors.primary }}>
                   EN
                 </ThemedText>
               </View>
-              <ThemedText weight={currentLang === "en" ? "semibold" : "normal"}>
-                {t("settings.english")}
+              <ThemedText weight={currentLang === 'en' ? 'semibold' : 'normal'}>
+                {t('settings.english')}
               </ThemedText>
-              {currentLang === "en" && (
-                <Icon icon={Check} size={20} variant="primary" />
-              )}
+              {currentLang === 'en' && <Icon icon={Check} size={20} variant="primary" />}
             </TouchableOpacity>
           </Card>
         </View>
@@ -299,37 +249,31 @@ export default function SettingsScreen() {
         {/* About Section */}
         <View style={styles.section}>
           <ThemedText variant="secondary" size="sm" style={styles.sectionTitle}>
-            {t("settings.about").toUpperCase()}
+            {t('settings.about').toUpperCase()}
           </ThemedText>
 
           <Card variant="default" padding="none">
             <View style={styles.settingRow}>
               <Icon icon={Trophy} size={22} variant="primary" />
               <View style={styles.settingInfo}>
-                <ThemedText weight="medium">
-                  GoalMind: El Oráculo del Fútbol
-                </ThemedText>
+                <ThemedText weight="medium">GoalMind: El Oráculo del Fútbol</ThemedText>
                 <ThemedText variant="muted" size="sm">
                   Tu oráculo deportivo con IA
                 </ThemedText>
               </View>
             </View>
 
-            <View
-              style={[styles.divider, { backgroundColor: theme.colors.border }]}
-            />
+            <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
             <View style={styles.settingRow}>
               <Icon icon={Smartphone} size={22} variant="secondary" />
               <View style={styles.settingInfo}>
-                <ThemedText weight="medium">{t("settings.version")}</ThemedText>
+                <ThemedText weight="medium">{t('settings.version')}</ThemedText>
               </View>
               <ThemedText variant="muted">1.0.0</ThemedText>
             </View>
 
-            <View
-              style={[styles.divider, { backgroundColor: theme.colors.border }]}
-            />
+            <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
             <View style={styles.settingRow}>
               <Icon icon={Brain} size={22} variant="secondary" />
@@ -421,8 +365,8 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   settingRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 18,
     gap: 18,
   },
@@ -433,16 +377,16 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   divider: {
     height: 1,
     marginLeft: 60,
   },
   languageOption: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 18,
     gap: 18,
   },
@@ -450,17 +394,17 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(16, 185, 129, 0.1)",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   techCard: {
     marginBottom: 28,
     paddingVertical: 20,
   },
   techTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
     marginBottom: 8,
   },
@@ -468,19 +412,19 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   techGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 14,
-    justifyContent: "space-around",
+    justifyContent: 'space-around',
   },
   techItem: {
-    alignItems: "center",
-    width: "28%",
+    alignItems: 'center',
+    width: '28%',
     minWidth: 80,
     paddingVertical: 10,
   },
   footer: {
-    alignItems: "center",
+    alignItems: 'center',
     paddingVertical: 24,
   },
   // ==========================================

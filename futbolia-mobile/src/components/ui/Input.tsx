@@ -1,26 +1,19 @@
 /**
  * Input - Themed text input component
  */
-import { TextInput, TextInputProps, View, StyleSheet } from "react-native";
-import { useTheme } from "@/src/theme";
-import { ThemedText } from "./ThemedText";
-import { useState } from "react";
+import { TextInput, TextInputProps, View, StyleSheet } from 'react-native';
+import { useTheme } from '@/src/theme';
+import { ThemedText } from './ThemedText';
+import { useState } from 'react';
 
 interface InputProps extends TextInputProps {
   label?: string;
   error?: string;
   icon?: React.ReactNode;
-  iconPosition?: "left" | "right";
+  iconPosition?: 'left' | 'right';
 }
 
-export function Input({
-  label,
-  error,
-  icon,
-  iconPosition = "left",
-  style,
-  ...props
-}: InputProps) {
+export function Input({ label, error, icon, iconPosition = 'left', style, ...props }: InputProps) {
   const { theme, isDark } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
 
@@ -48,9 +41,7 @@ export function Input({
           },
         ]}
       >
-        {icon && iconPosition === "left" && (
-          <View style={styles.icon}>{icon}</View>
-        )}
+        {icon && iconPosition === 'left' && <View style={styles.icon}>{icon}</View>}
 
         <TextInput
           style={[
@@ -67,9 +58,7 @@ export function Input({
           {...props}
         />
 
-        {icon && iconPosition === "right" && (
-          <View style={styles.icon}>{icon}</View>
-        )}
+        {icon && iconPosition === 'right' && <View style={styles.icon}>{icon}</View>}
       </View>
 
       {error && (
@@ -89,8 +78,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     borderRadius: 14,
     paddingHorizontal: 18,
     minHeight: 54,

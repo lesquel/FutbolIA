@@ -2,7 +2,7 @@
  * FutbolIA - Predict Screen
  * Main prediction interface with team selection
  */
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo } from 'react';
 import {
   ScrollView,
   View,
@@ -12,27 +12,21 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
-} from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useTranslation } from "react-i18next";
-import { Lock, Sparkles, Home, Bus, AlertCircle } from "lucide-react-native";
+} from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import { Lock, Sparkles, Home, Bus, AlertCircle } from 'lucide-react-native';
 
-import { useTheme } from "@/src/theme";
-import { useAuth } from "@/src/context";
-import {
-  ThemedView,
-  ThemedText,
-  Card,
-  Button,
-  Icon,
-} from "@/src/components/ui";
+import { useTheme } from '@/src/theme';
+import { useAuth } from '@/src/context';
+import { ThemedView, ThemedText, Card, Button, Icon } from '@/src/components/ui';
 import {
   TeamSelector,
   TeamStatsCard,
   PredictionCard,
   GoalMindChat,
-} from "@/src/components/features";
-import { predictionsApi, Prediction } from "@/src/services/api";
+} from '@/src/components/features';
+import { predictionsApi, Prediction } from '@/src/services/api';
 
 export default function PredictScreen() {
   const { theme } = useTheme();
@@ -55,12 +49,8 @@ export default function PredictScreen() {
   }, [isTablet, isDesktop]);
 
   // State
-  const [homeTeam, setHomeTeam] = useState<string | null>(
-    (params.homeTeam as string) || null,
-  );
-  const [awayTeam, setAwayTeam] = useState<string | null>(
-    (params.awayTeam as string) || null,
-  );
+  const [homeTeam, setHomeTeam] = useState<string | null>((params.homeTeam as string) || null);
+  const [awayTeam, setAwayTeam] = useState<string | null>((params.awayTeam as string) || null);
   const [homeTeamData, setHomeTeamData] = useState<{
     logo_url?: string;
     league?: string;
@@ -94,7 +84,7 @@ export default function PredictScreen() {
     setShowAuthPrompt(false);
 
     try {
-      const response = await predictionsApi.predict(homeTeam, awayTeam, "es");
+      const response = await predictionsApi.predict(homeTeam, awayTeam, 'es');
 
       if (response.success && response.data?.prediction) {
         // Include player context in the prediction object
@@ -104,11 +94,11 @@ export default function PredictScreen() {
         };
         setPrediction(predictionWithContext);
       } else {
-        setError(response.error || "Error generando predicción");
+        setError(response.error || 'Error generando predicción');
       }
     } catch (err) {
-      setError("Error de conexión. Verifica que el servidor esté activo.");
-      console.log("Prediction error:", err);
+      setError('Error de conexión. Verifica que el servidor esté activo.');
+      console.log('Prediction error:', err);
     } finally {
       setLoading(false);
     }
@@ -133,53 +123,41 @@ export default function PredictScreen() {
         style={[
           styles.authIconContainer,
           isLargeScreen && styles.authIconContainerLarge,
-          { backgroundColor: theme.colors.primary + "20" },
+          { backgroundColor: theme.colors.primary + '20' },
         ]}
       >
         <Icon icon={Lock} size={isLargeScreen ? 40 : 32} variant="primary" />
       </View>
-      <ThemedText
-        size={isLargeScreen ? "2xl" : "xl"}
-        weight="bold"
-        style={styles.authTitle}
-      >
-        {t("auth.loginRequired")}
+      <ThemedText size={isLargeScreen ? '2xl' : 'xl'} weight="bold" style={styles.authTitle}>
+        {t('auth.loginRequired')}
       </ThemedText>
       <ThemedText
         variant="secondary"
-        size={isLargeScreen ? "lg" : "base"}
-        style={[
-          styles.authDescription,
-          isLargeScreen && styles.authDescriptionLarge,
-        ]}
+        size={isLargeScreen ? 'lg' : 'base'}
+        style={[styles.authDescription, isLargeScreen && styles.authDescriptionLarge]}
       >
-        {t("auth.loginToPredict")}
+        {t('auth.loginToPredict')}
       </ThemedText>
-      <View
-        style={[styles.authButtons, isLargeScreen && styles.authButtonsLarge]}
-      >
+      <View style={[styles.authButtons, isLargeScreen && styles.authButtonsLarge]}>
         <Button
-          title={t("auth.login")}
+          title={t('auth.login')}
           variant="primary"
           size="lg"
           fullWidth
-          onPress={() => router.push("/login")}
+          onPress={() => router.push('/login')}
           style={styles.authButton}
         />
         <Button
-          title={t("auth.createAccount")}
+          title={t('auth.createAccount')}
           variant="outline"
           size="md"
           fullWidth
-          onPress={() => router.push("/register")}
+          onPress={() => router.push('/register')}
         />
       </View>
-      <TouchableOpacity
-        onPress={() => setShowAuthPrompt(false)}
-        style={styles.dismissButton}
-      >
+      <TouchableOpacity onPress={() => setShowAuthPrompt(false)} style={styles.dismissButton}>
         <ThemedText variant="muted" size="sm">
-          {t("common.cancel")}
+          {t('common.cancel')}
         </ThemedText>
       </TouchableOpacity>
     </Card>
@@ -188,7 +166,9 @@ export default function PredictScreen() {
   return (
     <ThemedView variant="background" style={styles.container}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : Platform.OS === "android" ? "height" : undefined}
+        behavior={
+          Platform.OS === 'ios' ? 'padding' : Platform.OS === 'android' ? 'height' : undefined
+        }
         style={styles.container}
         enabled={Platform.OS !== 'web'}
       >
@@ -221,27 +201,15 @@ export default function PredictScreen() {
               ]}
             >
               {/* Header */}
-              <View
-                style={[styles.header, isLargeScreen && styles.headerLarge]}
-              >
+              <View style={[styles.header, isLargeScreen && styles.headerLarge]}>
                 <View style={styles.headerRow}>
-                  <Icon
-                    icon={Sparkles}
-                    size={isLargeScreen ? 36 : 28}
-                    variant="primary"
-                  />
-                  <ThemedText
-                    size={isLargeScreen ? "3xl" : "2xl"}
-                    weight="bold"
-                  >
-                    {t("prediction.newPrediction")}
+                  <Icon icon={Sparkles} size={isLargeScreen ? 36 : 28} variant="primary" />
+                  <ThemedText size={isLargeScreen ? '3xl' : '2xl'} weight="bold">
+                    {t('prediction.newPrediction')}
                   </ThemedText>
                 </View>
-                <ThemedText
-                  variant="secondary"
-                  size={isLargeScreen ? "lg" : "base"}
-                >
-                  {t("home.selectTeams")}
+                <ThemedText variant="secondary" size={isLargeScreen ? 'lg' : 'base'}>
+                  {t('home.selectTeams')}
                 </ThemedText>
               </View>
 
@@ -254,15 +222,11 @@ export default function PredictScreen() {
 
               {/* Team Selection (only show if no prediction yet and no auth prompt) */}
               {!prediction && !showAuthPrompt && (
-                <Card
-                  variant="default"
-                  padding="lg"
-                  style={styles.selectionCard}
-                >
+                <Card variant="default" padding="lg" style={styles.selectionCard}>
                   {/* Home Team Selector */}
                   <View style={styles.teamSelectorWrapper}>
                     <TeamSelector
-                      label={t("prediction.selectHomeTeam")}
+                      label={t('prediction.selectHomeTeam')}
                       selectedTeam={homeTeam}
                       onSelectTeam={(team, data) => {
                         setHomeTeam(team);
@@ -280,32 +244,17 @@ export default function PredictScreen() {
 
                   {/* VS Indicator - sin interacción */}
                   <View style={styles.vsIndicator}>
-                    <View
-                      style={[
-                        styles.vsLine,
-                        { backgroundColor: theme.colors.border },
-                      ]}
-                    />
-                    <ThemedText
-                      variant="primary"
-                      size="xl"
-                      weight="bold"
-                      style={styles.vsText}
-                    >
-                      {t("prediction.vs")}
+                    <View style={[styles.vsLine, { backgroundColor: theme.colors.border }]} />
+                    <ThemedText variant="primary" size="xl" weight="bold" style={styles.vsText}>
+                      {t('prediction.vs')}
                     </ThemedText>
-                    <View
-                      style={[
-                        styles.vsLine,
-                        { backgroundColor: theme.colors.border },
-                      ]}
-                    />
+                    <View style={[styles.vsLine, { backgroundColor: theme.colors.border }]} />
                   </View>
 
                   {/* Away Team Selector - con zIndex mayor */}
                   <View style={styles.teamSelectorWrapper}>
                     <TeamSelector
-                      label={t("prediction.selectAwayTeam")}
+                      label={t('prediction.selectAwayTeam')}
                       selectedTeam={awayTeam}
                       onSelectTeam={(team, data) => {
                         setAwayTeam(team);
@@ -323,18 +272,9 @@ export default function PredictScreen() {
 
                   {/* Error Message */}
                   {error && (
-                    <View
-                      style={[
-                        styles.errorBox,
-                        { backgroundColor: theme.colors.error + "20" },
-                      ]}
-                    >
+                    <View style={[styles.errorBox, { backgroundColor: theme.colors.error + '20' }]}>
                       <Icon icon={AlertCircle} size={18} variant="error" />
-                      <ThemedText
-                        variant="error"
-                        size="sm"
-                        style={styles.errorText}
-                      >
+                      <ThemedText variant="error" size="sm" style={styles.errorText}>
                         {error}
                       </ThemedText>
                     </View>
@@ -342,11 +282,7 @@ export default function PredictScreen() {
 
                   {/* Predict Button */}
                   <Button
-                    title={
-                      loading
-                        ? t("prediction.generating")
-                        : t("prediction.predict")
-                    }
+                    title={loading ? t('prediction.generating') : t('prediction.predict')}
                     icon={loading ? undefined : Sparkles}
                     variant="primary"
                     size="lg"
@@ -377,26 +313,17 @@ export default function PredictScreen() {
                   <Card
                     variant="outlined"
                     padding="lg"
-                    style={[
-                      styles.loadingCard,
-                      isLargeScreen && styles.loadingCardLarge,
-                    ]}
+                    style={[styles.loadingCard, isLargeScreen && styles.loadingCardLarge]}
                   >
-                    <ActivityIndicator
-                      size="large"
-                      color={theme.colors.primary}
-                    />
+                    <ActivityIndicator size="large" color={theme.colors.primary} />
                     <ThemedText
                       variant="secondary"
-                      size={isLargeScreen ? "lg" : "base"}
+                      size={isLargeScreen ? 'lg' : 'base'}
                       style={styles.loadingText}
                     >
-                      {t("prediction.generating")}
+                      {t('prediction.generating')}
                     </ThemedText>
-                    <ThemedText
-                      variant="muted"
-                      size={isLargeScreen ? "base" : "sm"}
-                    >
+                    <ThemedText variant="muted" size={isLargeScreen ? 'base' : 'sm'}>
                       Analizando estadísticas y atributos de jugadores...
                     </ThemedText>
                   </Card>
@@ -409,7 +336,7 @@ export default function PredictScreen() {
                     onNewPrediction={handleNewPrediction}
                     onSave={() => {
                       // Already saved by backend
-                      console.log("Prediction saved:", prediction.id);
+                      console.log('Prediction saved:', prediction.id);
                     }}
                   />
                 )}
@@ -419,19 +346,12 @@ export default function PredictScreen() {
                   <Card
                     variant="outlined"
                     padding="lg"
-                    style={[
-                      styles.emptyCard,
-                      isDesktop && styles.emptyCardDesktop,
-                    ]}
+                    style={[styles.emptyCard, isDesktop && styles.emptyCardDesktop]}
                   >
-                    <Icon
-                      icon={Sparkles}
-                      size={isDesktop ? 80 : 64}
-                      variant="muted"
-                    />
+                    <Icon icon={Sparkles} size={isDesktop ? 80 : 64} variant="muted" />
                     <ThemedText
                       variant="muted"
-                      size={isDesktop ? "lg" : "base"}
+                      size={isDesktop ? 'lg' : 'base'}
                       style={styles.emptyText}
                     >
                       Selecciona dos equipos para ver la predicción de GoalMind
@@ -460,7 +380,7 @@ const styles = StyleSheet.create({
     // No flex: 1 on mobile - let content determine height
   },
   contentTablet: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 24,
     flex: 1,
   },
@@ -474,14 +394,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
     marginBottom: 2,
   },
   errorBox: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
     padding: 12,
     borderRadius: 10,
@@ -495,17 +415,17 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   teamSelectorWrapper: {
-    position: "relative",
+    position: 'relative',
     zIndex: 10,
   },
   statsWrapper: {
-    position: "relative",
+    position: 'relative',
     zIndex: 1,
-    overflow: "hidden",
+    overflow: 'hidden',
   },
   vsIndicator: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginVertical: 12,
     paddingHorizontal: 6,
     zIndex: 1,
@@ -521,8 +441,8 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   loadingCard: {
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     minHeight: 160,
     paddingVertical: 24,
   },
@@ -531,8 +451,8 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   emptyCard: {
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     minHeight: 200,
     paddingVertical: 28,
   },
@@ -540,12 +460,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   emptyText: {
-    textAlign: "center",
+    textAlign: 'center',
     paddingHorizontal: 16,
   },
   authCard: {
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 16,
     paddingVertical: 24,
   },
@@ -553,22 +473,22 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 20,
   },
   authTitle: {
-    textAlign: "center",
+    textAlign: 'center',
     marginBottom: 10,
   },
   authDescription: {
-    textAlign: "center",
+    textAlign: 'center',
     marginBottom: 24,
     paddingHorizontal: 16,
     lineHeight: 22,
   },
   authButtons: {
-    width: "100%",
+    width: '100%',
     gap: 12,
     paddingHorizontal: 8,
   },
@@ -583,11 +503,11 @@ const styles = StyleSheet.create({
   // RESPONSIVE STYLES FOR TABLETS AND DESKTOP
   // ==========================================
   contentDesktop: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 40,
     maxWidth: 1400,
-    alignSelf: "center",
-    width: "100%",
+    alignSelf: 'center',
+    width: '100%',
   },
   columnDesktop: {
     flex: 0.5,
@@ -607,7 +527,7 @@ const styles = StyleSheet.create({
     paddingVertical: 36,
     paddingHorizontal: 32,
     maxWidth: 480,
-    alignSelf: "center",
+    alignSelf: 'center',
   },
   authIconContainerLarge: {
     width: 88,

@@ -2,11 +2,11 @@
  * DendrogramChart - Componente para visualizar dendrograma de clustering jerárquico
  * Muestra la estructura jerárquica de clusters de equipos
  */
-import React, { useMemo } from "react";
-import { View, StyleSheet, Dimensions, useWindowDimensions } from "react-native";
-import Svg, { Line, Text as SvgText, Circle, Rect, G } from "react-native-svg";
-import { useTheme } from "@/src/theme";
-import { ThemedText } from "@/src/components/ui";
+import React, { useMemo } from 'react';
+import { View, StyleSheet, Dimensions, useWindowDimensions } from 'react-native';
+import Svg, { Line, Text as SvgText, Circle, Rect, G } from 'react-native-svg';
+import { useTheme } from '@/src/theme';
+import { ThemedText } from '@/src/components/ui';
 
 interface DendrogramData {
   icoord: number[][];
@@ -178,9 +178,8 @@ export function DendrogramChart({ data }: DendrogramChartProps) {
         const uniqueX = Array.from(new Set(allXValues)).sort((a, b) => a - b);
 
         data.leaves.forEach((leafIdx, posIdx) => {
-          leafXMap[leafIdx] = uniqueX[posIdx] !== undefined
-            ? uniqueX[posIdx]
-            : (posIdx * (maxX / data.leaves.length));
+          leafXMap[leafIdx] =
+            uniqueX[posIdx] !== undefined ? uniqueX[posIdx] : posIdx * (maxX / data.leaves.length);
         });
       }
 
@@ -206,15 +205,7 @@ export function DendrogramChart({ data }: DendrogramChartProps) {
     }
 
     return { lines, labels };
-  }, [
-    data,
-    CHART_WIDTH,
-    CHART_HEIGHT,
-    MARGIN_LEFT,
-    MARGIN_TOP,
-    MARGIN_BOTTOM,
-    MARGIN_RIGHT,
-  ]);
+  }, [data, CHART_WIDTH, CHART_HEIGHT, MARGIN_LEFT, MARGIN_TOP, MARGIN_BOTTOM, MARGIN_RIGHT]);
 
   return (
     <View style={[styles.container, isLargeScreen && styles.containerLarge]}>
@@ -264,9 +255,8 @@ export function DendrogramChart({ data }: DendrogramChartProps) {
 
           {/* Renderizar etiquetas de equipos en la parte inferior con texto inclinado */}
           {normalizedCoords.labels.map((label, idx) => {
-            const shortName = label.text.length > 20
-              ? label.text.substring(0, 20) + "..."
-              : label.text;
+            const shortName =
+              label.text.length > 20 ? label.text.substring(0, 20) + '...' : label.text;
 
             // Calcular posición Y de la hoja (parte inferior del dendrograma)
             const leafY = CHART_HEIGHT - MARGIN_BOTTOM;
@@ -281,7 +271,7 @@ export function DendrogramChart({ data }: DendrogramChartProps) {
                   y2={label.y - (isLargeScreen ? 30 : 25)}
                   stroke={theme.colors.primary}
                   strokeWidth={isLargeScreen ? 2 : 1.5}
-                  strokeDasharray={isLargeScreen ? "5,5" : "4,4"}
+                  strokeDasharray={isLargeScreen ? '5,5' : '4,4'}
                   opacity={0.4}
                 />
                 {/* Fondo transparente */}
@@ -294,10 +284,7 @@ export function DendrogramChart({ data }: DendrogramChartProps) {
                   fill="transparent"
                 />
                 {/* Texto del equipo inclinado (-45 grados) */}
-                <G
-                  origin={[label.x, label.y + (isLargeScreen ? 10 : 8)]}
-                  rotation={-45}
-                >
+                <G origin={[label.x, label.y + (isLargeScreen ? 10 : 8)]} rotation={-45}>
                   <SvgText
                     x={label.x}
                     y={label.y + (isLargeScreen ? 10 : 8)}
@@ -315,44 +302,40 @@ export function DendrogramChart({ data }: DendrogramChartProps) {
         </Svg>
 
         {/* Información del dendrograma */}
-        <View
-          style={[styles.chartInfo, isLargeScreen && styles.chartInfoLarge]}
-        >
+        <View style={[styles.chartInfo, isLargeScreen && styles.chartInfoLarge]}>
           <ThemedText
-            size={isLargeScreen ? "sm" : "xs"}
+            size={isLargeScreen ? 'sm' : 'xs'}
             variant="muted"
             style={[styles.infoText, isLargeScreen && styles.infoTextLarge]}
           >
-            El dendrograma muestra la similitud entre equipos. Equipos más
-            cercanos tienen características más similares.
+            El dendrograma muestra la similitud entre equipos. Equipos más cercanos tienen
+            características más similares.
           </ThemedText>
         </View>
       </View>
-
-
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    width: "100%",
+    width: '100%',
   },
   chartContainer: {
     borderRadius: 14,
     borderWidth: 1,
     padding: 18,
     marginBottom: 18,
-    overflow: "visible", // Cambiado a visible para que las etiquetas no se corten
+    overflow: 'visible', // Cambiado a visible para que las etiquetas no se corten
   },
   chartInfo: {
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: "rgba(0,0,0,0.1)",
+    borderTopColor: 'rgba(0,0,0,0.1)',
   },
   infoText: {
-    textAlign: "center",
+    textAlign: 'center',
     lineHeight: 20,
     paddingHorizontal: 8,
   },

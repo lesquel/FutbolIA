@@ -10,13 +10,13 @@ import React, {
   useMemo,
   useCallback,
   ReactNode,
-} from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { authApi, User, getToken, removeToken } from "@/src/services/api";
+} from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { authApi, User, getToken, removeToken } from '@/src/services/api';
 
 // Storage keys
-const USER_KEY = "@futbolia_user";
-const FAVORITE_TEAMS_KEY = "@futbolia_favorite_teams";
+const USER_KEY = '@futbolia_user';
+const FAVORITE_TEAMS_KEY = '@futbolia_favorite_teams';
 
 // Favorite team type
 export interface FavoriteTeam {
@@ -33,19 +33,14 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   favoriteTeams: FavoriteTeam[];
-  login: (
-    email: string,
-    password: string
-  ) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (
     email: string,
     username: string,
-    password: string
+    password: string,
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
-  updateProfile: (
-    data: Partial<User>
-  ) => Promise<{ success: boolean; error?: string }>;
+  updateProfile: (data: Partial<User>) => Promise<{ success: boolean; error?: string }>;
   addFavoriteTeam: (team: FavoriteTeam) => Promise<void>;
   removeFavoriteTeam: (teamId: string) => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -76,10 +71,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const response = await authApi.getProfile();
         if (response.success && response.data?.user) {
           setUser(response.data.user);
-          await AsyncStorage.setItem(
-            USER_KEY,
-            JSON.stringify(response.data.user)
-          );
+          await AsyncStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
         } else {
           // Token invalid, clear it
           await removeToken();
@@ -92,7 +84,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           try {
             setUser(JSON.parse(cachedUser));
           } catch (e) {
-            console.error("Error parsing cached user:", e);
+            console.error('Error parsing cached user:', e);
             await AsyncStorage.removeItem(USER_KEY);
           }
         }
@@ -104,12 +96,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         try {
           setFavoriteTeams(JSON.parse(cachedTeams));
         } catch (e) {
-          console.error("Error parsing cached teams:", e);
+          console.error('Error parsing cached teams:', e);
           await AsyncStorage.removeItem(FAVORITE_TEAMS_KEY);
         }
       }
     } catch (err) {
-      console.error("Auth initialization error:", err);
+      console.error('Auth initialization error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -120,42 +112,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const response = await authApi.login(email, password);
       if (response.success && response.data?.user) {
         setUser(response.data.user);
-        await AsyncStorage.setItem(
-          USER_KEY,
-          JSON.stringify(response.data.user)
-        );
+        await AsyncStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
         return { success: true };
       }
-      return { success: false, error: response.error || "Login failed" };
+      return { success: false, error: response.error || 'Login failed' };
     } catch (err) {
-      console.error("Login error:", err);
-      return { success: false, error: "Network error" };
+      console.error('Login error:', err);
+      return { success: false, error: 'Network error' };
     }
   }, []);
 
-  const register = useCallback(
-    async (email: string, username: string, password: string) => {
-      try {
-        const response = await authApi.register(email, username, password);
-        if (response.success && response.data?.user) {
-          setUser(response.data.user);
-          await AsyncStorage.setItem(
-            USER_KEY,
-            JSON.stringify(response.data.user)
-          );
-          return { success: true };
-        }
-        return {
-          success: false,
-          error: response.error || "Registration failed",
-        };
-      } catch (err) {
-        console.error("Register error:", err);
-        return { success: false, error: "Network error" };
+  const register = useCallback(async (email: string, username: string, password: string) => {
+    try {
+      const response = await authApi.register(email, username, password);
+      if (response.success && response.data?.user) {
+        setUser(response.data.user);
+        await AsyncStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
+        return { success: true };
       }
-    },
-    []
-  );
+      return {
+        success: false,
+        error: response.error || 'Registration failed',
+      };
+    } catch (err) {
+      console.error('Register error:', err);
+      return { success: false, error: 'Network error' };
+    }
+  }, []);
 
   const logout = useCallback(async () => {
     await authApi.logout();
@@ -165,22 +148,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const updateProfile = useCallback(async (data: Partial<User>) => {
     try {
-      const response = await authApi.updatePreferences(
-        data.language,
-        data.theme
-      );
+      const response = await authApi.updatePreferences(data.language, data.theme);
       if (response.success && response.data?.user) {
         setUser(response.data.user);
-        await AsyncStorage.setItem(
-          USER_KEY,
-          JSON.stringify(response.data.user)
-        );
+        await AsyncStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
         return { success: true };
       }
-      return { success: false, error: response.error || "Update failed" };
+      return { success: false, error: response.error || 'Update failed' };
     } catch (err) {
-      console.error("Update profile error:", err);
-      return { success: false, error: "Network error" };
+      console.error('Update profile error:', err);
+      return { success: false, error: 'Network error' };
     }
   }, []);
 
@@ -207,13 +184,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const response = await authApi.getProfile();
       if (response.success && response.data?.user) {
         setUser(response.data.user);
-        await AsyncStorage.setItem(
-          USER_KEY,
-          JSON.stringify(response.data.user)
-        );
+        await AsyncStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
       }
     } catch (err) {
-      console.error("Refresh user error:", err);
+      console.error('Refresh user error:', err);
     }
   }, []);
 
@@ -242,7 +216,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       addFavoriteTeam,
       removeFavoriteTeam,
       refreshUser,
-    ]
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -251,7 +225,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 }

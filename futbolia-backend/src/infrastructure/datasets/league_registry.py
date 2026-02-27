@@ -2,13 +2,15 @@
 Global League Registry
 Catálogo completo de +50 ligas mundiales con sus identificadores en múltiples APIs
 """
+
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Any
 from enum import Enum
+from typing import Any
 
 
 class LeagueTier(Enum):
     """Clasificación de ligas por prioridad de datos"""
+
     TIER_1 = 1  # Alta prioridad - Datos completos disponibles
     TIER_2 = 2  # Media prioridad - Datos parciales
     TIER_3 = 3  # Expansión futura - Datos limitados
@@ -16,6 +18,7 @@ class LeagueTier(Enum):
 
 class Continent(Enum):
     """Continentes para clasificación geográfica"""
+
     EUROPE = "europe"
     SOUTH_AMERICA = "south_america"
     NORTH_AMERICA = "north_america"
@@ -28,26 +31,28 @@ class Continent(Enum):
 @dataclass
 class LeagueInfo:
     """Información completa de una liga"""
-    code: str                          # Código interno único
-    name: str                          # Nombre oficial
-    country: str                       # País
-    continent: Continent               # Continente
-    tier: LeagueTier                   # Prioridad de datos
-    
+
+    code: str  # Código interno único
+    name: str  # Nombre oficial
+    country: str  # País
+    continent: Continent  # Continente
+    tier: LeagueTier  # Prioridad de datos
+
     # IDs en diferentes APIs
-    football_data_id: Optional[str] = None      # Football-Data.org
-    thesportsdb_id: Optional[str] = None        # TheSportsDB
-    api_football_id: Optional[int] = None       # API-Football
-    
+    football_data_id: str | None = None  # Football-Data.org
+    thesportsdb_id: str | None = None  # TheSportsDB
+    api_football_id: int | None = None  # API-Football
+
     # Metadatos adicionales
-    season_start_month: int = 8                 # Mes inicio temporada (agosto por defecto)
-    teams_count: int = 20                       # Número típico de equipos
-    logo_url: Optional[str] = None              # URL del logo de la liga
-    is_active: bool = True                      # Liga activa para predicciones
-    
+    season_start_month: int = 8  # Mes inicio temporada (agosto por defecto)
+    teams_count: int = 20  # Número típico de equipos
+    logo_url: str | None = None  # URL del logo de la liga
+    is_active: bool = True  # Liga activa para predicciones
+
     def get_current_season(self) -> str:
         """Calcula la temporada actual basado en el mes de inicio"""
         from datetime import datetime
+
         now = datetime.now()
         year = now.year
         if now.month < self.season_start_month:
@@ -59,7 +64,7 @@ class LeagueInfo:
 # CATÁLOGO GLOBAL DE LIGAS (+50 LIGAS)
 # =============================================================================
 
-GLOBAL_LEAGUES: Dict[str, LeagueInfo] = {
+GLOBAL_LEAGUES: dict[str, LeagueInfo] = {
     # =========================================================================
     # EUROPA - TIER 1 (Top 5 Ligas)
     # =========================================================================
@@ -118,7 +123,6 @@ GLOBAL_LEAGUES: Dict[str, LeagueInfo] = {
         api_football_id=61,
         teams_count=18,
     ),
-    
     # =========================================================================
     # EUROPA - TIER 1 (Otras Ligas Importantes)
     # =========================================================================
@@ -156,7 +160,6 @@ GLOBAL_LEAGUES: Dict[str, LeagueInfo] = {
         teams_count=20,
         season_start_month=4,  # Abril (calendario sudamericano)
     ),
-    
     # =========================================================================
     # COMPETICIONES INTERNACIONALES - TIER 1
     # =========================================================================
@@ -223,7 +226,6 @@ GLOBAL_LEAGUES: Dict[str, LeagueInfo] = {
         api_football_id=13,
         teams_count=32,
     ),
-    
     # =========================================================================
     # SUDAMÉRICA - TIER 1
     # =========================================================================
@@ -324,7 +326,6 @@ GLOBAL_LEAGUES: Dict[str, LeagueInfo] = {
         teams_count=18,
         season_start_month=1,
     ),
-    
     # =========================================================================
     # NORTEAMÉRICA - TIER 1
     # =========================================================================
@@ -359,7 +360,6 @@ GLOBAL_LEAGUES: Dict[str, LeagueInfo] = {
         api_football_id=263,
         teams_count=18,
     ),
-    
     # =========================================================================
     # EUROPA - TIER 2 (Ligas Secundarias)
     # =========================================================================
@@ -502,7 +502,6 @@ GLOBAL_LEAGUES: Dict[str, LeagueInfo] = {
         api_football_id=113,
         teams_count=16,
     ),
-    
     # =========================================================================
     # ASIA - TIER 2
     # =========================================================================
@@ -579,7 +578,6 @@ GLOBAL_LEAGUES: Dict[str, LeagueInfo] = {
         teams_count=12,
         season_start_month=10,
     ),
-    
     # =========================================================================
     # ÁFRICA - TIER 3
     # =========================================================================
@@ -635,70 +633,65 @@ class LeagueRegistry:
     """
     Registro centralizado de ligas con métodos de búsqueda y filtrado
     """
-    
+
     @staticmethod
-    def get_league(code: str) -> Optional[LeagueInfo]:
+    def get_league(code: str) -> LeagueInfo | None:
         """Obtener información de una liga por su código"""
         return GLOBAL_LEAGUES.get(code.upper())
-    
+
     @staticmethod
-    def get_all_leagues() -> Dict[str, LeagueInfo]:
+    def get_all_leagues() -> dict[str, LeagueInfo]:
         """Obtener todas las ligas registradas"""
         return GLOBAL_LEAGUES
-    
+
     @staticmethod
-    def get_leagues_by_continent(continent: Continent) -> List[LeagueInfo]:
+    def get_leagues_by_continent(continent: Continent) -> list[LeagueInfo]:
         """Filtrar ligas por continente"""
-        return [
-            league for league in GLOBAL_LEAGUES.values()
-            if league.continent == continent
-        ]
-    
+        return [league for league in GLOBAL_LEAGUES.values() if league.continent == continent]
+
     @staticmethod
-    def get_leagues_by_tier(tier: LeagueTier) -> List[LeagueInfo]:
+    def get_leagues_by_tier(tier: LeagueTier) -> list[LeagueInfo]:
         """Filtrar ligas por tier de prioridad"""
-        return [
-            league for league in GLOBAL_LEAGUES.values()
-            if league.tier == tier
-        ]
-    
+        return [league for league in GLOBAL_LEAGUES.values() if league.tier == tier]
+
     @staticmethod
-    def get_active_leagues() -> List[LeagueInfo]:
+    def get_active_leagues() -> list[LeagueInfo]:
         """Obtener solo ligas activas para predicciones"""
-        return [
-            league for league in GLOBAL_LEAGUES.values()
-            if league.is_active
-        ]
-    
+        return [league for league in GLOBAL_LEAGUES.values() if league.is_active]
+
     @staticmethod
-    def get_leagues_with_api(api_name: str) -> List[LeagueInfo]:
+    def get_leagues_with_api(api_name: str) -> list[LeagueInfo]:
         """
         Filtrar ligas que tienen ID en una API específica
-        
+
         Args:
             api_name: 'football_data', 'thesportsdb', 'api_football'
         """
         result = []
         for league in GLOBAL_LEAGUES.values():
-            if api_name == "football_data" and league.football_data_id:
-                result.append(league)
-            elif api_name == "thesportsdb" and league.thesportsdb_id:
-                result.append(league)
-            elif api_name == "api_football" and league.api_football_id:
+            if (
+                api_name == "football_data"
+                and league.football_data_id
+                or api_name == "thesportsdb"
+                and league.thesportsdb_id
+                or api_name == "api_football"
+                and league.api_football_id
+            ):
                 result.append(league)
         return result
-    
+
     @staticmethod
-    def search_league_by_name(name: str) -> List[LeagueInfo]:
+    def search_league_by_name(name: str) -> list[LeagueInfo]:
         """Buscar ligas por nombre (fuzzy search)"""
         name_lower = name.lower()
         return [
-            league for league in GLOBAL_LEAGUES.values()
+            league
+            for league in GLOBAL_LEAGUES.values()
             if name_lower in league.name.lower() or name_lower in league.country.lower()
         ]
-    
+
     @staticmethod
-    def get_league_codes_for_predictions() -> Dict[str, str]:
+    def get_league_codes_for_predictions() -> dict[str, str]:
         """
         Generar diccionario de mapeo nombre->código para predicciones
         Compatible con el formato actual de LEAGUE_MAPPING_PREDICTIONS
@@ -711,24 +704,22 @@ class LeagueRegistry:
                 if league.country not in league.name:
                     mapping[f"{league.name} ({league.country})"] = code
         return mapping
-    
+
     @staticmethod
-    def get_statistics() -> Dict[str, Any]:
+    def get_statistics() -> dict[str, Any]:
         """Obtener estadísticas del registro de ligas"""
         leagues = list(GLOBAL_LEAGUES.values())
-        
+
         return {
             "total_leagues": len(leagues),
             "by_continent": {
-                c.value: len([l for l in leagues if l.continent == c])
-                for c in Continent
+                c.value: len([lg for lg in leagues if lg.continent == c]) for c in Continent
             },
             "by_tier": {
-                f"tier_{t.value}": len([l for l in leagues if l.tier == t])
-                for t in LeagueTier
+                f"tier_{t.value}": len([lg for lg in leagues if lg.tier == t]) for t in LeagueTier
             },
-            "with_football_data": len([l for l in leagues if l.football_data_id]),
-            "with_thesportsdb": len([l for l in leagues if l.thesportsdb_id]),
-            "with_api_football": len([l for l in leagues if l.api_football_id]),
-            "active_for_predictions": len([l for l in leagues if l.is_active]),
+            "with_football_data": len([lg for lg in leagues if lg.football_data_id]),
+            "with_thesportsdb": len([lg for lg in leagues if lg.thesportsdb_id]),
+            "with_api_football": len([lg for lg in leagues if lg.api_football_id]),
+            "active_for_predictions": len([lg for lg in leagues if lg.is_active]),
         }

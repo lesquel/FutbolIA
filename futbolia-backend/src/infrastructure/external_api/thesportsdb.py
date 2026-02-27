@@ -14,19 +14,19 @@ Key endpoints:
 - /eventslast.php?id={team_id} - Get last matches
 - /searchplayers.php?t={name} - Search players
 """
-import httpx
-from typing import List, Optional, Dict, Any
+
 from datetime import datetime
 
-from src.core.config import settings
-from src.core.cache import team_cache, squad_cache, api_cache
+import httpx
+
+from src.core.cache import api_cache, squad_cache, team_cache
 from src.domain.entities import Team
 
 
 class TheSportsDBClient:
     """
     Client for TheSportsDB API (100% FREE, NO API KEY REQUIRED)
-    
+
     Benefits:
     - ✅ Completely free (no API key needed)
     - ✅ 100,000 requests/day limit (very generous!)
@@ -34,32 +34,32 @@ class TheSportsDBClient:
     - ✅ Team logos and player photos
     - ✅ Historical and upcoming matches
     - ✅ Perfect for development and production
-    
+
     Covers:
     - Major European leagues (Premier League, La Liga, Serie A, etc.)
     - MLS, Liga MX
     - Some South American leagues
     - International competitions
     """
-    
+
     BASE_URL = "https://www.thesportsdb.com/api/v1/json/3"
-    
+
     @classmethod
     def _get_headers(cls) -> dict:
         """Get API headers (no authentication needed!)"""
         return {
             "Accept": "application/json",
         }
-    
+
     @classmethod
-    async def search_team(cls, team_name: str) -> Optional[dict]:
+    async def search_team(cls, team_name: str) -> dict | None:
         """
         Search for a team by name
         Returns raw API response with team data
         Uses TTL cache to reduce API calls
         """
         cache_key = f"thesportsdb_team_search:{team_name.lower()}"
-        
+
         # Check cache first
         cached_result = await team_cache.get(cache_key)
         if cached_result is not None:
@@ -69,20 +69,22 @@ class TheSportsDBClient:
                 print(f"✅ Cache hit for team: {team_name}")
                 return cached_result
             else:
-                print(f"⚠️ Cache mismatch for search '{team_name}': got '{cached_name}', deleting corrupted cache")
+                print(
+                    f"⚠️ Cache mismatch for search '{team_name}': got '{cached_name}', deleting corrupted cache"
+                )
                 await team_cache.delete(cache_key)
-        
+
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
                 response = await client.get(
                     f"{cls.BASE_URL}/searchteams.php",
                     headers=cls._get_headers(),
-                    params={"t": team_name}
+                    params={"t": team_name},
                 )
-                
+
                 if response.status_code == 200:
                     data = response.json()
-                    
+
                     teams = data.get("teams", [])
                     if teams and len(teams) > 0:
                         # Find the best match (prefer exact or partial match)
@@ -92,31 +94,33 @@ class TheSportsDBClient:
                             if team_name.lower() in t_name or t_name in team_name.lower():
                                 team_data = t
                                 break
-                        
+
                         # If no good match, use first result
                         if not team_data:
                             team_data = teams[0]
-                        
+
                         # Cache only if name matches reasonably
                         result_name = team_data.get("strTeam", "").lower()
                         if team_name.lower() in result_name or result_name in team_name.lower():
                             await team_cache.set(cache_key, team_data)
-                        
-                        print(f"✅ Found team: {team_data.get('strTeam', team_name)} (ID: {team_data.get('idTeam')})")
+
+                        print(
+                            f"✅ Found team: {team_data.get('strTeam', team_name)} (ID: {team_data.get('idTeam')})"
+                        )
                         return team_data
-                    
+
                     print(f"⚠️ No teams found for: {team_name}")
-                    
+
         except Exception as e:
             print(f"❌ TheSportsDB search error: {e}")
-        
+
         return None
-    
+
     @classmethod
-    async def get_team_by_id(cls, team_id: str) -> Optional[dict]:
+    async def get_team_by_id(cls, team_id: str) -> dict | None:
         """Get detailed team information by ID"""
         cache_key = f"thesportsdb_team:{team_id}"
-        
+
         # Check cache first
         cached_result = await team_cache.get(cache_key)
         if cached_result is not None:
@@ -124,17 +128,19 @@ class TheSportsDBClient:
             if str(cached_result.get("idTeam")) == str(team_id):
                 return cached_result
             else:
-                print(f"⚠️ Cache mismatch for team {team_id}: got {cached_result.get('idTeam')}, deleting corrupted cache")
+                print(
+                    f"⚠️ Cache mismatch for team {team_id}: got {cached_result.get('idTeam')}, deleting corrupted cache"
+                )
                 await team_cache.delete(cache_key)
-        
+
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
                 response = await client.get(
                     f"{cls.BASE_URL}/lookupteam.php",
                     headers=cls._get_headers(),
-                    params={"id": team_id}
+                    params={"id": team_id},
                 )
-                
+
                 if response.status_code == 200:
                     data = response.json()
                     teams = data.get("teams", [])
@@ -146,19 +152,21 @@ class TheSportsDBClient:
                             await team_cache.set(cache_key, team_data)
                             return team_data
                         else:
-                            print(f"⚠️ API returned wrong team ID: expected {team_id}, got {team_data.get('idTeam')}")
-                    
+                            print(
+                                f"⚠️ API returned wrong team ID: expected {team_id}, got {team_data.get('idTeam')}"
+                            )
+
         except Exception as e:
             print(f"❌ TheSportsDB get team error: {e}")
-        
+
         return None
-    
+
     @classmethod
-    async def get_team_squad(cls, team_id: str) -> List[dict]:
+    async def get_team_squad(cls, team_id: str) -> list[dict]:
         """
         Get current squad for a team
         Returns list of players with their info
-        
+
         Response format per player:
         {
             "idPlayer": "123",
@@ -171,21 +179,21 @@ class TheSportsDBClient:
         Uses TTL cache (1 hour) since squads change less frequently
         """
         cache_key = f"thesportsdb_squad:{team_id}"
-        
+
         # Check cache first
         cached_result = await squad_cache.get(cache_key)
         if cached_result is not None:
             print(f"✅ Cache hit for squad: {team_id}")
             return cached_result
-        
+
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
                 response = await client.get(
                     f"{cls.BASE_URL}/lookup_all_players.php",
                     headers=cls._get_headers(),
-                    params={"id": team_id}
+                    params={"id": team_id},
                 )
-                
+
                 if response.status_code == 200:
                     data = response.json()
                     players = data.get("player", [])
@@ -194,14 +202,14 @@ class TheSportsDBClient:
                         await squad_cache.set(cache_key, players)
                         print(f"✅ Found {len(players)} players for team {team_id}")
                         return players
-                        
+
         except Exception as e:
             print(f"❌ TheSportsDB squad error: {e}")
-        
+
         return []
-    
+
     @classmethod
-    async def get_team_with_squad(cls, team_name: str) -> Optional[dict]:
+    async def get_team_with_squad(cls, team_name: str) -> dict | None:
         """
         Get team info AND full squad in one call sequence
         Returns:
@@ -214,19 +222,19 @@ class TheSportsDBClient:
         team_data = await cls.search_team(team_name)
         if not team_data:
             return None
-        
+
         team_id = team_data.get("idTeam")
         if not team_id:
             return None
-        
+
         # Get detailed team info
         detailed_team = await cls.get_team_by_id(team_id)
         if detailed_team:
             team_data = detailed_team
-        
+
         # Then get the squad
         players_raw = await cls.get_team_squad(team_id)
-        
+
         # Extract manager from squad (TheSportsDB lists manager as a player with position "Manager")
         manager_name = team_data.get("strManager", "")
         if not manager_name:
@@ -234,18 +242,20 @@ class TheSportsDBClient:
                 if p.get("strPosition", "").lower() == "manager":
                     manager_name = p.get("strPlayer", "")
                     break
-        
+
         # Update team entity with manager
         team = Team(
             id=f"tsdb_{team_id}",
             name=team_data.get("strTeam", team_name),
-            short_name=team_data.get("strTeamShort", team_data.get("strTeam", team_name)[:3].upper()),
+            short_name=team_data.get(
+                "strTeamShort", team_data.get("strTeam", team_name)[:3].upper()
+            ),
             logo_url=team_data.get("strTeamBadge", ""),
             country=team_data.get("strCountry", ""),
             league=team_data.get("strLeague", ""),
             manager=manager_name,  # ✅ DT extraído del squad o del team data
         )
-        
+
         # Convert to our format with estimated overall ratings — skip the manager
         player_list = []
         for p in players_raw:
@@ -263,43 +273,46 @@ class TheSportsDBClient:
                 base_overall = 75
             elif position in ["Attacker", "Forward", "FW", "ST", "LW", "RW"]:
                 base_overall = 76
-            
+
             # Add some variation
             import random
+
             overall = base_overall + random.randint(-3, 5)
-            
-            player_list.append({
-                "name": p.get("strPlayer", "Unknown"),
-                "position": cls._map_position(position),
-                "overall": min(88, max(65, overall)),
-                "number": p.get("strNumber"),
-                "age": cls._calculate_age(p.get("dateBorn")),
-                "photo": p.get("strThumb", ""),
-            })
-        
+
+            player_list.append(
+                {
+                    "name": p.get("strPlayer", "Unknown"),
+                    "position": cls._map_position(position),
+                    "overall": min(88, max(65, overall)),
+                    "number": p.get("strNumber"),
+                    "age": cls._calculate_age(p.get("dateBorn")),
+                    "photo": p.get("strThumb", ""),
+                }
+            )
+
         return {
             "team": team,
             "players": player_list,
         }
-    
+
     @classmethod
-    async def get_upcoming_fixtures(cls, team_id: str, limit: int = 10) -> List[dict]:
+    async def get_upcoming_fixtures(cls, team_id: str, limit: int = 10) -> list[dict]:
         """Get upcoming fixtures for a team"""
         cache_key = f"thesportsdb_fixtures:{team_id}:next"
-        
+
         # Check cache first
         cached_result = await api_cache.get(cache_key)
         if cached_result is not None:
             return cached_result[:limit] if cached_result else []
-        
+
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
                 response = await client.get(
                     f"{cls.BASE_URL}/eventsnext.php",
                     headers=cls._get_headers(),
-                    params={"id": team_id}
+                    params={"id": team_id},
                 )
-                
+
                 if response.status_code == 200:
                     data = response.json()
                     events = data.get("events", [])
@@ -307,30 +320,30 @@ class TheSportsDBClient:
                         # Cache for 1 hour (api_cache TTL is 3600 seconds)
                         await api_cache.set(cache_key, events)
                         return events[:limit]
-                        
+
         except Exception as e:
             print(f"❌ TheSportsDB fixtures error: {e}")
-        
+
         return []
-    
+
     @classmethod
-    async def get_last_matches(cls, team_id: str, limit: int = 5) -> List[dict]:
+    async def get_last_matches(cls, team_id: str, limit: int = 5) -> list[dict]:
         """Get last matches for a team (for form calculation)"""
         cache_key = f"thesportsdb_fixtures:{team_id}:last"
-        
+
         # Check cache first
         cached_result = await api_cache.get(cache_key)
         if cached_result is not None:
             return cached_result[:limit] if cached_result else []
-        
+
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
                 response = await client.get(
                     f"{cls.BASE_URL}/eventslast.php",
                     headers=cls._get_headers(),
-                    params={"id": team_id}
+                    params={"id": team_id},
                 )
-                
+
                 if response.status_code == 200:
                     data = response.json()
                     events = data.get("results", [])
@@ -338,12 +351,12 @@ class TheSportsDBClient:
                         # Cache for 1 hour (api_cache TTL is 3600 seconds)
                         await api_cache.set(cache_key, events)
                         return events[:limit]
-                        
+
         except Exception as e:
             print(f"❌ TheSportsDB last matches error: {e}")
-        
+
         return []
-    
+
     @staticmethod
     def _map_position(api_position: str) -> str:
         """Map TheSportsDB positions to our format"""
@@ -374,39 +387,39 @@ class TheSportsDBClient:
             "RW": "RW",
         }
         return position_map.get(api_position, "CM")
-    
+
     @staticmethod
-    def _calculate_age(birth_date: Optional[str]) -> Optional[int]:
+    def _calculate_age(birth_date: str | None) -> int | None:
         """Calculate age from birth date"""
         if not birth_date:
             return None
-        
+
         try:
             birth = datetime.strptime(birth_date, "%Y-%m-%d")
             today = datetime.now()
             age = today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day))
             return age
-        except:
+        except Exception:
             return None
-    
+
     @classmethod
-    async def search_players(cls, player_name: str, limit: int = 20) -> List[dict]:
+    async def search_players(cls, player_name: str, limit: int = 20) -> list[dict]:
         """Search for players by name"""
         cache_key = f"thesportsdb_player_search:{player_name.lower()}"
-        
+
         # Check cache first
         cached_result = await api_cache.get(cache_key)
         if cached_result is not None:
             return cached_result[:limit] if cached_result else []
-        
+
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
                 response = await client.get(
                     f"{cls.BASE_URL}/searchplayers.php",
                     headers=cls._get_headers(),
-                    params={"p": player_name}
+                    params={"p": player_name},
                 )
-                
+
                 if response.status_code == 200:
                     data = response.json()
                     players = data.get("player", [])
@@ -414,9 +427,8 @@ class TheSportsDBClient:
                         # Cache for 1 hour (api_cache TTL is 3600 seconds)
                         await api_cache.set(cache_key, players)
                         return players[:limit]
-                        
+
         except Exception as e:
             print(f"❌ TheSportsDB player search error: {e}")
-        
-        return []
 
+        return []

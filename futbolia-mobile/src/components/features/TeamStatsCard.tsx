@@ -1,17 +1,12 @@
 /**
  * TeamStatsCard - Shows team players and stats after selection
  */
-import {
-  View,
-  StyleSheet,
-  ActivityIndicator,
-  useWindowDimensions,
-} from "react-native";
-import { useState, useEffect, memo } from "react";
-import { LucideIcon, Users } from "lucide-react-native";
-import { useTheme } from "@/src/theme";
-import { ThemedText, Card, Icon } from "@/src/components/ui";
-import { teamsApi, Player } from "@/src/services/api";
+import { View, StyleSheet, ActivityIndicator, useWindowDimensions } from 'react-native';
+import { useState, useEffect, memo } from 'react';
+import { LucideIcon, Users } from 'lucide-react-native';
+import { useTheme } from '@/src/theme';
+import { ThemedText, Card, Icon } from '@/src/components/ui';
+import { teamsApi, Player } from '@/src/services/api';
 
 interface TeamStats {
   overall: number;
@@ -29,10 +24,10 @@ interface TeamStatsCardProps {
 
 // Helper to get position color
 const getPositionColor = (position: string) => {
-  if (position === "GK") return "#FFA500"; // Orange
-  if (["CB", "LB", "RB", "LWB", "RWB"].includes(position)) return "#3498db"; // Blue
-  if (["CDM", "CM", "CAM"].includes(position)) return "#27ae60"; // Green
-  return "#e74c3c"; // Red for attackers
+  if (position === 'GK') return '#FFA500'; // Orange
+  if (['CB', 'LB', 'RB', 'LWB', 'RWB'].includes(position)) return '#3498db'; // Blue
+  if (['CDM', 'CM', 'CAM'].includes(position)) return '#27ae60'; // Green
+  return '#e74c3c'; // Red for attackers
 };
 
 // Stat bar component
@@ -49,26 +44,16 @@ const StatBar = ({
 }) => (
   <View style={[styles.statRow, isLargeScreen && styles.statRowLarge]}>
     <ThemedText
-      size={isLargeScreen ? "sm" : "xs"}
+      size={isLargeScreen ? 'sm' : 'xs'}
       style={[styles.statLabel, isLargeScreen && styles.statLabelLarge]}
     >
       {label}
     </ThemedText>
-    <View
-      style={[
-        styles.statBarContainer,
-        isLargeScreen && styles.statBarContainerLarge,
-      ]}
-    >
-      <View
-        style={[
-          styles.statBarFill,
-          { width: `${value}%`, backgroundColor: color },
-        ]}
-      />
+    <View style={[styles.statBarContainer, isLargeScreen && styles.statBarContainerLarge]}>
+      <View style={[styles.statBarFill, { width: `${value}%`, backgroundColor: color }]} />
     </View>
     <ThemedText
-      size={isLargeScreen ? "sm" : "xs"}
+      size={isLargeScreen ? 'sm' : 'xs'}
       weight="bold"
       style={[styles.statValue, isLargeScreen && styles.statValueLarge]}
     >
@@ -109,11 +94,11 @@ export const TeamStatsCard = memo(function TeamStatsCard({
           setPlayers(response.data.players || []);
           setStats(response.data.stats || null);
         } else {
-          setError("No se pudieron cargar los datos");
+          setError('No se pudieron cargar los datos');
         }
       } catch (err) {
-        setError("Error de conexión");
-        console.log("Error loading team data:", err);
+        setError('Error de conexión');
+        console.log('Error loading team data:', err);
       } finally {
         setLoading(false);
       }
@@ -128,22 +113,17 @@ export const TeamStatsCard = memo(function TeamStatsCard({
     return (
       <Card
         variant="outlined"
-        padding={isLargeScreen ? "lg" : "md"}
+        padding={isLargeScreen ? 'lg' : 'md'}
         style={[styles.card, isLargeScreen && styles.cardLarge]}
       >
-        <View
-          style={[
-            styles.loadingContainer,
-            isLargeScreen && styles.loadingContainerLarge,
-          ]}
-        >
+        <View style={[styles.loadingContainer, isLargeScreen && styles.loadingContainerLarge]}>
           <ActivityIndicator
-            size={isLargeScreen ? "large" : "small"}
+            size={isLargeScreen ? 'large' : 'small'}
             color={theme.colors.primary}
           />
           <ThemedText
             variant="muted"
-            size={isLargeScreen ? "base" : "sm"}
+            size={isLargeScreen ? 'base' : 'sm'}
             style={styles.loadingText}
           >
             Cargando datos de {teamName}...
@@ -157,10 +137,10 @@ export const TeamStatsCard = memo(function TeamStatsCard({
     return (
       <Card
         variant="outlined"
-        padding={isLargeScreen ? "lg" : "md"}
+        padding={isLargeScreen ? 'lg' : 'md'}
         style={[styles.card, isLargeScreen && styles.cardLarge]}
       >
-        <ThemedText variant="muted" size={isLargeScreen ? "base" : "sm"}>
+        <ThemedText variant="muted" size={isLargeScreen ? 'base' : 'sm'}>
           {error || `Sin datos disponibles para ${teamName}`}
         </ThemedText>
       </Card>
@@ -170,18 +150,14 @@ export const TeamStatsCard = memo(function TeamStatsCard({
   return (
     <Card
       variant="outlined"
-      padding={isLargeScreen ? "lg" : "md"}
+      padding={isLargeScreen ? 'lg' : 'md'}
       style={[styles.card, isLargeScreen && styles.cardLarge]}
     >
       {/* Header */}
       <View style={[styles.header, isLargeScreen && styles.headerLarge]}>
         <View style={styles.headerRow}>
-          <Icon
-            icon={IconComponent}
-            size={isLargeScreen ? 26 : 20}
-            variant="primary"
-          />
-          <ThemedText size={isLargeScreen ? "lg" : "base"} weight="bold">
+          <Icon icon={IconComponent} size={isLargeScreen ? 26 : 20} variant="primary" />
+          <ThemedText size={isLargeScreen ? 'lg' : 'base'} weight="bold">
             {teamName}
           </ThemedText>
         </View>
@@ -190,11 +166,11 @@ export const TeamStatsCard = memo(function TeamStatsCard({
             style={[
               styles.ovrBadge,
               isLargeScreen && styles.ovrBadgeLarge,
-              { backgroundColor: theme.colors.primary + "20" },
+              { backgroundColor: theme.colors.primary + '20' },
             ]}
           >
             <ThemedText
-              size={isLargeScreen ? "base" : "sm"}
+              size={isLargeScreen ? 'base' : 'sm'}
               weight="bold"
               style={{ color: theme.colors.primary }}
             >
@@ -206,40 +182,35 @@ export const TeamStatsCard = memo(function TeamStatsCard({
 
       {/* Team Stats */}
       {stats && (
-        <View
-          style={[
-            styles.statsSection,
-            isLargeScreen && styles.statsSectionLarge,
-          ]}
-        >
+        <View style={[styles.statsSection, isLargeScreen && styles.statsSectionLarge]}>
           <StatBar
             label="PAC"
             value={stats.pace}
-            color={stats.pace > 75 ? "#27ae60" : "#f39c12"}
+            color={stats.pace > 75 ? '#27ae60' : '#f39c12'}
             isLargeScreen={isLargeScreen}
           />
           <StatBar
             label="SHO"
             value={stats.shooting}
-            color={stats.shooting > 75 ? "#27ae60" : "#f39c12"}
+            color={stats.shooting > 75 ? '#27ae60' : '#f39c12'}
             isLargeScreen={isLargeScreen}
           />
           <StatBar
             label="PAS"
             value={stats.passing}
-            color={stats.passing > 75 ? "#27ae60" : "#f39c12"}
+            color={stats.passing > 75 ? '#27ae60' : '#f39c12'}
             isLargeScreen={isLargeScreen}
           />
           <StatBar
             label="DEF"
             value={stats.defending}
-            color={stats.defending > 75 ? "#27ae60" : "#f39c12"}
+            color={stats.defending > 75 ? '#27ae60' : '#f39c12'}
             isLargeScreen={isLargeScreen}
           />
           <StatBar
             label="PHY"
             value={stats.physical}
-            color={stats.physical > 75 ? "#27ae60" : "#f39c12"}
+            color={stats.physical > 75 ? '#27ae60' : '#f39c12'}
             isLargeScreen={isLargeScreen}
           />
         </View>
@@ -247,28 +218,18 @@ export const TeamStatsCard = memo(function TeamStatsCard({
 
       {/* Players List */}
       {players.length > 0 && (
-        <View
-          style={[
-            styles.playersSection,
-            isLargeScreen && styles.playersSectionLarge,
-          ]}
-        >
+        <View style={[styles.playersSection, isLargeScreen && styles.playersSectionLarge]}>
           <View style={styles.playersTitleRow}>
             <Icon icon={Users} size={isLargeScreen ? 18 : 14} variant="muted" />
             <ThemedText
               variant="muted"
-              size={isLargeScreen ? "sm" : "xs"}
+              size={isLargeScreen ? 'sm' : 'xs'}
               style={styles.playersTitle}
             >
               Plantilla ({players.length} jugadores)
             </ThemedText>
           </View>
-          <View
-            style={[
-              styles.playersGrid,
-              isLargeScreen && styles.playersGridLarge,
-            ]}
-          >
+          <View style={[styles.playersGrid, isLargeScreen && styles.playersGridLarge]}>
             {players.slice(0, isDesktop ? 15 : 11).map((player) => (
               <View
                 key={`${player.name}-${player.position}`}
@@ -286,17 +247,14 @@ export const TeamStatsCard = memo(function TeamStatsCard({
                   ]}
                 />
                 <ThemedText
-                  size={isLargeScreen ? "sm" : "xs"}
+                  size={isLargeScreen ? 'sm' : 'xs'}
                   numberOfLines={1}
-                  style={[
-                    styles.playerName,
-                    isLargeScreen && styles.playerNameLarge,
-                  ]}
+                  style={[styles.playerName, isLargeScreen && styles.playerNameLarge]}
                 >
-                  {player.name.split(" ").pop()}
+                  {player.name.split(' ').pop()}
                 </ThemedText>
                 <ThemedText
-                  size={isLargeScreen ? "sm" : "xs"}
+                  size={isLargeScreen ? 'sm' : 'xs'}
                   weight="bold"
                   style={{ color: theme.colors.primary }}
                 >
@@ -316,32 +274,32 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   loadingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 12,
   },
   loadingText: {
     marginLeft: 10,
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 14,
-    flexWrap: "wrap",
+    flexWrap: 'wrap',
     gap: 8,
   },
   headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
     flex: 1,
     minWidth: 0,
   },
   playersTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
     marginBottom: 10,
   },
@@ -355,8 +313,8 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   statRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 6,
   },
   statLabel: {
@@ -365,34 +323,34 @@ const styles = StyleSheet.create({
   statBarContainer: {
     flex: 1,
     height: 8,
-    backgroundColor: "rgba(0,0,0,0.1)",
+    backgroundColor: 'rgba(0,0,0,0.1)',
     borderRadius: 4,
     marginHorizontal: 10,
   },
   statBarFill: {
-    height: "100%",
+    height: '100%',
     borderRadius: 4,
   },
   statValue: {
     width: 28,
-    textAlign: "right",
+    textAlign: 'right',
   },
   playersSection: {
     borderTopWidth: 1,
-    borderTopColor: "rgba(0,0,0,0.1)",
+    borderTopColor: 'rgba(0,0,0,0.1)',
     paddingTop: 12,
   },
   playersTitle: {
     marginBottom: 10,
   },
   playersGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 6,
   },
   playerChip: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 5,
     borderRadius: 14,

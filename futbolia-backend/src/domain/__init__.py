@@ -1,17 +1,17 @@
 # Domain module - Business Entities
 from src.domain.entities import (
-    User,
-    Team,
+    Match,
     Player,
     PlayerAttributes,
-    Match,
     Prediction,
     PredictionResult,
+    Team,
+    User,
 )
 
 __all__ = [
     "User",
-    "Team", 
+    "Team",
     "Player",
     "PlayerAttributes",
     "Match",

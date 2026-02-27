@@ -1,16 +1,11 @@
 /**
  * MatchCard - Card displaying match information
  */
-import {
-  View,
-  TouchableOpacity,
-  StyleSheet,
-  useWindowDimensions,
-} from "react-native";
-import { Sparkles } from "lucide-react-native";
-import { useTheme } from "@/src/theme";
-import { ThemedText, Card, TeamBadge, Icon } from "@/src/components/ui";
-import { Match } from "@/src/services/api";
+import { View, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
+import { Sparkles } from 'lucide-react-native';
+import { useTheme } from '@/src/theme';
+import { ThemedText, Card, TeamBadge, Icon } from '@/src/components/ui';
+import { Match } from '@/src/services/api';
 
 interface MatchCardProps {
   match: Match;
@@ -18,11 +13,7 @@ interface MatchCardProps {
   featured?: boolean;
 }
 
-export function MatchCard({
-  match,
-  onPress,
-  featured = false,
-}: MatchCardProps) {
+export function MatchCard({ match, onPress, featured = false }: MatchCardProps) {
   const { theme } = useTheme();
   const { width: screenWidth } = useWindowDimensions();
   const isTablet = screenWidth >= 768;
@@ -44,13 +35,13 @@ export function MatchCard({
       }
 
       // Formatear a zona horaria de Ecuador (America/Guayaquil = UTC-5)
-      return date.toLocaleDateString("es-EC", {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        timeZone: "America/Guayaquil", // Zona horaria de Ecuador
+      return date.toLocaleDateString('es-EC', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'America/Guayaquil', // Zona horaria de Ecuador
       });
     } catch {
       return dateString;
@@ -60,63 +51,34 @@ export function MatchCard({
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
       <Card
-        variant={featured ? "elevated" : "default"}
-        padding={isLargeScreen ? "lg" : "md"}
-        style={[
-          featured && styles.featuredCard,
-          isLargeScreen && styles.cardLarge,
-        ]}
+        variant={featured ? 'elevated' : 'default'}
+        padding={isLargeScreen ? 'lg' : 'md'}
+        style={[featured && styles.featuredCard, isLargeScreen && styles.cardLarge]}
       >
         {/* League Badge */}
         <View style={[styles.header, isLargeScreen && styles.headerLarge]}>
-          <ThemedText variant="muted" size={isLargeScreen ? "sm" : "xs"}>
+          <ThemedText variant="muted" size={isLargeScreen ? 'sm' : 'xs'}>
             {match.league}
           </ThemedText>
-          <ThemedText variant="muted" size={isLargeScreen ? "sm" : "xs"}>
+          <ThemedText variant="muted" size={isLargeScreen ? 'sm' : 'xs'}>
             {formatDate(match.date)}
           </ThemedText>
         </View>
 
         {/* Teams */}
-        <View
-          style={[
-            styles.teamsContainer,
-            isLargeScreen && styles.teamsContainerLarge,
-          ]}
-        >
+        <View style={[styles.teamsContainer, isLargeScreen && styles.teamsContainerLarge]}>
           <TeamBadge
             name={match.home_team.name}
             logoUrl={match.home_team.logo_url}
             form={match.home_team.form}
-            size={
-              featured
-                ? isLargeScreen
-                  ? "xl"
-                  : "lg"
-                : isLargeScreen
-                  ? "lg"
-                  : "md"
-            }
+            size={featured ? (isLargeScreen ? 'xl' : 'lg') : isLargeScreen ? 'lg' : 'md'}
             showForm={featured}
           />
 
-          <View
-            style={[
-              styles.vsContainer,
-              isLargeScreen && styles.vsContainerLarge,
-            ]}
-          >
+          <View style={[styles.vsContainer, isLargeScreen && styles.vsContainerLarge]}>
             <ThemedText
               variant="primary"
-              size={
-                featured
-                  ? isLargeScreen
-                    ? "3xl"
-                    : "2xl"
-                  : isLargeScreen
-                    ? "xl"
-                    : "lg"
-              }
+              size={featured ? (isLargeScreen ? '3xl' : '2xl') : isLargeScreen ? 'xl' : 'lg'}
               weight="bold"
             >
               VS
@@ -124,7 +86,7 @@ export function MatchCard({
             {match.venue && featured && (
               <ThemedText
                 variant="muted"
-                size={isLargeScreen ? "sm" : "xs"}
+                size={isLargeScreen ? 'sm' : 'xs'}
                 style={[styles.venue, isLargeScreen && styles.venueLarge]}
               >
                 📍 {match.venue}
@@ -136,15 +98,7 @@ export function MatchCard({
             name={match.away_team.name}
             logoUrl={match.away_team.logo_url}
             form={match.away_team.form}
-            size={
-              featured
-                ? isLargeScreen
-                  ? "xl"
-                  : "lg"
-                : isLargeScreen
-                  ? "lg"
-                  : "md"
-            }
+            size={featured ? (isLargeScreen ? 'xl' : 'lg') : isLargeScreen ? 'lg' : 'md'}
             showForm={featured}
           />
         </View>
@@ -155,26 +109,18 @@ export function MatchCard({
             style={[
               styles.predictHint,
               isLargeScreen && styles.predictHintLarge,
-              { backgroundColor: theme.colors.primary + "20" },
+              { backgroundColor: theme.colors.primary + '20' },
             ]}
           >
             <View
               style={{
-                flexDirection: "row",
-                alignItems: "center",
+                flexDirection: 'row',
+                alignItems: 'center',
                 gap: isLargeScreen ? 10 : 6,
               }}
             >
-              <Icon
-                icon={Sparkles}
-                size={isLargeScreen ? 20 : 16}
-                variant="primary"
-              />
-              <ThemedText
-                variant="primary"
-                size={isLargeScreen ? "base" : "sm"}
-                weight="semibold"
-              >
+              <Icon icon={Sparkles} size={isLargeScreen ? 20 : 16} variant="primary" />
+              <ThemedText variant="primary" size={isLargeScreen ? 'base' : 'sm'} weight="semibold">
                 Toca para predecir con GoalMind
               </ThemedText>
             </View>
@@ -190,26 +136,26 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 18,
-    flexWrap: "wrap",
+    flexWrap: 'wrap',
     gap: 6,
   },
   teamsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 12,
   },
   vsContainer: {
-    alignItems: "center",
+    alignItems: 'center',
     paddingHorizontal: 8,
   },
   venue: {
     marginTop: 6,
-    textAlign: "center",
+    textAlign: 'center',
     maxWidth: 120,
   },
   predictHint: {
@@ -217,7 +163,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 10,
-    alignItems: "center",
+    alignItems: 'center',
   },
   // ==========================================
   // RESPONSIVE STYLES FOR TABLETS AND DESKTOP

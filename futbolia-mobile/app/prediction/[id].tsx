@@ -2,22 +2,16 @@
  * FutbolIA - Prediction Detail Screen
  * Shows full analysis for a specific prediction from history
  */
-import { useState, useEffect } from "react";
-import {
-  ScrollView,
-  View,
-  StyleSheet,
-  ActivityIndicator,
-  TouchableOpacity,
-} from "react-native";
-import { useLocalSearchParams, useRouter, Stack } from "expo-router";
-import { useTranslation } from "react-i18next";
-import { Ionicons } from "@expo/vector-icons";
+import { useState, useEffect } from 'react';
+import { ScrollView, View, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import { Ionicons } from '@expo/vector-icons';
 
-import { useTheme } from "@/src/theme";
-import { ThemedView, ThemedText, Card, Button } from "@/src/components/ui";
-import { PredictionCard } from "@/src/components/features";
-import { predictionsApi, Prediction } from "@/src/services/api";
+import { useTheme } from '@/src/theme';
+import { ThemedView, ThemedText, Card, Button } from '@/src/components/ui';
+import { PredictionCard } from '@/src/components/features';
+import { predictionsApi, Prediction } from '@/src/services/api';
 
 export default function PredictionDetailScreen() {
   const { theme } = useTheme();
@@ -43,13 +37,11 @@ export default function PredictionDetailScreen() {
       if (response.success && response.data) {
         setPrediction(response.data);
       } else {
-        setError(
-          response.error || "No se pudo cargar el detalle de la predicción"
-        );
+        setError(response.error || 'No se pudo cargar el detalle de la predicción');
       }
     } catch (err) {
-      setError("Error de conexión al cargar el detalle");
-      console.log("Error loading prediction detail:", err);
+      setError('Error de conexión al cargar el detalle');
+      console.log('Error loading prediction detail:', err);
     } finally {
       setLoading(false);
     }
@@ -59,12 +51,9 @@ export default function PredictionDetailScreen() {
     <ThemedView variant="background" style={styles.container}>
       <Stack.Screen
         options={{
-          title: t("prediction.detailTitle") || "Detalle de Predicción",
+          title: t('prediction.detailTitle') || 'Detalle de Predicción',
           headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={styles.backButton}
-            >
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
               <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
             </TouchableOpacity>
           ),
@@ -93,10 +82,7 @@ export default function PredictionDetailScreen() {
             />
           </View>
         ) : prediction ? (
-          <PredictionCard
-            prediction={prediction}
-            onNewPrediction={() => router.push("/predict")}
-          />
+          <PredictionCard prediction={prediction} onNewPrediction={() => router.push('/predict')} />
         ) : null}
       </ScrollView>
     </ThemedView>
@@ -114,18 +100,18 @@ const styles = StyleSheet.create({
   },
   centerContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     paddingTop: 80,
     paddingHorizontal: 24,
   },
   loadingText: {
     marginTop: 20,
-    textAlign: "center",
+    textAlign: 'center',
   },
   errorText: {
     marginTop: 20,
-    textAlign: "center",
+    textAlign: 'center',
     marginBottom: 28,
     lineHeight: 22,
   },

@@ -1,15 +1,15 @@
 /**
  * ThemedView - A View component that responds to theme changes
  */
-import { View, ViewProps } from "react-native";
-import { useTheme } from "@/src/theme";
+import { View, ViewProps } from 'react-native';
+import { useTheme } from '@/src/theme';
 
 interface ThemedViewProps extends ViewProps {
-  variant?: "background" | "surface" | "card";
+  variant?: 'background' | 'surface' | 'card';
 }
 
 export function ThemedView({
-  variant = "background",
+  variant = 'background',
   style,
   className,
   ...props

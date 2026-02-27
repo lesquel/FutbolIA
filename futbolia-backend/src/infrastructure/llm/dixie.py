@@ -2,13 +2,13 @@
 Dixie - The Elite Sports Analyst AI
 DeepSeek integration for tactical football predictions
 """
+
 import json
-from typing import Optional
+
 from openai import AsyncOpenAI
 
 from src.core.config import settings
-from src.domain.entities import Team, PredictionResult, PlayerAttributes
-
+from src.domain.entities import PlayerAttributes, PredictionResult, Team
 
 # Dixie's System Prompt - The Expert Sports Analyst
 # ANTI-HALLUCINATION: The system prompt forces Dixie to ONLY use data provided in the user prompt.
@@ -62,15 +62,15 @@ def build_prediction_prompt(
     team_b: Team,
     players_a: list[PlayerAttributes],
     players_b: list[PlayerAttributes],
-    language: str = "es"
+    language: str = "es",
 ) -> str:
     """Build the structured prompt for match prediction"""
-    
+
     # Format players info with more detail
     def format_players(players: list[PlayerAttributes], team_name: str) -> str:
         if not players:
             return f"⚠️ Sin datos de jugadores para {team_name} - Usa estimaciones generales"
-        
+
         lines = []
         for p in players[:5]:
             # Determine player role
@@ -82,25 +82,30 @@ def build_prediction_prompt(
                 role = "🎯 Mediocampo"
             else:
                 role = "⚡ Ataque"
-            
+
             # Highlight strengths
             attrs = {"Pace": p.pace, "Shot": p.shooting, "Pass": p.passing, "Def": p.defending}
             best_attr = max(attrs, key=attrs.get)
-            
+
             lines.append(
                 f"  • {p.name} ({p.position}) - OVR {p.overall_rating} | "
                 f"Mejor: {best_attr} {attrs[best_attr]} | {role}"
             )
         return "\n".join(lines)
-    
+
     # Calculate team averages and strengths
     def calc_team_profile(players: list[PlayerAttributes]) -> dict:
         if not players:
             return {
-                "overall": 75, "pace": 70, "attack": 70, "defense": 70,
-                "passing": 70, "physical": 70, "style": "Desconocido"
+                "overall": 75,
+                "pace": 70,
+                "attack": 70,
+                "defense": 70,
+                "passing": 70,
+                "physical": 70,
+                "style": "Desconocido",
             }
-        
+
         profile = {
             "overall": sum(p.overall_rating for p in players) // len(players),
             "pace": sum(p.pace for p in players) // len(players),
@@ -109,7 +114,7 @@ def build_prediction_prompt(
             "passing": sum(p.passing for p in players) // len(players),
             "physical": sum(p.physical for p in players) // len(players),
         }
-        
+
         # Determine playing style
         if profile["pace"] > 80:
             profile["style"] = "Contraataque rápido ⚡"
@@ -121,18 +126,22 @@ def build_prediction_prompt(
             profile["style"] = "Ataque directo 🔥"
         else:
             profile["style"] = "Equilibrado ⚖️"
-        
+
         return profile
-    
+
     profile_a = calc_team_profile(players_a)
     profile_b = calc_team_profile(players_b)
-    
+
     # Determine data quality
     has_good_data = len(players_a) >= 3 and len(players_b) >= 3
     data_quality = "✅ DATOS COMPLETOS" if has_good_data else "⚠️ DATOS LIMITADOS - Ajusta confianza"
-    
-    lang_instruction = "Responde en ESPAÑOL con tu estilo característico" if language == "es" else "Respond in ENGLISH with your characteristic style"
-    
+
+    lang_instruction = (
+        "Responde en ESPAÑOL con tu estilo característico"
+        if language == "es"
+        else "Respond in ENGLISH with your characteristic style"
+    )
+
     prompt = f"""
 🏟️ ANÁLISIS PRE-PARTIDO: {team_a.name} vs {team_b.name}
 {data_quality}
@@ -142,16 +151,16 @@ def build_prediction_prompt(
 ═══════════════════════════════════════════════════
 🏠 EQUIPO LOCAL: {team_a.name}
 ═══════════════════════════════════════════════════
-📋 Liga: {team_a.league or 'Internacional'}
-🧑‍💼 Director Técnico: {team_a.manager or 'No disponible en datos'}
-📈 Forma Reciente: {team_a.form or 'Sin datos'} {'🔥' if team_a.form and team_a.form.count('W') >= 3 else ''}
-🎮 Estilo de juego: {profile_a['style']}
+📋 Liga: {team_a.league or "Internacional"}
+🧑‍💼 Director Técnico: {team_a.manager or "No disponible en datos"}
+📈 Forma Reciente: {team_a.form or "Sin datos"} {"🔥" if team_a.form and team_a.form.count("W") >= 3 else ""}
+🎮 Estilo de juego: {profile_a["style"]}
 
 📊 PERFIL TÁCTICO:
-   Ataque: {'★' * (profile_a['attack'] // 20)} ({profile_a['attack']})
-   Defensa: {'★' * (profile_a['defense'] // 20)} ({profile_a['defense']})
-   Velocidad: {'★' * (profile_a['pace'] // 20)} ({profile_a['pace']})
-   Pases: {'★' * (profile_a['passing'] // 20)} ({profile_a['passing']})
+   Ataque: {"★" * (profile_a["attack"] // 20)} ({profile_a["attack"]})
+   Defensa: {"★" * (profile_a["defense"] // 20)} ({profile_a["defense"]})
+   Velocidad: {"★" * (profile_a["pace"] // 20)} ({profile_a["pace"]})
+   Pases: {"★" * (profile_a["passing"] // 20)} ({profile_a["passing"]})
 
 ⭐ JUGADORES CLAVE (ChromaDB — datos reales):
 {format_players(players_a, team_a.name)}
@@ -159,16 +168,16 @@ def build_prediction_prompt(
 ═══════════════════════════════════════════════════
 🚌 EQUIPO VISITANTE: {team_b.name}
 ═══════════════════════════════════════════════════
-📋 Liga: {team_b.league or 'Internacional'}
-🧑‍💼 Director Técnico: {team_b.manager or 'No disponible en datos'}
-📈 Forma Reciente: {team_b.form or 'Sin datos'} {'🔥' if team_b.form and team_b.form.count('W') >= 3 else ''}
-🎮 Estilo de juego: {profile_b['style']}
+📋 Liga: {team_b.league or "Internacional"}
+🧑‍💼 Director Técnico: {team_b.manager or "No disponible en datos"}
+📈 Forma Reciente: {team_b.form or "Sin datos"} {"🔥" if team_b.form and team_b.form.count("W") >= 3 else ""}
+🎮 Estilo de juego: {profile_b["style"]}
 
 📊 PERFIL TÁCTICO:
-   Ataque: {'★' * (profile_b['attack'] // 20)} ({profile_b['attack']})
-   Defensa: {'★' * (profile_b['defense'] // 20)} ({profile_b['defense']})
-   Velocidad: {'★' * (profile_b['pace'] // 20)} ({profile_b['pace']})
-   Pases: {'★' * (profile_b['passing'] // 20)} ({profile_b['passing']})
+   Ataque: {"★" * (profile_b["attack"] // 20)} ({profile_b["attack"]})
+   Defensa: {"★" * (profile_b["defense"] // 20)} ({profile_b["defense"]})
+   Velocidad: {"★" * (profile_b["pace"] // 20)} ({profile_b["pace"]})
+   Pases: {"★" * (profile_b["passing"] // 20)} ({profile_b["passing"]})
 
 ⭐ JUGADORES CLAVE (ChromaDB — datos reales):
 {format_players(players_b, team_b.name)}
@@ -176,9 +185,9 @@ def build_prediction_prompt(
 ═══════════════════════════════════════════════════
 🔍 ANÁLISIS COMPARATIVO
 ═══════════════════════════════════════════════════
-• Diferencia Overall: {profile_a['overall'] - profile_b['overall']:+d} puntos ({'favorable a ' + team_a.name if profile_a['overall'] > profile_b['overall'] else 'favorable a ' + team_b.name if profile_b['overall'] > profile_a['overall'] else 'equilibrado'})
+• Diferencia Overall: {profile_a["overall"] - profile_b["overall"]:+d} puntos ({"favorable a " + team_a.name if profile_a["overall"] > profile_b["overall"] else "favorable a " + team_b.name if profile_b["overall"] > profile_a["overall"] else "equilibrado"})
 • Factor Local: {team_a.name} tiene +7% de ventaja por jugar en casa
-• Jugadores estrella: {players_a[0].name if players_a else 'N/A'} ({players_a[0].overall_rating if players_a else 0}) vs {players_b[0].name if players_b else 'N/A'} ({players_b[0].overall_rating if players_b else 0})
+• Jugadores estrella: {players_a[0].name if players_a else "N/A"} ({players_a[0].overall_rating if players_a else 0}) vs {players_b[0].name if players_b else "N/A"} ({players_b[0].overall_rating if players_b else 0})
 
 ═══════════════════════════════════════════════════
 🎯 TU MISIÓN, DIXIE:
@@ -212,22 +221,22 @@ def build_prediction_prompt(
 
 class DixieAI:
     """Dixie - The AI Sports Analyst powered by DeepSeek"""
-    
-    _client: Optional[AsyncOpenAI] = None
-    
+
+    _client: AsyncOpenAI | None = None
+
     @classmethod
     def initialize(cls) -> None:
         """Initialize the DeepSeek client"""
         if not settings.DEEPSEEK_API_KEY:
             print("⚠️ DEEPSEEK_API_KEY not set. Dixie will use mock responses.")
             return
-        
+
         cls._client = AsyncOpenAI(
             api_key=settings.DEEPSEEK_API_KEY,
             base_url=settings.DEEPSEEK_BASE_URL,
         )
         print("✅ Dixie AI initialized with DeepSeek")
-    
+
     @classmethod
     async def predict_match(
         cls,
@@ -235,47 +244,49 @@ class DixieAI:
         team_b: Team,
         players_a: list[PlayerAttributes],
         players_b: list[PlayerAttributes],
-        language: str = "es"
+        language: str = "es",
     ) -> PredictionResult:
         """Generate a match prediction using Dixie AI"""
-        
+
         # Build the prompt
         prompt = build_prediction_prompt(team_a, team_b, players_a, players_b, language)
-        
+
         # If no API key, return mock response
         if cls._client is None:
             return cls._generate_mock_prediction(team_a, team_b, players_a, players_b, language)
-        
+
         try:
             # Call DeepSeek
             response = await cls._client.chat.completions.create(
                 model=settings.DEEPSEEK_MODEL,
                 messages=[
                     {"role": "system", "content": DIXIE_SYSTEM_PROMPT},
-                    {"role": "user", "content": prompt}
+                    {"role": "user", "content": prompt},
                 ],
                 temperature=0.7,
                 max_tokens=1000,
             )
-            
+
             # Parse JSON response
             content = response.choices[0].message.content
             print(f"🔮 Dixie raw response: {content[:300]}...")
-            
+
             # Try to extract JSON from response
             result_data = cls._parse_json_response(content)
             print(f"🔮 Parsed result type: {type(result_data)}")
-            
+
             # Ensure we have a dict (not a list)
             if isinstance(result_data, list):
                 # If it's a list, try to get first dict element or create empty dict
-                result_data = result_data[0] if result_data and isinstance(result_data[0], dict) else {}
-            
+                result_data = (
+                    result_data[0] if result_data and isinstance(result_data[0], dict) else {}
+                )
+
             if not isinstance(result_data, dict):
                 result_data = {}
-            
+
             print(f"🔮 Final result_data keys: {result_data.keys() if result_data else 'empty'}")
-            
+
             return PredictionResult(
                 winner=result_data.get("winner", team_a.name),
                 predicted_score=result_data.get("predicted_score", "1-0"),
@@ -287,11 +298,11 @@ class DixieAI:
                 match_preview=result_data.get("match_preview", ""),
                 tactical_insight=result_data.get("tactical_insight", ""),
             )
-            
+
         except Exception as e:
             print(f"❌ Dixie AI error: {e}")
             return cls._generate_mock_prediction(team_a, team_b, players_a, players_b, language)
-    
+
     @staticmethod
     def _parse_json_response(content: str):
         """Extract and parse JSON from LLM response (dict or list)"""
@@ -304,13 +315,13 @@ class DixieAI:
         if content.endswith("```"):
             content = content[:-3]
         content = content.strip()
-        
+
         try:
             # Try direct parse
             return json.loads(content)
         except json.JSONDecodeError:
             pass
-        
+
         # Try to find JSON object first (for prediction responses)
         obj_start = content.find("{")
         obj_end = content.rfind("}") + 1
@@ -319,7 +330,7 @@ class DixieAI:
                 return json.loads(content[obj_start:obj_end])
             except json.JSONDecodeError:
                 pass
-        
+
         # Try to find JSON array (for player lists)
         array_start = content.find("[")
         array_end = content.rfind("]") + 1
@@ -328,7 +339,7 @@ class DixieAI:
                 return json.loads(content[array_start:array_end])
             except json.JSONDecodeError:
                 pass
-        
+
         return {}
 
     @classmethod
@@ -340,73 +351,76 @@ class DixieAI:
         # Auto-initialize if not already done
         if cls._client is None:
             cls.initialize()
-        
+
         if cls._client is None:
-            print(f"⚠️ No API key available for generating players")
+            print("⚠️ No API key available for generating players")
             return []
 
         prompt = f"""
-        Eres un experto en bases de datos de fútbol mundial. 
+        Eres un experto en bases de datos de fútbol mundial.
         Necesito una lista de los {count} jugadores más importantes/actuales del equipo: {team_name}.
-        
+
         Para cada jugador, proporciona:
         1. Nombre completo real.
         2. Posición (GK, CB, LB, RB, CDM, CM, CAM, LW, RW, ST).
         3. Valoración general (OVR) basada en su nivel actual (50-95).
         4. Atributos (Pace, Shooting, Passing, Dribbling, Defending, Physical) estilo FIFA.
-        
+
         Responde ÚNICAMENTE con un JSON válido que sea una lista de objetos:
         [
           {{"name": "Nombre Real", "position": "POS", "overall_rating": 80, "pace": 75, "shooting": 70, "passing": 80, "dribbling": 78, "defending": 50, "physical": 70}},
           ...
         ]
         """
-        
+
         try:
             response = await cls._client.chat.completions.create(
                 model=settings.DEEPSEEK_MODEL,
                 messages=[
-                    {"role": "system", "content": "Eres un experto en datos de fútbol. Solo respondes en JSON."},
-                    {"role": "user", "content": prompt}
+                    {
+                        "role": "system",
+                        "content": "Eres un experto en datos de fútbol. Solo respondes en JSON.",
+                    },
+                    {"role": "user", "content": prompt},
                 ],
                 temperature=0.3,
             )
-            
+
             content = response.choices[0].message.content
             print(f"🔍 AI response for {team_name}: {content[:200]}...")
-            
+
             players_data = cls._parse_json_response(content)
-            
+
             if isinstance(players_data, list) and len(players_data) > 0:
                 print(f"✅ Parsed {len(players_data)} real players for {team_name}")
                 return players_data
             elif isinstance(players_data, dict) and "players" in players_data:
                 print(f"✅ Parsed {len(players_data['players'])} real players for {team_name}")
                 return players_data["players"]
-            
+
             print(f"⚠️ Could not parse players for {team_name}, raw: {type(players_data)}")
             return []
         except Exception as e:
             print(f"❌ Error generating real players for {team_name}: {e}")
             return []
-    
+
     @staticmethod
     def _generate_mock_prediction(
         team_a: Team,
         team_b: Team,
         players_a: list[PlayerAttributes],
         players_b: list[PlayerAttributes],
-        language: str
+        language: str,
     ) -> PredictionResult:
         """Generate a mock prediction when API is not available"""
-        
+
         # Calculate simple averages for mock prediction
         avg_a = sum(p.overall_rating for p in players_a) / len(players_a) if players_a else 75
         avg_b = sum(p.overall_rating for p in players_b) / len(players_b) if players_b else 75
-        
+
         # Add home advantage
         avg_a += 3
-        
+
         # Determine winner
         diff = avg_a - avg_b
         if diff > 3:
@@ -421,10 +435,10 @@ class DixieAI:
             winner = "Empate" if language == "es" else "Draw"
             score = "1-1"
             confidence = 45
-        
+
         star_a = max(players_a, key=lambda p: p.overall_rating).name if players_a else "N/A"
         star_b = max(players_b, key=lambda p: p.overall_rating).name if players_b else "N/A"
-        
+
         if language == "es":
             match_preview = f"🔥 ¡PARTIDAZO a la vista! {team_a.name} recibe a {team_b.name} en un duelo que promete emociones."
             reasoning = (
@@ -443,7 +457,7 @@ class DixieAI:
                 f"{'Expect a thrilling encounter!' if abs(diff) < 5 else 'The favorite should prevail!'}"
             )
             tactical_insight = f"The key will be the {star_a} vs defensive line matchup. If they can create space, the home goal is just a matter of time."
-        
+
         return PredictionResult(
             winner=winner,
             predicted_score=score,
@@ -453,7 +467,7 @@ class DixieAI:
                 f"🏠 Home advantage: {team_a.name}",
                 f"⭐ Star player duel: {star_a} vs {star_b}",
                 f"📊 Rating difference: {diff:+.1f} points",
-                f"📈 Form analysis included",
+                "📈 Form analysis included",
             ],
             star_player_home=star_a,
             star_player_away=star_b,

@@ -2,7 +2,7 @@
  * FutbolIA - Register Screen
  * User registration with email, username, and password
  */
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -12,20 +12,14 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-} from "react-native";
-import { useRouter } from "expo-router";
-import { useTranslation } from "react-i18next";
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
-import { useTheme } from "@/src/theme";
-import { useAuth } from "@/src/context";
-import {
-  ThemedView,
-  ThemedText,
-  Card,
-  Button,
-  Icon,
-} from "@/src/components/ui";
-import { Gift, Check } from "lucide-react-native";
+import { useTheme } from '@/src/theme';
+import { useAuth } from '@/src/context';
+import { ThemedView, ThemedText, Card, Button, Icon } from '@/src/components/ui';
+import { Gift, Check } from 'lucide-react-native';
 
 export default function RegisterScreen() {
   const { theme } = useTheme();
@@ -33,10 +27,10 @@ export default function RegisterScreen() {
   const { register } = useAuth();
   const router = useRouter();
 
-  const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -44,34 +38,34 @@ export default function RegisterScreen() {
   const handleRegister = async () => {
     // Validation
     if (!email.trim()) {
-      setError(t("auth.emailRequired"));
+      setError(t('auth.emailRequired'));
       return;
     }
     if (!username.trim()) {
-      setError(t("auth.usernameRequired"));
+      setError(t('auth.usernameRequired'));
       return;
     }
     if (username.trim().length < 3) {
-      setError(t("auth.usernameTooShort"));
+      setError(t('auth.usernameTooShort'));
       return;
     }
     if (!password.trim()) {
-      setError(t("auth.passwordRequired"));
+      setError(t('auth.passwordRequired'));
       return;
     }
     if (password.length < 6) {
-      setError(t("auth.passwordTooShort"));
+      setError(t('auth.passwordTooShort'));
       return;
     }
     if (password !== confirmPassword) {
-      setError(t("auth.passwordsDontMatch"));
+      setError(t('auth.passwordsDontMatch'));
       return;
     }
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
-      setError(t("auth.invalidEmail"));
+      setError(t('auth.invalidEmail'));
       return;
     }
 
@@ -83,16 +77,16 @@ export default function RegisterScreen() {
     setLoading(false);
 
     if (result.success) {
-      router.replace("/(tabs)");
+      router.replace('/(tabs)');
     } else {
-      setError(result.error || t("auth.registerError"));
+      setError(result.error || t('auth.registerError'));
     }
   };
 
   return (
     <ThemedView variant="background" style={styles.container}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
         <ScrollView
@@ -105,10 +99,10 @@ export default function RegisterScreen() {
               ⚽
             </ThemedText>
             <ThemedText size="2xl" weight="bold">
-              {t("auth.createAccount")}
+              {t('auth.createAccount')}
             </ThemedText>
             <ThemedText variant="secondary" style={styles.subtitle}>
-              {t("auth.registerSubtitle")}
+              {t('auth.registerSubtitle')}
             </ThemedText>
           </View>
 
@@ -116,22 +110,15 @@ export default function RegisterScreen() {
           <Card variant="elevated" padding="lg" style={styles.formCard}>
             {/* Error Message */}
             {error && (
-              <View
-                style={[
-                  styles.errorBox,
-                  { backgroundColor: theme.colors.error + "20" },
-                ]}
-              >
-                <ThemedText style={{ color: theme.colors.error }}>
-                  {error}
-                </ThemedText>
+              <View style={[styles.errorBox, { backgroundColor: theme.colors.error + '20' }]}>
+                <ThemedText style={{ color: theme.colors.error }}>{error}</ThemedText>
               </View>
             )}
 
             {/* Email Input */}
             <View style={styles.inputGroup}>
               <ThemedText weight="medium" style={styles.label}>
-                {t("auth.email")} *
+                {t('auth.email')} *
               </ThemedText>
               <TextInput
                 style={[
@@ -142,7 +129,7 @@ export default function RegisterScreen() {
                     color: theme.colors.text,
                   },
                 ]}
-                placeholder={t("auth.emailPlaceholder")}
+                placeholder={t('auth.emailPlaceholder')}
                 placeholderTextColor={theme.colors.textMuted}
                 value={email}
                 onChangeText={setEmail}
@@ -155,7 +142,7 @@ export default function RegisterScreen() {
             {/* Username Input */}
             <View style={styles.inputGroup}>
               <ThemedText weight="medium" style={styles.label}>
-                {t("auth.username")} *
+                {t('auth.username')} *
               </ThemedText>
               <TextInput
                 style={[
@@ -166,7 +153,7 @@ export default function RegisterScreen() {
                     color: theme.colors.text,
                   },
                 ]}
-                placeholder={t("auth.usernamePlaceholder")}
+                placeholder={t('auth.usernamePlaceholder')}
                 placeholderTextColor={theme.colors.textMuted}
                 value={username}
                 onChangeText={setUsername}
@@ -178,7 +165,7 @@ export default function RegisterScreen() {
             {/* Password Input */}
             <View style={styles.inputGroup}>
               <ThemedText weight="medium" style={styles.label}>
-                {t("auth.password")} *
+                {t('auth.password')} *
               </ThemedText>
               <View style={styles.passwordContainer}>
                 <TextInput
@@ -191,7 +178,7 @@ export default function RegisterScreen() {
                       color: theme.colors.text,
                     },
                   ]}
-                  placeholder={t("auth.passwordPlaceholder")}
+                  placeholder={t('auth.passwordPlaceholder')}
                   placeholderTextColor={theme.colors.textMuted}
                   value={password}
                   onChangeText={setPassword}
@@ -202,20 +189,18 @@ export default function RegisterScreen() {
                   style={styles.eyeButton}
                   onPress={() => setShowPassword(!showPassword)}
                 >
-                  <ThemedText size="lg">
-                    {showPassword ? "🙈" : "👁️"}
-                  </ThemedText>
+                  <ThemedText size="lg">{showPassword ? '🙈' : '👁️'}</ThemedText>
                 </TouchableOpacity>
               </View>
               <ThemedText variant="muted" size="xs" style={styles.hint}>
-                {t("auth.passwordHint")}
+                {t('auth.passwordHint')}
               </ThemedText>
             </View>
 
             {/* Confirm Password Input */}
             <View style={styles.inputGroup}>
               <ThemedText weight="medium" style={styles.label}>
-                {t("auth.confirmPassword")} *
+                {t('auth.confirmPassword')} *
               </ThemedText>
               <TextInput
                 style={[
@@ -226,7 +211,7 @@ export default function RegisterScreen() {
                     color: theme.colors.text,
                   },
                 ]}
-                placeholder={t("auth.confirmPasswordPlaceholder")}
+                placeholder={t('auth.confirmPasswordPlaceholder')}
                 placeholderTextColor={theme.colors.textMuted}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
@@ -236,7 +221,7 @@ export default function RegisterScreen() {
 
             {/* Register Button */}
             <Button
-              title={loading ? "" : t("auth.registerButton")}
+              title={loading ? '' : t('auth.registerButton')}
               variant="primary"
               size="lg"
               fullWidth
@@ -244,24 +229,22 @@ export default function RegisterScreen() {
               disabled={loading}
               style={styles.registerButton}
             >
-              {loading && (
-                <ActivityIndicator color="#fff" style={styles.loader} />
-              )}
+              {loading && <ActivityIndicator color="#fff" style={styles.loader} />}
             </Button>
 
             {/* Terms */}
             <ThemedText variant="muted" size="xs" style={styles.terms}>
-              {t("auth.termsText")}
+              {t('auth.termsText')}
             </ThemedText>
           </Card>
 
           {/* Login Link */}
           <View style={styles.loginSection}>
-            <ThemedText variant="secondary">{t("auth.haveAccount")}</ThemedText>
+            <ThemedText variant="secondary">{t('auth.haveAccount')}</ThemedText>
             <TouchableOpacity onPress={() => router.back()}>
               <ThemedText variant="primary" weight="semibold">
-                {" "}
-                {t("auth.loginNow")}
+                {' '}
+                {t('auth.loginNow')}
               </ThemedText>
             </TouchableOpacity>
           </View>
@@ -271,26 +254,26 @@ export default function RegisterScreen() {
             <View style={styles.benefitsTitleRow}>
               <Icon icon={Gift} size={20} variant="primary" />
               <ThemedText weight="semibold" style={styles.benefitsTitle}>
-                {t("auth.benefits")}
+                {t('auth.benefits')}
               </ThemedText>
             </View>
             <View style={styles.benefitsList}>
               <View style={styles.benefitItem}>
                 <Icon icon={Check} size={18} variant="success" />
                 <ThemedText variant="secondary" size="sm">
-                  {t("auth.benefit1")}
+                  {t('auth.benefit1')}
                 </ThemedText>
               </View>
               <View style={styles.benefitItem}>
                 <Icon icon={Check} size={18} variant="success" />
                 <ThemedText variant="secondary" size="sm">
-                  {t("auth.benefit2")}
+                  {t('auth.benefit2')}
                 </ThemedText>
               </View>
               <View style={styles.benefitItem}>
                 <Icon icon={Check} size={18} variant="success" />
                 <ThemedText variant="secondary" size="sm">
-                  {t("auth.benefit3")}
+                  {t('auth.benefit3')}
                 </ThemedText>
               </View>
             </View>
@@ -314,7 +297,7 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
   },
   header: {
-    alignItems: "center",
+    alignItems: 'center',
     marginBottom: 24,
     marginTop: 16,
   },
@@ -324,7 +307,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     marginTop: 10,
-    textAlign: "center",
+    textAlign: 'center',
     paddingHorizontal: 16,
     lineHeight: 22,
   },
@@ -352,13 +335,13 @@ const styles = StyleSheet.create({
     minHeight: 52,
   },
   passwordContainer: {
-    position: "relative",
+    position: 'relative',
   },
   passwordInput: {
     paddingRight: 54,
   },
   eyeButton: {
-    position: "absolute",
+    position: 'absolute',
     right: 14,
     top: 14,
     padding: 6,
@@ -373,17 +356,17 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   terms: {
-    textAlign: "center",
+    textAlign: 'center',
     marginTop: 18,
     lineHeight: 20,
     paddingHorizontal: 8,
   },
   loginSection: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 22,
-    flexWrap: "wrap",
+    flexWrap: 'wrap',
   },
   benefitsCard: {
     marginBottom: 22,
@@ -391,8 +374,8 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
   },
   benefitsTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
     marginBottom: 14,
   },
@@ -403,8 +386,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   benefitItem: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
   },
 });

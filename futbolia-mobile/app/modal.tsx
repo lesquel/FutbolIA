@@ -2,12 +2,12 @@
  * GoalMind - Info Modal
  * About the app and GoalMind AI
  */
-import { StatusBar } from "expo-status-bar";
-import { Platform, StyleSheet, ScrollView, View } from "react-native";
-import { Wrench, Trophy, Sparkles, Settings } from "lucide-react-native";
+import { StatusBar } from 'expo-status-bar';
+import { Platform, StyleSheet, ScrollView, View } from 'react-native';
+import { Wrench, Trophy, Sparkles, Settings } from 'lucide-react-native';
 
-import { useTheme } from "@/src/theme";
-import { ThemedView, ThemedText, Card, Icon } from "@/src/components/ui";
+import { useTheme } from '@/src/theme';
+import { ThemedView, ThemedText, Card, Icon } from '@/src/components/ui';
 
 export default function ModalScreen() {
   const { theme } = useTheme();
@@ -21,9 +21,7 @@ export default function ModalScreen() {
           <ThemedText size="2xl" weight="bold" style={styles.title}>
             GoalMind: El Oráculo del Fútbol
           </ThemedText>
-          <ThemedText variant="secondary">
-            Tu oráculo deportivo con IA
-          </ThemedText>
+          <ThemedText variant="secondary">Tu oráculo deportivo con IA</ThemedText>
         </View>
 
         {/* About GoalMind */}
@@ -35,9 +33,8 @@ export default function ModalScreen() {
             </ThemedText>
           </View>
           <ThemedText variant="secondary" style={styles.description}>
-            GoalMind es una IA analista deportiva de élite que combina estadísticas
-            en tiempo real con atributos de jugadores (tipo FIFA) para predecir
-            resultados de partidos de fútbol.
+            GoalMind es una IA analista deportiva de élite que combina estadísticas en tiempo real
+            con atributos de jugadores (tipo FIFA) para predecir resultados de partidos de fútbol.
           </ThemedText>
         </Card>
 
@@ -51,12 +48,7 @@ export default function ModalScreen() {
           </View>
 
           <View style={styles.step}>
-            <View
-              style={[
-                styles.stepNumber,
-                { backgroundColor: theme.colors.primary + "20" },
-              ]}
-            >
+            <View style={[styles.stepNumber, { backgroundColor: theme.colors.primary + '20' }]}>
               <ThemedText variant="primary" weight="bold">
                 1
               </ThemedText>
@@ -67,29 +59,18 @@ export default function ModalScreen() {
           </View>
 
           <View style={styles.step}>
-            <View
-              style={[
-                styles.stepNumber,
-                { backgroundColor: theme.colors.primary + "20" },
-              ]}
-            >
+            <View style={[styles.stepNumber, { backgroundColor: theme.colors.primary + '20' }]}>
               <ThemedText variant="primary" weight="bold">
                 2
               </ThemedText>
             </View>
             <ThemedText variant="secondary" style={styles.stepText}>
-              Obtenemos datos de jugadores desde nuestra base vectorial
-              (ChromaDB)
+              Obtenemos datos de jugadores desde nuestra base vectorial (ChromaDB)
             </ThemedText>
           </View>
 
           <View style={styles.step}>
-            <View
-              style={[
-                styles.stepNumber,
-                { backgroundColor: theme.colors.primary + "20" },
-              ]}
-            >
+            <View style={[styles.stepNumber, { backgroundColor: theme.colors.primary + '20' }]}>
               <ThemedText variant="primary" weight="bold">
                 3
               </ThemedText>
@@ -100,12 +81,7 @@ export default function ModalScreen() {
           </View>
 
           <View style={styles.step}>
-            <View
-              style={[
-                styles.stepNumber,
-                { backgroundColor: theme.colors.primary + "20" },
-              ]}
-            >
+            <View style={[styles.stepNumber, { backgroundColor: theme.colors.primary + '20' }]}>
               <ThemedText variant="primary" weight="bold">
                 4
               </ThemedText>
@@ -126,24 +102,12 @@ export default function ModalScreen() {
           </View>
 
           <View style={styles.techList}>
-            <ThemedText variant="secondary">
-              • React Native + Expo (Frontend)
-            </ThemedText>
-            <ThemedText variant="secondary">
-              • FastAPI + Python (Backend)
-            </ThemedText>
-            <ThemedText variant="secondary">
-              • DeepSeek V3 (LLM - "GoalMind")
-            </ThemedText>
-            <ThemedText variant="secondary">
-              • ChromaDB (Vector Database - RAG)
-            </ThemedText>
-            <ThemedText variant="secondary">
-              • MongoDB (Base de datos)
-            </ThemedText>
-            <ThemedText variant="secondary">
-              • NativeWind/TailwindCSS (Estilos)
-            </ThemedText>
+            <ThemedText variant="secondary">• React Native + Expo (Frontend)</ThemedText>
+            <ThemedText variant="secondary">• FastAPI + Python (Backend)</ThemedText>
+            <ThemedText variant="secondary">• DeepSeek V3 (LLM - "GoalMind")</ThemedText>
+            <ThemedText variant="secondary">• ChromaDB (Vector Database - RAG)</ThemedText>
+            <ThemedText variant="secondary">• MongoDB (Base de datos)</ThemedText>
+            <ThemedText variant="secondary">• NativeWind/TailwindCSS (Estilos)</ThemedText>
           </View>
         </Card>
 
@@ -158,7 +122,7 @@ export default function ModalScreen() {
         </View>
       </ScrollView>
 
-      <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
+      <StatusBar style={Platform.OS === 'ios' ? 'light' : 'auto'} />
     </ThemedView>
   );
 }
@@ -171,7 +135,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   header: {
-    alignItems: "center",
+    alignItems: 'center',
     marginBottom: 24,
   },
   title: {
@@ -182,14 +146,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
     marginBottom: 12,
   },
   cardTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
     marginBottom: 16,
   },
@@ -200,16 +164,16 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   step: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 12,
   },
   stepNumber: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 12,
   },
   stepText: {
@@ -219,7 +183,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   footer: {
-    alignItems: "center",
+    alignItems: 'center',
     marginTop: 16,
     paddingVertical: 20,
   },

@@ -7,9 +7,10 @@ Incluye:
 - AdvancedClustering: K-Means, DBSCAN, análisis de silueta
 - MatchPredictor: Predicción de resultados con ML
 """
-from .team_clustering import TeamClustering
+
 from .advanced_clustering import AdvancedClustering, ClusteringResult
 from .match_predictor import MatchPredictor, MatchResult, PredictionOutput
+from .team_clustering import TeamClustering
 
 __all__ = [
     "TeamClustering",

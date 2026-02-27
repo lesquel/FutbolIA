@@ -2,16 +2,16 @@
  * TeamBadge - Display team information with logo/icon
  * Fixed: Added proper image loading states and error handling
  */
-import React, { useState, useCallback, memo } from "react";
-import { View, Image, StyleSheet, ActivityIndicator } from "react-native";
-import { useTheme } from "@/src/theme";
-import { ThemedText } from "./ThemedText";
+import React, { useState, useCallback, memo } from 'react';
+import { View, Image, StyleSheet, ActivityIndicator } from 'react-native';
+import { useTheme } from '@/src/theme';
+import { ThemedText } from './ThemedText';
 
 interface TeamBadgeProps {
   name: string;
   logoUrl?: string;
   form?: string;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   showForm?: boolean;
 }
 
@@ -19,7 +19,7 @@ export const TeamBadge = memo(function TeamBadge({
   name,
   logoUrl,
   form,
-  size = "md",
+  size = 'md',
   showForm = false,
 }: TeamBadgeProps) {
   const { theme } = useTheme();
@@ -28,14 +28,14 @@ export const TeamBadge = memo(function TeamBadge({
 
   const getSizes = () => {
     switch (size) {
-      case "sm":
-        return { logo: 36, font: "xs" as const, maxWidth: 80 };
-      case "md":
-        return { logo: 50, font: "sm" as const, maxWidth: 100 };
-      case "lg":
-        return { logo: 70, font: "base" as const, maxWidth: 120 };
-      case "xl":
-        return { logo: 100, font: "xl" as const, maxWidth: 160 };
+      case 'sm':
+        return { logo: 36, font: 'xs' as const, maxWidth: 80 };
+      case 'md':
+        return { logo: 50, font: 'sm' as const, maxWidth: 100 };
+      case 'lg':
+        return { logo: 70, font: 'base' as const, maxWidth: 120 };
+      case 'xl':
+        return { logo: 100, font: 'xl' as const, maxWidth: 160 };
     }
   };
 
@@ -43,25 +43,25 @@ export const TeamBadge = memo(function TeamBadge({
 
   // Get initials if no logo - ensure it's always a valid string
   const getInitials = useCallback((): string => {
-    if (!name || typeof name !== "string") return "?";
+    if (!name || typeof name !== 'string') return '?';
     return (
       name
-        .split(" ")
+        .split(' ')
         .filter(Boolean)
-        .map((w) => w[0]?.toUpperCase() || "")
-        .join("")
-        .slice(0, 3) || "?"
+        .map((w) => w[0]?.toUpperCase() || '')
+        .join('')
+        .slice(0, 3) || '?'
     );
   }, [name]);
 
   // Form indicator colors
   const getFormColor = (result: string) => {
     switch (result) {
-      case "W":
+      case 'W':
         return theme.colors.success;
-      case "D":
+      case 'D':
         return theme.colors.warning;
-      case "L":
+      case 'L':
         return theme.colors.error;
       default:
         return theme.colors.textMuted;
@@ -69,10 +69,10 @@ export const TeamBadge = memo(function TeamBadge({
   };
 
   // Parse form string safely
-  const formResults = form ? form.split("").filter((r) => r.trim()) : [];
+  const formResults = form ? form.split('').filter((r) => r.trim()) : [];
 
   // Validate logo URL
-  const hasValidLogo = logoUrl && logoUrl.startsWith("http") && !imageError;
+  const hasValidLogo = logoUrl && logoUrl.startsWith('http') && !imageError;
 
   const handleImageLoad = useCallback(() => {
     setImageLoading(false);
@@ -107,7 +107,7 @@ export const TeamBadge = memo(function TeamBadge({
               />
             )}
             <Image
-              source={{ uri: logoUrl, cache: "force-cache" }}
+              source={{ uri: logoUrl, cache: 'force-cache' }}
               style={[
                 { width: sizes.logo - 10, height: sizes.logo - 10 },
                 imageLoading && { opacity: 0 },
@@ -129,18 +129,12 @@ export const TeamBadge = memo(function TeamBadge({
         style={[styles.name, { maxWidth: sizes.maxWidth }]}
         numberOfLines={2}
       >
-        {name || "Unknown Team"}
+        {name || 'Unknown Team'}
       </ThemedText>
       {showForm && formResults.length > 0 && (
         <View style={styles.formContainer}>
           {formResults.map((result, index) => (
-            <View
-              key={index}
-              style={[
-                styles.formDot,
-                { backgroundColor: getFormColor(result) },
-              ]}
-            />
+            <View key={index} style={[styles.formDot, { backgroundColor: getFormColor(result) }]} />
           ))}
         </View>
       )}
@@ -150,22 +144,22 @@ export const TeamBadge = memo(function TeamBadge({
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: "center",
+    alignItems: 'center',
     paddingHorizontal: 4,
   },
   logoContainer: {
     borderRadius: 50,
     borderWidth: 2,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 10,
   },
   name: {
-    textAlign: "center",
+    textAlign: 'center',
     lineHeight: 18,
   },
   formContainer: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 5,
     marginTop: 10,
   },

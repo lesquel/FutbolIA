@@ -8,16 +8,16 @@
  * - Queue predictions for when back online
  * - Team suggestions caching
  */
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Storage Keys
 const STORAGE_KEYS = {
-  FAVORITE_TEAMS: "@futbolia_favorite_teams",
-  RECENT_PREDICTIONS: "@futbolia_recent_predictions",
-  PENDING_PREDICTIONS: "@futbolia_pending_predictions",
-  TEAM_CACHE: "@futbolia_team_cache",
-  LAST_SYNC: "@futbolia_last_sync",
-  OFFLINE_MODE: "@futbolia_offline_mode",
+  FAVORITE_TEAMS: '@futbolia_favorite_teams',
+  RECENT_PREDICTIONS: '@futbolia_recent_predictions',
+  PENDING_PREDICTIONS: '@futbolia_pending_predictions',
+  TEAM_CACHE: '@futbolia_team_cache',
+  LAST_SYNC: '@futbolia_last_sync',
+  OFFLINE_MODE: '@futbolia_offline_mode',
 } as const;
 
 // Types
@@ -65,7 +65,7 @@ export const getFavoriteTeams = async (): Promise<CachedTeam[]> => {
     const data = await AsyncStorage.getItem(STORAGE_KEYS.FAVORITE_TEAMS);
     return data ? JSON.parse(data) : [];
   } catch (error) {
-    console.error("Error reading favorite teams:", error);
+    console.error('Error reading favorite teams:', error);
     return [];
   }
 };
@@ -73,16 +73,12 @@ export const getFavoriteTeams = async (): Promise<CachedTeam[]> => {
 /**
  * Add a team to favorites
  */
-export const addFavoriteTeam = async (
-  team: Omit<CachedTeam, "cachedAt">
-): Promise<void> => {
+export const addFavoriteTeam = async (team: Omit<CachedTeam, 'cachedAt'>): Promise<void> => {
   try {
     const favorites = await getFavoriteTeams();
 
     // Check if already exists
-    if (
-      favorites.some((t) => t.name.toLowerCase() === team.name.toLowerCase())
-    ) {
+    if (favorites.some((t) => t.name.toLowerCase() === team.name.toLowerCase())) {
       return;
     }
 
@@ -92,12 +88,9 @@ export const addFavoriteTeam = async (
     };
 
     favorites.push(newFavorite);
-    await AsyncStorage.setItem(
-      STORAGE_KEYS.FAVORITE_TEAMS,
-      JSON.stringify(favorites)
-    );
+    await AsyncStorage.setItem(STORAGE_KEYS.FAVORITE_TEAMS, JSON.stringify(favorites));
   } catch (error) {
-    console.error("Error adding favorite team:", error);
+    console.error('Error adding favorite team:', error);
     throw error;
   }
 };
@@ -108,15 +101,10 @@ export const addFavoriteTeam = async (
 export const removeFavoriteTeam = async (teamName: string): Promise<void> => {
   try {
     const favorites = await getFavoriteTeams();
-    const updated = favorites.filter(
-      (t) => t.name.toLowerCase() !== teamName.toLowerCase()
-    );
-    await AsyncStorage.setItem(
-      STORAGE_KEYS.FAVORITE_TEAMS,
-      JSON.stringify(updated)
-    );
+    const updated = favorites.filter((t) => t.name.toLowerCase() !== teamName.toLowerCase());
+    await AsyncStorage.setItem(STORAGE_KEYS.FAVORITE_TEAMS, JSON.stringify(updated));
   } catch (error) {
-    console.error("Error removing favorite team:", error);
+    console.error('Error removing favorite team:', error);
     throw error;
   }
 };
@@ -134,9 +122,7 @@ export const isTeamFavorite = async (teamName: string): Promise<boolean> => {
 /**
  * Get cached predictions
  */
-export const getCachedPredictions = async (
-  limit: number = 20
-): Promise<CachedPrediction[]> => {
+export const getCachedPredictions = async (limit: number = 20): Promise<CachedPrediction[]> => {
   try {
     const data = await AsyncStorage.getItem(STORAGE_KEYS.RECENT_PREDICTIONS);
     if (!data) return [];
@@ -149,7 +135,7 @@ export const getCachedPredictions = async (
 
     return valid.slice(0, limit);
   } catch (error) {
-    console.error("Error reading cached predictions:", error);
+    console.error('Error reading cached predictions:', error);
     return [];
   }
 };
@@ -158,15 +144,14 @@ export const getCachedPredictions = async (
  * Cache a new prediction
  */
 export const cachePrediction = async (
-  prediction: Omit<CachedPrediction, "cachedAt">
+  prediction: Omit<CachedPrediction, 'cachedAt'>,
 ): Promise<void> => {
   try {
     const cached = await getCachedPredictions(50);
 
     // Check if prediction already exists
     const exists = cached.some(
-      (p) =>
-        p.homeTeam === prediction.homeTeam && p.awayTeam === prediction.awayTeam
+      (p) => p.homeTeam === prediction.homeTeam && p.awayTeam === prediction.awayTeam,
     );
 
     if (exists) {
@@ -174,12 +159,9 @@ export const cachePrediction = async (
       const updated = cached.map((p) =>
         p.homeTeam === prediction.homeTeam && p.awayTeam === prediction.awayTeam
           ? { ...prediction, cachedAt: Date.now() }
-          : p
+          : p,
       );
-      await AsyncStorage.setItem(
-        STORAGE_KEYS.RECENT_PREDICTIONS,
-        JSON.stringify(updated)
-      );
+      await AsyncStorage.setItem(STORAGE_KEYS.RECENT_PREDICTIONS, JSON.stringify(updated));
     } else {
       // Add new prediction
       const newPrediction: CachedPrediction = {
@@ -189,13 +171,10 @@ export const cachePrediction = async (
 
       // Keep only last 50 predictions
       const updated = [newPrediction, ...cached].slice(0, 50);
-      await AsyncStorage.setItem(
-        STORAGE_KEYS.RECENT_PREDICTIONS,
-        JSON.stringify(updated)
-      );
+      await AsyncStorage.setItem(STORAGE_KEYS.RECENT_PREDICTIONS, JSON.stringify(updated));
     }
   } catch (error) {
-    console.error("Error caching prediction:", error);
+    console.error('Error caching prediction:', error);
   }
 };
 
@@ -204,14 +183,14 @@ export const cachePrediction = async (
  */
 export const getCachedPredictionForMatch = async (
   homeTeam: string,
-  awayTeam: string
+  awayTeam: string,
 ): Promise<CachedPrediction | null> => {
   const cached = await getCachedPredictions();
   return (
     cached.find(
       (p) =>
         p.homeTeam.toLowerCase() === homeTeam.toLowerCase() &&
-        p.awayTeam.toLowerCase() === awayTeam.toLowerCase()
+        p.awayTeam.toLowerCase() === awayTeam.toLowerCase(),
     ) || null
   );
 };
@@ -226,7 +205,7 @@ export const getPendingPredictions = async (): Promise<PendingPrediction[]> => {
     const data = await AsyncStorage.getItem(STORAGE_KEYS.PENDING_PREDICTIONS);
     return data ? JSON.parse(data) : [];
   } catch (error) {
-    console.error("Error reading pending predictions:", error);
+    console.error('Error reading pending predictions:', error);
     return [];
   }
 };
@@ -237,15 +216,13 @@ export const getPendingPredictions = async (): Promise<PendingPrediction[]> => {
 export const queuePrediction = async (
   homeTeam: string,
   awayTeam: string,
-  language: string = "es"
+  language: string = 'es',
 ): Promise<string> => {
   try {
     const pending = await getPendingPredictions();
 
     // Generate a temporary ID
-    const id = `pending_${Date.now()}_${Math.random()
-      .toString(36)
-      .substr(2, 9)}`;
+    const id = `pending_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     const newRequest: PendingPrediction = {
       id,
@@ -256,14 +233,11 @@ export const queuePrediction = async (
     };
 
     pending.push(newRequest);
-    await AsyncStorage.setItem(
-      STORAGE_KEYS.PENDING_PREDICTIONS,
-      JSON.stringify(pending)
-    );
+    await AsyncStorage.setItem(STORAGE_KEYS.PENDING_PREDICTIONS, JSON.stringify(pending));
 
     return id;
   } catch (error) {
-    console.error("Error queuing prediction:", error);
+    console.error('Error queuing prediction:', error);
     throw error;
   }
 };
@@ -275,12 +249,9 @@ export const removePendingPrediction = async (id: string): Promise<void> => {
   try {
     const pending = await getPendingPredictions();
     const updated = pending.filter((p) => p.id !== id);
-    await AsyncStorage.setItem(
-      STORAGE_KEYS.PENDING_PREDICTIONS,
-      JSON.stringify(updated)
-    );
+    await AsyncStorage.setItem(STORAGE_KEYS.PENDING_PREDICTIONS, JSON.stringify(updated));
   } catch (error) {
-    console.error("Error removing pending prediction:", error);
+    console.error('Error removing pending prediction:', error);
   }
 };
 
@@ -296,14 +267,12 @@ export const clearPendingPredictions = async (): Promise<void> => {
 /**
  * Cache team search results
  */
-export const cacheTeamSearch = async (
-  query: string,
-  teams: CachedTeam[]
-): Promise<void> => {
+export const cacheTeamSearch = async (query: string, teams: CachedTeam[]): Promise<void> => {
   try {
     const data = await AsyncStorage.getItem(STORAGE_KEYS.TEAM_CACHE);
-    const cache: Record<string, { teams: CachedTeam[]; cachedAt: number }> =
-      data ? JSON.parse(data) : {};
+    const cache: Record<string, { teams: CachedTeam[]; cachedAt: number }> = data
+      ? JSON.parse(data)
+      : {};
 
     cache[query.toLowerCase()] = {
       teams,
@@ -319,22 +288,19 @@ export const cacheTeamSearch = async (
 
     await AsyncStorage.setItem(STORAGE_KEYS.TEAM_CACHE, JSON.stringify(cache));
   } catch (error) {
-    console.error("Error caching team search:", error);
+    console.error('Error caching team search:', error);
   }
 };
 
 /**
  * Get cached team search results
  */
-export const getCachedTeamSearch = async (
-  query: string
-): Promise<CachedTeam[] | null> => {
+export const getCachedTeamSearch = async (query: string): Promise<CachedTeam[] | null> => {
   try {
     const data = await AsyncStorage.getItem(STORAGE_KEYS.TEAM_CACHE);
     if (!data) return null;
 
-    const cache: Record<string, { teams: CachedTeam[]; cachedAt: number }> =
-      JSON.parse(data);
+    const cache: Record<string, { teams: CachedTeam[]; cachedAt: number }> = JSON.parse(data);
     const entry = cache[query.toLowerCase()];
 
     if (!entry) return null;
@@ -346,7 +312,7 @@ export const getCachedTeamSearch = async (
 
     return entry.teams;
   } catch (error) {
-    console.error("Error reading team cache:", error);
+    console.error('Error reading team cache:', error);
     return null;
   }
 };
@@ -359,7 +325,7 @@ export const getCachedTeamSearch = async (
 export const isOfflineModeEnabled = async (): Promise<boolean> => {
   try {
     const value = await AsyncStorage.getItem(STORAGE_KEYS.OFFLINE_MODE);
-    return value === "true";
+    return value === 'true';
   } catch {
     return false;
   }
@@ -434,10 +400,7 @@ export const clearOfflineData = async (): Promise<void> => {
  * Export offline data for backup
  */
 export const exportOfflineData = async (): Promise<string> => {
-  const [favorites, predictions] = await Promise.all([
-    getFavoriteTeams(),
-    getCachedPredictions(),
-  ]);
+  const [favorites, predictions] = await Promise.all([getFavoriteTeams(), getCachedPredictions()]);
 
   return JSON.stringify(
     {
@@ -449,7 +412,7 @@ export const exportOfflineData = async (): Promise<string> => {
       },
     },
     null,
-    2
+    2,
   );
 };
 
@@ -461,26 +424,26 @@ export const importOfflineData = async (jsonData: string): Promise<boolean> => {
     const data = JSON.parse(jsonData);
 
     if (data.version !== 1) {
-      throw new Error("Unsupported backup version");
+      throw new Error('Unsupported backup version');
     }
 
     if (data.data.favoriteTeams) {
       await AsyncStorage.setItem(
         STORAGE_KEYS.FAVORITE_TEAMS,
-        JSON.stringify(data.data.favoriteTeams)
+        JSON.stringify(data.data.favoriteTeams),
       );
     }
 
     if (data.data.predictions) {
       await AsyncStorage.setItem(
         STORAGE_KEYS.RECENT_PREDICTIONS,
-        JSON.stringify(data.data.predictions)
+        JSON.stringify(data.data.predictions),
       );
     }
 
     return true;
   } catch (error) {
-    console.error("Error importing offline data:", error);
+    console.error('Error importing offline data:', error);
     return false;
   }
 };

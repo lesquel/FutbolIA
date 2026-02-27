@@ -2,7 +2,7 @@
  * TeamSelector - Dropdown/Modal for selecting teams
  * Now with button-based search to reduce server load!
  */
-import { useState, useEffect, useCallback, useRef, memo, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef, memo, useMemo } from 'react';
 import {
   View,
   Modal,
@@ -15,58 +15,57 @@ import {
   Image,
   Platform,
   useWindowDimensions,
-} from "react-native";
-import { Search, X, Check, Sparkles, Loader2 } from "lucide-react-native";
-import { useTheme } from "@/src/theme";
-import { ThemedText, Card, Input, Button, Icon } from "@/src/components/ui";
-import { teamsApi, TeamSearchResult } from "@/src/services/api";
+} from 'react-native';
+import { Search, X, Check, Sparkles, Loader2 } from 'lucide-react-native';
+import { useTheme } from '@/src/theme';
+import { ThemedText, Card, Input, Button, Icon } from '@/src/components/ui';
+import { teamsApi, TeamSearchResult } from '@/src/services/api';
 
 // Solo Premier League 2025-2026
-const ALLOWED_LEAGUES = ["Premier League"];
+const ALLOWED_LEAGUES = ['Premier League'];
 
 // Equipos conocidos de Premier League (para validación cuando no hay liga en la respuesta)
 const PREMIER_LEAGUE_TEAMS = [
-  "Arsenal",
-  "Aston Villa",
-  "AFC Bournemouth",
-  "Brentford",
-  "Brighton",
-  "Brighton & Hove Albion",
-  "Chelsea",
-  "Crystal Palace",
-  "Everton",
-  "Fulham",
-  "Ipswich Town",
-  "Leeds United",
-  "Leicester City",
-  "Liverpool",
-  "Manchester City",
-  "Manchester United",
-  "Newcastle United",
-  "Nottingham Forest",
-  "Southampton",
-  "Sunderland",
-  "Tottenham",
-  "Tottenham Hotspur",
-  "West Ham",
-  "West Ham United",
-  "Wolverhampton",
-  "Wolverhampton Wanderers",
-  "Burnley",
-  "Luton Town",
-  "Sheffield United",
+  'Arsenal',
+  'Aston Villa',
+  'AFC Bournemouth',
+  'Brentford',
+  'Brighton',
+  'Brighton & Hove Albion',
+  'Chelsea',
+  'Crystal Palace',
+  'Everton',
+  'Fulham',
+  'Ipswich Town',
+  'Leeds United',
+  'Leicester City',
+  'Liverpool',
+  'Manchester City',
+  'Manchester United',
+  'Newcastle United',
+  'Nottingham Forest',
+  'Southampton',
+  'Sunderland',
+  'Tottenham',
+  'Tottenham Hotspur',
+  'West Ham',
+  'West Ham United',
+  'Wolverhampton',
+  'Wolverhampton Wanderers',
+  'Burnley',
+  'Luton Town',
+  'Sheffield United',
 ];
 
 // Función para verificar si un nombre de equipo es de Premier League
 const isPremierLeagueTeam = (teamName: string): boolean => {
   const normalizedName = teamName
     .toLowerCase()
-    .replace(/\s*(fc|afc)\s*$/i, "")
+    .replace(/\s*(fc|afc)\s*$/i, '')
     .trim();
   return PREMIER_LEAGUE_TEAMS.some(
     (known) =>
-      normalizedName.includes(known.toLowerCase()) ||
-      known.toLowerCase().includes(normalizedName),
+      normalizedName.includes(known.toLowerCase()) || known.toLowerCase().includes(normalizedName),
   );
 };
 
@@ -85,105 +84,105 @@ const isTeamInAllowedLeague = (team: TeamSearchResult): boolean => {
 const POPULAR_TEAMS = [
   // Top 6
   {
-    name: "Manchester City",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/65.png",
+    name: 'Manchester City',
+    league: 'Premier League',
+    logo_url: 'https://crests.football-data.org/65.png',
   },
   {
-    name: "Liverpool FC",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/64.png",
+    name: 'Liverpool FC',
+    league: 'Premier League',
+    logo_url: 'https://crests.football-data.org/64.png',
   },
   {
-    name: "Arsenal FC",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/57.png",
+    name: 'Arsenal FC',
+    league: 'Premier League',
+    logo_url: 'https://crests.football-data.org/57.png',
   },
   {
-    name: "Chelsea FC",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/61.png",
+    name: 'Chelsea FC',
+    league: 'Premier League',
+    logo_url: 'https://crests.football-data.org/61.png',
   },
   {
-    name: "Tottenham Hotspur FC",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/73.png",
+    name: 'Tottenham Hotspur FC',
+    league: 'Premier League',
+    logo_url: 'https://crests.football-data.org/73.png',
   },
   {
-    name: "Manchester United FC",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/66.png",
+    name: 'Manchester United FC',
+    league: 'Premier League',
+    logo_url: 'https://crests.football-data.org/66.png',
   },
   // Rest of Premier League
   {
-    name: "Newcastle United FC",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/67.png",
+    name: 'Newcastle United FC',
+    league: 'Premier League',
+    logo_url: 'https://crests.football-data.org/67.png',
   },
   {
-    name: "Aston Villa FC",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/58.png",
+    name: 'Aston Villa FC',
+    league: 'Premier League',
+    logo_url: 'https://crests.football-data.org/58.png',
   },
   {
-    name: "Brighton & Hove Albion FC",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/397.png",
+    name: 'Brighton & Hove Albion FC',
+    league: 'Premier League',
+    logo_url: 'https://crests.football-data.org/397.png',
   },
   {
-    name: "West Ham United FC",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/563.png",
+    name: 'West Ham United FC',
+    league: 'Premier League',
+    logo_url: 'https://crests.football-data.org/563.png',
   },
   {
-    name: "Crystal Palace FC",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/354.png",
+    name: 'Crystal Palace FC',
+    league: 'Premier League',
+    logo_url: 'https://crests.football-data.org/354.png',
   },
   {
-    name: "Brentford FC",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/402.png",
+    name: 'Brentford FC',
+    league: 'Premier League',
+    logo_url: 'https://crests.football-data.org/402.png',
   },
   {
-    name: "Fulham FC",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/63.png",
+    name: 'Fulham FC',
+    league: 'Premier League',
+    logo_url: 'https://crests.football-data.org/63.png',
   },
   {
-    name: "Wolverhampton Wanderers FC",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/76.png",
+    name: 'Wolverhampton Wanderers FC',
+    league: 'Premier League',
+    logo_url: 'https://crests.football-data.org/76.png',
   },
   {
-    name: "AFC Bournemouth",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/1044.png",
+    name: 'AFC Bournemouth',
+    league: 'Premier League',
+    logo_url: 'https://crests.football-data.org/1044.png',
   },
   {
-    name: "Nottingham Forest FC",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/351.png",
+    name: 'Nottingham Forest FC',
+    league: 'Premier League',
+    logo_url: 'https://crests.football-data.org/351.png',
   },
   {
-    name: "Everton FC",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/62.png",
+    name: 'Everton FC',
+    league: 'Premier League',
+    logo_url: 'https://crests.football-data.org/62.png',
   },
   {
-    name: "Leicester City FC",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/338.png",
+    name: 'Leicester City FC',
+    league: 'Premier League',
+    logo_url: 'https://crests.football-data.org/338.png',
   },
   {
-    name: "Ipswich Town FC",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/349.png",
+    name: 'Ipswich Town FC',
+    league: 'Premier League',
+    logo_url: 'https://crests.football-data.org/349.png',
   },
   {
-    name: "Southampton FC",
-    league: "Premier League",
-    logo_url: "https://crests.football-data.org/340.png",
+    name: 'Southampton FC',
+    league: 'Premier League',
+    logo_url: 'https://crests.football-data.org/340.png',
   },
 ];
 
@@ -193,8 +192,8 @@ const POPULAR_TEAMS = [
 const normalizeTeamName = (name: string): string => {
   return name
     .toLowerCase()
-    .replace(/\s*(fc|afc)\s*$/i, "")
-    .replace(/\s+/g, " ")
+    .replace(/\s*(fc|afc)\s*$/i, '')
+    .replace(/\s+/g, ' ')
     .trim();
 };
 
@@ -202,9 +201,7 @@ const normalizeTeamName = (name: string): string => {
  * Elimina equipos duplicados basándose en el nombre normalizado
  * Prioriza equipos con logo_url y con "FC" en el nombre
  */
-const removeDuplicateTeams = (
-  teams: TeamSearchResult[],
-): TeamSearchResult[] => {
+const removeDuplicateTeams = (teams: TeamSearchResult[]): TeamSearchResult[] => {
   const seen = new Map<string, TeamSearchResult>();
 
   for (const team of teams) {
@@ -217,7 +214,7 @@ const removeDuplicateTeams = (
       // Priorizar: 1) Con logo, 2) Con "FC" en el nombre, 3) Con has_players
       const shouldReplace =
         (!existing.logo_url && team.logo_url) ||
-        (!existing.name.includes("FC") && team.name.includes("FC")) ||
+        (!existing.name.includes('FC') && team.name.includes('FC')) ||
         (!existing.has_players && team.has_players);
 
       if (shouldReplace) {
@@ -232,10 +229,7 @@ const removeDuplicateTeams = (
 interface TeamSelectorProps {
   label: string;
   selectedTeam: string | null;
-  onSelectTeam: (
-    team: string,
-    teamData?: { logo_url?: string; league?: string },
-  ) => void;
+  onSelectTeam: (team: string, teamData?: { logo_url?: string; league?: string }) => void;
   excludeTeam?: string | null; // To prevent selecting the same team twice
   icon?: any; // LucideIcon
 }
@@ -271,14 +265,14 @@ export const TeamSelector = memo(function TeamSelector({
       };
     }
     return {
-      width: "100%" as any,
-      maxHeight: "92%" as any,
-      minHeight: "65%" as any,
+      width: '100%' as any,
+      maxHeight: '92%' as any,
+      minHeight: '65%' as any,
     };
   }, [screenWidth, screenHeight, isTablet, isDesktop]);
 
   const [modalVisible, setModalVisible] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [teams, setTeams] = useState<TeamSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
@@ -289,12 +283,12 @@ export const TeamSelector = memo(function TeamSelector({
   // Función para recargar equipos desde la API
   const reloadTeams = useCallback(async () => {
     const fallbackTeams = POPULAR_TEAMS.map((t) => ({
-      id: t.name.toLowerCase().replaceAll(/\s+/g, "_"),
+      id: t.name.toLowerCase().replaceAll(/\s+/g, '_'),
       name: t.name,
       short_name: t.name.substring(0, 3).toUpperCase(),
       league: t.league,
       logo_url: t.logo_url,
-      country: "",
+      country: '',
       has_players: true,
       player_count: 11,
     }));
@@ -302,24 +296,16 @@ export const TeamSelector = memo(function TeamSelector({
     try {
       // Forzar que no use caché en el backend
       const response = await teamsApi.getTeamsWithPlayers();
-      if (
-        response.success &&
-        response.data?.teams &&
-        response.data.teams.length > 0
-      ) {
+      if (response.success && response.data?.teams && response.data.teams.length > 0) {
         // Incluir TODOS los equipos (include_all=true equivalente)
         const combinedTeams = [...fallbackTeams, ...response.data.teams];
         setTeams(removeDuplicateTeams(combinedTeams));
-        console.log(
-          "✅ Teams reloaded:",
-          response.data.teams.length,
-          "from API",
-        );
+        console.log('✅ Teams reloaded:', response.data.teams.length, 'from API');
       } else {
         setTeams(fallbackTeams);
       }
     } catch (error) {
-      console.log("Error reloading teams:", error);
+      console.log('Error reloading teams:', error);
       setTeams(fallbackTeams);
     }
   }, []);
@@ -330,12 +316,12 @@ export const TeamSelector = memo(function TeamSelector({
       try {
         // Set fallback teams immediately for instant UI (ya sin duplicados)
         const fallbackTeams = POPULAR_TEAMS.map((t) => ({
-          id: t.name.toLowerCase().replaceAll(/\s+/g, "_"),
+          id: t.name.toLowerCase().replaceAll(/\s+/g, '_'),
           name: t.name,
           short_name: t.name.substring(0, 3).toUpperCase(),
           league: t.league,
           logo_url: t.logo_url,
-          country: "",
+          country: '',
           has_players: true,
           player_count: 11,
         }));
@@ -343,17 +329,13 @@ export const TeamSelector = memo(function TeamSelector({
 
         // Then try to load from API (non-blocking)
         const response = await teamsApi.getTeamsWithPlayers();
-        if (
-          response.success &&
-          response.data?.teams &&
-          response.data.teams.length > 0
-        ) {
+        if (response.success && response.data?.teams && response.data.teams.length > 0) {
           // Incluir TODOS los equipos, no filtrar por liga
           const combinedTeams = [...fallbackTeams, ...response.data.teams];
           setTeams(removeDuplicateTeams(combinedTeams));
         }
       } catch (error) {
-        console.log("Error loading initial teams:", error);
+        console.log('Error loading initial teams:', error);
         // Keep fallback teams on error
       }
     };
@@ -364,7 +346,7 @@ export const TeamSelector = memo(function TeamSelector({
   // Recargar equipos cuando se abre el modal
   useEffect(() => {
     if (modalVisible) {
-      console.log("🔄 Modal abierto, recargando equipos...");
+      console.log('🔄 Modal abierto, recargando equipos...');
       reloadTeams();
     }
   }, [modalVisible, reloadTeams]);
@@ -399,9 +381,7 @@ export const TeamSelector = memo(function TeamSelector({
         // Search with timeout handling
         const response = (await Promise.race([
           teamsApi.search(searchQuery, true),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Timeout")), 5000),
-          ),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000)),
         ])) as any;
 
         if (response.success && response.data?.teams) {
@@ -410,18 +390,17 @@ export const TeamSelector = memo(function TeamSelector({
         } else {
           // Show error but keep previous results
           Alert.alert(
-            "Búsqueda",
-            response.error ||
-            "No se encontraron equipos. Intenta con otro nombre."
+            'Búsqueda',
+            response.error || 'No se encontraron equipos. Intenta con otro nombre.',
           );
         }
       } catch (error: any) {
-        console.log("Search error:", error);
+        console.log('Search error:', error);
         Alert.alert(
-          "Error de búsqueda",
-          error.message === "Timeout"
-            ? "La búsqueda está tardando mucho. Intenta con un nombre más específico."
-            : "Error al buscar equipos. Verifica tu conexión.",
+          'Error de búsqueda',
+          error.message === 'Timeout'
+            ? 'La búsqueda está tardando mucho. Intenta con un nombre más específico.'
+            : 'Error al buscar equipos. Verifica tu conexión.',
         );
       } finally {
         setLoading(false);
@@ -432,7 +411,7 @@ export const TeamSelector = memo(function TeamSelector({
   // Reset search when modal closes
   const handleCloseModal = () => {
     setModalVisible(false);
-    setSearchQuery("");
+    setSearchQuery('');
     setHasSearched(false);
   };
 
@@ -459,17 +438,13 @@ export const TeamSelector = memo(function TeamSelector({
 
       if (addResponse.success) {
         // 2. Generate players automatically so GoalMind has data to work with
-        const generateResponse = await teamsApi.generatePlayers(
-          searchQuery,
-          15,
-          75,
-        );
+        const generateResponse = await teamsApi.generatePlayers(searchQuery, 15, 75);
 
         // 3. Refrescar caché del backend
         await teamsApi.refreshCache();
 
         // 4. Refrescar la lista de equipos inmediatamente
-        console.log("✅ Equipo agregado, refrescando lista...");
+        console.log('✅ Equipo agregado, refrescando lista...');
         await reloadTeams();
         setRefreshKey((prev) => prev + 1); // Forzar re-render
 
@@ -478,20 +453,20 @@ export const TeamSelector = memo(function TeamSelector({
           : 0;
 
         Alert.alert(
-          "✅ Equipo Agregado",
+          '✅ Equipo Agregado',
           `${searchQuery} ha sido agregado con ${playersGenerated} jugadores. GoalMind ya conoce a sus jugadores.`,
           [
             {
-              text: "¡Genial!",
+              text: '¡Genial!',
               onPress: () => {
                 // Seleccionar el equipo recién agregado
                 handleSelectTeam(searchQuery, {
-                  id: `new_${searchQuery.toLowerCase().replace(/\s+/g, "_")}`,
+                  id: `new_${searchQuery.toLowerCase().replace(/\s+/g, '_')}`,
                   name: searchQuery,
                   short_name: searchQuery.substring(0, 3).toUpperCase(),
-                  logo_url: "",
-                  country: "",
-                  league: "",
+                  logo_url: '',
+                  country: '',
+                  league: '',
                   has_players: true,
                   player_count: playersGenerated,
                 });
@@ -500,14 +475,11 @@ export const TeamSelector = memo(function TeamSelector({
           ],
         );
       } else {
-        Alert.alert(
-          "Error",
-          addResponse.error || "No se pudo agregar el equipo",
-        );
+        Alert.alert('Error', addResponse.error || 'No se pudo agregar el equipo');
       }
     } catch (error) {
-      console.error("Error adding team:", error);
-      Alert.alert("Error", "Error de conexión al agregar equipo");
+      console.error('Error adding team:', error);
+      Alert.alert('Error', 'Error de conexión al agregar equipo');
     } finally {
       setIsAdding(false);
     }
@@ -516,23 +488,20 @@ export const TeamSelector = memo(function TeamSelector({
   // Get team initials for display
   const getInitials = (name: string) => {
     return name
-      .split(" ")
+      .split(' ')
       .map((w) => w[0])
-      .join("")
+      .join('')
       .slice(0, 3);
   };
 
   // Helper to find logo from POPULAR_TEAMS
-  const getTeamLogo = (
-    teamName: string,
-    itemLogo?: string,
-  ): string | undefined => {
+  const getTeamLogo = (teamName: string, itemLogo?: string): string | undefined => {
     if (itemLogo) return itemLogo;
     const popularTeam = POPULAR_TEAMS.find(
       (t) =>
         t.name === teamName ||
         teamName.includes(t.name) ||
-        t.name.includes(teamName.replace(" FC", "").replace("FC ", "")),
+        t.name.includes(teamName.replace(' FC', '').replace('FC ', '')),
     );
     return popularTeam?.logo_url;
   };
@@ -542,7 +511,7 @@ export const TeamSelector = memo(function TeamSelector({
 
     const logoUrl = getTeamLogo(item.name, item.logo_url);
     // Also pass the logo when selecting the team
-    const itemWithLogo = { ...item, logo_url: logoUrl || "" };
+    const itemWithLogo = { ...item, logo_url: logoUrl || '' };
 
     return (
       <TouchableOpacity
@@ -553,20 +522,13 @@ export const TeamSelector = memo(function TeamSelector({
           isDesktop && styles.teamItemDesktop,
           {
             backgroundColor:
-              selectedTeam === item.name
-                ? theme.colors.primary + "20"
-                : "transparent",
+              selectedTeam === item.name ? theme.colors.primary + '20' : 'transparent',
             borderBottomColor: theme.colors.border,
           },
         ]}
         activeOpacity={0.7}
       >
-        <View
-          style={[
-            styles.teamItemContent,
-            isLargeScreen && styles.teamItemContentLarge,
-          ]}
-        >
+        <View style={[styles.teamItemContent, isLargeScreen && styles.teamItemContentLarge]}>
           <View
             style={[
               styles.teamItemBadge,
@@ -575,27 +537,19 @@ export const TeamSelector = memo(function TeamSelector({
             ]}
           >
             {logoUrl ? (
-              <Image
-                source={{ uri: logoUrl }}
-                style={styles.teamLogo}
-                resizeMode="contain"
-              />
+              <Image source={{ uri: logoUrl }} style={styles.teamLogo} resizeMode="contain" />
             ) : (
-              <ThemedText weight="bold" size={isLargeScreen ? "lg" : "base"}>
+              <ThemedText weight="bold" size={isLargeScreen ? 'lg' : 'base'}>
                 {getInitials(item.name)}
               </ThemedText>
             )}
           </View>
           <View style={{ flex: 1 }}>
-            <ThemedText
-              weight="semibold"
-              size={isLargeScreen ? "lg" : "base"}
-              numberOfLines={1}
-            >
+            <ThemedText weight="semibold" size={isLargeScreen ? 'lg' : 'base'} numberOfLines={1}>
               {item.name}
             </ThemedText>
-            <ThemedText variant="muted" size={isLargeScreen ? "sm" : "xs"}>
-              {item.league || item.country || "Liga desconocida"}
+            <ThemedText variant="muted" size={isLargeScreen ? 'sm' : 'xs'}>
+              {item.league || item.country || 'Liga desconocida'}
             </ThemedText>
           </View>
           {item.has_players && (
@@ -603,16 +557,12 @@ export const TeamSelector = memo(function TeamSelector({
               style={[
                 styles.dataBadge,
                 isLargeScreen && styles.dataBadgeLarge,
-                { backgroundColor: theme.colors.success + "20" },
+                { backgroundColor: theme.colors.success + '20' },
               ]}
             >
-              <Icon
-                icon={Check}
-                size={isLargeScreen ? 16 : 12}
-                variant="success"
-              />
+              <Icon icon={Check} size={isLargeScreen ? 16 : 12} variant="success" />
               <ThemedText
-                size={isLargeScreen ? "sm" : "xs"}
+                size={isLargeScreen ? 'sm' : 'xs'}
                 style={{ color: theme.colors.success, marginLeft: 4 }}
               >
                 Datos
@@ -630,9 +580,7 @@ export const TeamSelector = memo(function TeamSelector({
   return (
     <View style={styles.container}>
       <View style={styles.labelRow}>
-        {IconComponent ? (
-          <Icon icon={IconComponent} size={16} variant="secondary" />
-        ) : null}
+        {IconComponent ? <Icon icon={IconComponent} size={16} variant="secondary" /> : null}
         <ThemedText variant="secondary" size="sm" style={styles.label}>
           {label}
         </ThemedText>
@@ -640,7 +588,7 @@ export const TeamSelector = memo(function TeamSelector({
 
       <TouchableOpacity
         onPress={() => {
-          console.log("Abriendo selector de equipos...");
+          console.log('Abriendo selector de equipos...');
           setModalVisible(true);
         }}
         activeOpacity={0.6}
@@ -648,11 +596,9 @@ export const TeamSelector = memo(function TeamSelector({
           styles.selector,
           {
             backgroundColor: theme.colors.surface,
-            borderColor: selectedTeam
-              ? theme.colors.primary
-              : theme.colors.border,
+            borderColor: selectedTeam ? theme.colors.primary : theme.colors.border,
             // @ts-ignore
-            cursor: "pointer",
+            cursor: 'pointer',
           },
         ]}
       >
@@ -668,17 +614,12 @@ export const TeamSelector = memo(function TeamSelector({
                     (t) =>
                       t.name === selectedTeam ||
                       selectedTeam.includes(t.name) ||
-                      t.name.includes(
-                        selectedTeam.replace(" FC", "").replace("FC ", ""),
-                      ),
+                      t.name.includes(selectedTeam.replace(' FC', '').replace('FC ', '')),
                   )?.league;
                 return (
                   <>
                     <View
-                      style={[
-                        styles.teamBadge,
-                        { backgroundColor: theme.colors.primary + "20" },
-                      ]}
+                      style={[styles.teamBadge, { backgroundColor: theme.colors.primary + '20' }]}
                     >
                       {logoUrl ? (
                         <Image
@@ -693,7 +634,9 @@ export const TeamSelector = memo(function TeamSelector({
                       )}
                     </View>
                     <View style={{ flex: 1 }}>
-                      <ThemedText weight="semibold" numberOfLines={1}>{selectedTeam}</ThemedText>
+                      <ThemedText weight="semibold" numberOfLines={1}>
+                        {selectedTeam}
+                      </ThemedText>
                       {league ? (
                         <ThemedText variant="muted" size="xs">
                           {league}
@@ -707,7 +650,9 @@ export const TeamSelector = memo(function TeamSelector({
           ) : (
             <ThemedText variant="muted">Seleccionar equipo...</ThemedText>
           )}
-          <ThemedText variant="muted" style={{ marginLeft: 8 }}>▼</ThemedText>
+          <ThemedText variant="muted" style={{ marginLeft: 8 }}>
+            ▼
+          </ThemedText>
         </View>
       </TouchableOpacity>
 
@@ -719,10 +664,7 @@ export const TeamSelector = memo(function TeamSelector({
         onRequestClose={handleCloseModal}
         statusBarTranslucent
       >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={handleCloseModal}
-        >
+        <Pressable style={styles.modalOverlay} onPress={handleCloseModal}>
           {/* Prevenir que los toques en el contenido cierren el modal */}
           <Pressable
             style={[
@@ -730,10 +672,10 @@ export const TeamSelector = memo(function TeamSelector({
               { backgroundColor: theme.colors.background },
               Platform.select({
                 web: {
-                  boxShadow: "0 -2px 10px rgba(0, 0, 0, 0.25)",
+                  boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.25)',
                 },
                 default: {
-                  shadowColor: "#000",
+                  shadowColor: '#000',
                   shadowOffset: { width: 0, height: -2 },
                   shadowOpacity: 0.25,
                   shadowRadius: 10,
@@ -749,10 +691,10 @@ export const TeamSelector = memo(function TeamSelector({
                 },
                 Platform.select({
                   web: {
-                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
                   },
                   default: {
-                    shadowColor: "#000",
+                    shadowColor: '#000',
                     shadowOffset: { width: 0, height: 4 },
                     shadowOpacity: 0.3,
                     shadowRadius: 12,
@@ -764,13 +706,8 @@ export const TeamSelector = memo(function TeamSelector({
             onPress={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <View
-              style={[
-                styles.modalHeader,
-                isLargeScreen && styles.modalHeaderLarge,
-              ]}
-            >
-              <ThemedText size={isLargeScreen ? "2xl" : "xl"} weight="bold">
+            <View style={[styles.modalHeader, isLargeScreen && styles.modalHeaderLarge]}>
+              <ThemedText size={isLargeScreen ? '2xl' : 'xl'} weight="bold">
                 Seleccionar Equipo
               </ThemedText>
               <TouchableOpacity onPress={handleCloseModal}>
@@ -791,16 +728,13 @@ export const TeamSelector = memo(function TeamSelector({
                   />
                 </View>
                 <Button
-                  title={isLargeScreen ? "Buscar" : ""}
+                  title={isLargeScreen ? 'Buscar' : ''}
                   variant="primary"
-                  size={isLargeScreen ? "lg" : "md"}
+                  size={isLargeScreen ? 'lg' : 'md'}
                   onPress={handleSearch}
                   loading={loading}
                   icon={loading ? Loader2 : Search}
-                  style={[
-                    styles.searchButton,
-                    isLargeScreen && styles.searchButtonLarge,
-                  ]}
+                  style={[styles.searchButton, isLargeScreen && styles.searchButtonLarge]}
                 />
               </View>
             </View>
@@ -817,7 +751,7 @@ export const TeamSelector = memo(function TeamSelector({
                     <ThemedText variant="muted" style={styles.emptyText}>
                       {hasSearched
                         ? `No se encontró "${searchQuery}".`
-                        : "Escribe el nombre del equipo."}
+                        : 'Escribe el nombre del equipo.'}
                     </ThemedText>
                   </View>
                 ) : null
@@ -835,8 +769,8 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   labelRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
     marginBottom: 10,
   },
@@ -848,50 +782,50 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     minHeight: 60,
-    justifyContent: "center",
+    justifyContent: 'center',
   },
   selectorContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    width: "100%",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
   },
   selectedTeam: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 14,
   },
   teamBadge: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   modalOverlay: {
     flex: 1,
-    justifyContent: "flex-end",
+    justifyContent: 'flex-end',
     backgroundColor: 'rgba(0,0,0,0.6)',
   },
   modalContent: {
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
-    maxHeight: "80%",
-    width: "100%",
+    maxHeight: '80%',
+    width: '100%',
   },
   modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   searchContainer: {
     marginBottom: 14,
   },
   searchInputRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
   },
   searchInputWrapper: {
@@ -903,21 +837,21 @@ const styles = StyleSheet.create({
   },
   searchLoader: {
     marginTop: 10,
-    alignSelf: "center",
+    alignSelf: 'center',
   },
   searchResultsHeader: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
     paddingVertical: 10,
     paddingHorizontal: 6,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(0,0,0,0.1)",
+    borderBottomColor: 'rgba(0,0,0,0.1)',
     marginBottom: 10,
   },
   dataBadge: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -927,54 +861,54 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   teamItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingVertical: 14,
     borderBottomWidth: 1,
   },
   teamItemContent: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 14,
   },
   teamItemBadge: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
   },
   teamLogo: {
-    width: "100%",
-    height: "100%",
+    width: '100%',
+    height: '100%',
   },
   teamLogoSmall: {
-    width: "100%",
-    height: "100%",
+    width: '100%',
+    height: '100%',
   },
   emptyContainer: {
     padding: 24,
-    alignItems: "center",
+    alignItems: 'center',
   },
   emptyText: {
-    textAlign: "center",
+    textAlign: 'center',
     marginBottom: 24,
     lineHeight: 22,
   },
   addCard: {
-    width: "100%",
-    alignItems: "center",
+    width: '100%',
+    alignItems: 'center',
     padding: 18,
   },
   // ==========================================
   // RESPONSIVE STYLES FOR TABLETS AND DESKTOP
   // ==========================================
   modalOverlayCenter: {
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalContentCenter: {
     borderRadius: 20,
@@ -985,7 +919,7 @@ const styles = StyleSheet.create({
     marginBottom: 28,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(0,0,0,0.1)",
+    borderBottomColor: 'rgba(0,0,0,0.1)',
   },
   closeButton: {
     padding: 4,
@@ -1021,7 +955,7 @@ const styles = StyleSheet.create({
     flex: 0.5,
     marginHorizontal: 4,
     borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.08)",
+    borderColor: 'rgba(0,0,0,0.08)',
   },
   teamItemContentLarge: {
     gap: 18,

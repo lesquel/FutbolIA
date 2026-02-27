@@ -2,9 +2,11 @@
 GoalMind Backend - Configuration Tests
 Tests for application settings and environment configuration
 """
+
 import os
-import pytest
 from unittest.mock import patch
+
+import pytest
 
 
 class TestSettings:
@@ -33,13 +35,15 @@ class TestSettings:
         """JWT secret must be set in production"""
         from src.core.config import Settings
 
-        with patch.dict(
-            os.environ,
-            {"ENVIRONMENT": "production", "JWT_SECRET_KEY": ""},
-            clear=False,
+        with (
+            patch.dict(
+                os.environ,
+                {"ENVIRONMENT": "production", "JWT_SECRET_KEY": ""},
+                clear=False,
+            ),
+            pytest.raises(ValueError, match="JWT_SECRET_KEY"),
         ):
-            with pytest.raises(ValueError, match="JWT_SECRET_KEY"):
-                Settings()
+            Settings()
 
     def test_cors_defaults_in_development(self):
         """CORS should have localhost defaults in development"""

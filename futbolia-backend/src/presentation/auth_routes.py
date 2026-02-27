@@ -2,13 +2,12 @@
 Authentication API Routes
 Handles user registration, login, and profile management
 """
-from fastapi import APIRouter, Depends, HTTPException, Header
+
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel, EmailStr
-from typing import Optional
 
-from src.use_cases.auth import AuthUseCase
 from src.infrastructure.db.user_repository import UserRepository
-
+from src.use_cases.auth import AuthUseCase
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -28,8 +27,8 @@ class LoginRequest(BaseModel):
 
 
 class UpdatePreferencesRequest(BaseModel):
-    language: Optional[str] = None
-    theme: Optional[str] = None
+    language: str | None = None
+    theme: str | None = None
 
 
 class TokenResponse(BaseModel):
@@ -42,13 +41,13 @@ async def get_current_user(authorization: str = Header(None)):
     """Extract and verify JWT token from Authorization header"""
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Token no proporcionado")
-    
+
     token = authorization.split(" ")[1]
     user = await AuthUseCase.get_current_user(token)
-    
+
     if not user:
         raise HTTPException(status_code=401, detail="Token inválido o expirado")
-    
+
     return user
 
 
@@ -57,7 +56,7 @@ async def get_optional_user(authorization: str = Header(None)):
     """Extract and verify JWT token, returns None if no token or invalid"""
     if not authorization or not authorization.startswith("Bearer "):
         return None
-    
+
     try:
         token = authorization.split(" ")[1]
         user = await AuthUseCase.get_current_user(token)
@@ -76,10 +75,10 @@ async def register(request: RegisterRequest):
         password=request.password,
         language=request.language,
     )
-    
+
     if not result["success"]:
         raise HTTPException(status_code=400, detail=result["error"])
-    
+
     return result
 
 
@@ -91,28 +90,22 @@ async def login(request: LoginRequest):
         password=request.password,
         language=request.language,
     )
-    
+
     if not result["success"]:
         raise HTTPException(status_code=401, detail=result["error"])
-    
+
     return result
 
 
 @router.get("/me")
-async def get_profile(current_user = Depends(get_current_user)):
+async def get_profile(current_user=Depends(get_current_user)):
     """Get current user profile"""
-    return {
-        "success": True,
-        "data": {
-            "user": current_user.to_dict()
-        }
-    }
+    return {"success": True, "data": {"user": current_user.to_dict()}}
 
 
 @router.put("/preferences")
 async def update_preferences(
-    request: UpdatePreferencesRequest,
-    current_user = Depends(get_current_user)
+    request: UpdatePreferencesRequest, current_user=Depends(get_current_user)
 ):
     """Update user preferences (language, theme)"""
     success = await UserRepository.update_preferences(
@@ -120,18 +113,13 @@ async def update_preferences(
         language=request.language,
         theme=request.theme,
     )
-    
+
     if success:
         # Fetch updated user
         updated_user = await UserRepository.find_by_id(current_user.id)
         return {
             "success": True,
-            "data": {
-                "user": updated_user.to_dict() if updated_user else current_user.to_dict()
-            }
+            "data": {"user": updated_user.to_dict() if updated_user else current_user.to_dict()},
         }
-    
-    return {
-        "success": True,
-        "message": "No changes made"
-    }
+
+    return {"success": True, "message": "No changes made"}
