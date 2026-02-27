@@ -2,8 +2,17 @@
 
 Backend API para FutPredicIA, una plataforma de predicciones deportivas impulsada por IA.
 
+## 🎓 Motivación
+
+Este proyecto nació como aplicación práctica de **Minería de Datos** en el 5to semestre de Ingeniería en Tecnologías de la Información en la **Universidad Laica Eloy Alfaro de Manabí (ULEAM)**, desarrollado para la **Casa Abierta 2025**.
+
+La idea central: demostrar que las técnicas de minería de datos (clustering, RAG, embeddings vectoriales) pueden combinarse con inteligencia artificial generativa para resolver un problema real — **predecir resultados de partidos de fútbol** usando datos actualizados en lugar de depender del conocimiento estático de un LLM.
+
+El sistema aborda uno de los problemas más comunes de los modelos de lenguaje: **las alucinaciones**. En lugar de dejar que el modelo "adivine" quién es el técnico de un equipo o invente jugadores, le inyectamos datos en tiempo real desde APIs deportivas y una base vectorial ChromaDB, forzándolo a razonar solo con información verificable.
+
 ## 📋 Tabla de Contenidos
 
+- [Motivación](#-motivación)
 - [Arquitectura](#-arquitectura)
 - [Flujo del Programa](#-flujo-del-programa)
 - [Instalación](#-instalación)
@@ -221,6 +230,25 @@ El backend sigue **Clean Architecture** con las siguientes capas:
       │  }                                           │
 ```
 
+#### 🔄 Actualización de ChromaDB y Anti-Alucinación
+
+La base vectorial (ChromaDB) se **pre-carga al iniciar el servidor** con datos de jugadores tipo FIFA 25. Actualmente el seed contiene ~308 jugadores de las principales ligas europeas.
+
+**¿Cómo se refresca?**
+
+| Mecanismo | Cuándo ocurre | Qué actualiza |
+|-----------|---------------|---------------|
+| **Seed al startup** | Cada vez que arranca el servidor | Si ChromaDB está vacía, carga los 308 jugadores base |
+| **Generación con IA** | En tiempo real, por predicción | Si un equipo NO tiene jugadores en ChromaDB, Dixie AI genera la plantilla usando DeepSeek y la inyecta como contexto |
+| **Re-seed forzado** | Manual (`force=True`) | Borra y recarga todos los datos de jugadores |
+
+**¿Cómo evitamos que el LLM alucine?**
+
+1. **System Prompt estricto**: Dixie tiene la instrucción explícita de NO usar su conocimiento pre-entrenado sobre técnicos, jugadores o rachas.
+2. **Inyección de DT actual**: El nombre del director técnico se obtiene en tiempo real desde TheSportsDB (`strManager`) o Football-Data.org (`coach.name`) y se pasa en el prompt. Si no está disponible, el prompt dice "No disponible en datos" — no se inventa.
+3. **Datos RAG exclusivos**: El prompt marca los jugadores como "SOLO menciona estos" y la misión indica "NO menciones jugadores que NO estén en este prompt".
+4. **Confianza penalizada**: Si faltan datos, la IA baja automáticamente su porcentaje de confianza a 40-60%.
+
 ### 4️⃣ Diagrama de Componentes
 
 ```
@@ -296,11 +324,14 @@ cp .env.template .env
 
 ### Variables de Entorno Críticas
 
-| Variable           | Descripción                    | Requerido      |
-| ------------------ | ------------------------------ | -------------- |
-| `JWT_SECRET_KEY`   | Clave para firmar tokens JWT   | ✅ Sí          |
-| `DEEPSEEK_API_KEY` | API key de DeepSeek para Dixie | ⚠️ Recomendado |
-| `MONGODB_URI`      | URI de conexión a MongoDB      | ✅ Sí          |
+| Variable                | Descripción                        | Requerido                                           |
+| ----------------------- | ---------------------------------- | --------------------------------------------------- |
+| `JWT_SECRET_KEY`        | Clave para firmar tokens JWT       | ✅ Sí (auto-generada en dev)                        |
+| `DEEPSEEK_API_KEY`      | API key de DeepSeek para Dixie AI  | ✅ Sí en prod / Mock en dev                         |
+| `FOOTBALL_DATA_API_KEY` | API key de Football-Data.org       | ✅ Sí en prod / Mock en dev                         |
+| `MONGODB_URI`           | URI de conexión a MongoDB          | ✅ Sí                                                |
+
+> **Modo desarrollo (sin API keys):** Si no configuras `DEEPSEEK_API_KEY`, Dixie genera predicciones mock basadas en los atributos numéricos de los jugadores. Si no configuras `FOOTBALL_DATA_API_KEY`, se usan datos de equipos simulados. Esto permite trabajar en el frontend sin depender de servicios externos.
 
 ### Generar JWT_SECRET_KEY
 
@@ -445,7 +476,8 @@ uv run pytest --cov=src
 
 ## 📝 Licencia
 
-Casa Abierta ULEAM 2025 - Minería de Datos - 5to Semestre
+Casa Abierta ULEAM 2025-2026 - Minería de Datos - 5to Semestre
+Universidad Laica Eloy Alfaro de Manabí (ULEAM)
 
 ---
 

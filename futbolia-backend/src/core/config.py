@@ -217,12 +217,16 @@ class Settings:
 
         if self.is_production():
             if not self.DEEPSEEK_API_KEY:
-                warnings.append("⚠️ DEEPSEEK_API_KEY not set - Dixie will use mock responses")
+                warnings.append("❌ DEEPSEEK_API_KEY not set - REQUIRED for AI predictions in production")
+            if not self.FOOTBALL_DATA_API_KEY:
+                warnings.append("⚠️ FOOTBALL_DATA_API_KEY not set - live stats will be unavailable")
             if not self.CORS_ORIGINS:
                 warnings.append("⚠️ CORS_ORIGINS not set - no origins will be allowed")
         else:
             if not self.DEEPSEEK_API_KEY:
-                warnings.append("ℹ️ DEEPSEEK_API_KEY not set - Dixie will use mock responses")
+                warnings.append("ℹ️ DEEPSEEK_API_KEY not set - Dixie will use mock responses (dev mode)")
+            if not self.FOOTBALL_DATA_API_KEY:
+                warnings.append("ℹ️ FOOTBALL_DATA_API_KEY not set - using mock team data (dev mode)")
 
         return warnings
 

@@ -108,6 +108,7 @@ class Team:
     logo_url: str = ""
     country: str = ""
     league: str = ""
+    manager: str = ""  # Current head coach / director técnico
     form: str = ""  # Recent form: "WWDLW"
     attack_rating: int = 0
     defense_rating: int = 0
@@ -123,6 +124,7 @@ class Team:
             "logo_url": self.logo_url,
             "country": self.country,
             "league": self.league,
+            "manager": self.manager,
             "form": self.form,
             "attack_rating": self.attack_rating,
             "defense_rating": self.defense_rating,

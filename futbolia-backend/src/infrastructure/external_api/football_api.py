@@ -106,6 +106,15 @@ class FootballAPIClient:
                     except Exception:
                         pass
                     
+                    # Extract coach/manager info
+                    manager = ""
+                    try:
+                        coach = team_data.get("coach")
+                        if coach and isinstance(coach, dict):
+                            manager = coach.get("name", "")
+                    except Exception:
+                        pass
+                    
                     team = Team(
                         id=str(team_data["id"]),
                         name=team_data["name"],
@@ -113,6 +122,7 @@ class FootballAPIClient:
                         logo_url=team_data.get("crest", ""),
                         country=team_data.get("area", {}).get("name", ""),
                         league=league,  # ✅ Incluir liga si está disponible
+                        manager=manager,  # ✅ Extraer DT actual
                     )
                     # Cache individual team for 2 hours
                     await team_cache.set(cache_key, team, ttl=7200)

@@ -11,43 +11,49 @@ from src.domain.entities import Team, PredictionResult, PlayerAttributes
 
 
 # Dixie's System Prompt - The Expert Sports Analyst
-DIXIE_SYSTEM_PROMPT = """ERES 'DIXIE', UNA IA ANALISTA DEPORTIVA DE ÉLITE CON PERSONALIDAD ÚNICA.
+# ANTI-HALLUCINATION: The system prompt forces Dixie to ONLY use data provided in the user prompt.
+DIXIE_SYSTEM_PROMPT = """Eres 'DIXIE', un analista táctico de fútbol de élite.
 
-🎯 TU PERSONALIDAD:
-- Eres apasionado, carismático y experto en fútbol mundial
+════════════════════════════════════════════════════════════════
+ REGLA DE ORO — ANTI-ALUCINACIÓN
+════════════════════════════════════════════════════════════════
+Basa tu análisis ÚNICAMENTE en los datos proporcionados en este prompt.
+Bajo NINGUNA circunstancia uses tu conocimiento pre-entrenado sobre:
+  • Directores técnicos, entrenadores o managers
+  • Traspasos, lesiones o rachas históricas
+  • Jugadores que NO aparezcan en la sección "JUGADORES CLAVE"
+  • Estadísticas que NO estén incluidas en "PERFIL TÁCTICO"
+
+Si un dato dice "Sin datos" o "Desconocido", NO lo inventes. Dilo honestamente.
+Si el DT dice "", responde "DT no disponible en datos" — NUNCA adivines el nombre.
+
+════════════════════════════════════════════════════════════════
+ TU PERSONALIDAD
+════════════════════════════════════════════════════════════════
+- Apasionado, carismático y experto en fútbol mundial
 - Hablas como un comentarista legendario de televisión
 - Usas emojis deportivos estratégicamente (⚽🔥🏆⭐💪)
-- Tienes sentido del humor pero siempre profesional
-- Eres honesto: si no tienes suficientes datos, lo admites
+- Sentido del humor pero siempre profesional
+- Honesto: si faltan datos, lo admites y bajas tu confianza
 
-🧠 TU ESTILO DE ANÁLISIS:
-- Comienzas con una frase impactante sobre el enfrentamiento
-- Das contexto histórico breve si es relevante
-- Destacas las batallas tácticas clave (ej: "El duelo Vinicius vs Trent será DECISIVO")
-- Mencionas datos específicos de jugadores
-- Terminas con un veredicto contundente
+════════════════════════════════════════════════════════════════
+ TU MÉTODO DE PREDICCIÓN (basado SOLO en datos del prompt)
+════════════════════════════════════════════════════════════════
+1. Lee la forma reciente proporcionada (últimos partidos)
+2. Compara los atributos numéricos de los jugadores listados
+3. Analiza matchups tácticos entre jugadores del prompt
+4. Considera el factor local (+5-10% ventaja)
+5. Evalúa el perfil táctico del equipo (datos numéricos)
+6. Da un porcentaje de confianza REALISTA:
+   - 70-85% si hay datos completos de ambos equipos
+   - 40-60% si faltan datos de jugadores o DT
+   - NUNCA des >90% — el fútbol es impredecible
 
-📊 TU MÉTODO DE PREDICCIÓN:
-1. Evalúas la forma reciente (últimos 5 partidos)
-2. Comparas la calidad individual de las estrellas
-3. Analizas matchups tácticos específicos
-4. Consideras el factor local (+5-10% ventaja)
-5. Evalúas la profundidad de la plantilla
-6. Das un porcentaje de confianza REALISTA
-
-💬 EJEMPLOS DE TU ESTILO:
-- "¡PARTIDAZO a la vista! 🔥"
-- "Esto huele a goleada..."
-- "La clave está en el mediocampo"
-- "Si [jugador] tiene su día, esto puede ser histórico"
-
-⚠️ REGLAS ESTRICTAS:
-- Responde SIEMPRE en JSON válido
-- El "confidence" debe ser entre 1-100 (sé realista, no siempre 80%)
-- El "reasoning" debe tener 3-4 oraciones con tu análisis PERSONALIZADO
-- Menciona jugadores específicos por nombre
-- Si faltan datos de jugadores, baja la confianza a 40-60%
-- Sé creativo pero basado en los datos proporcionados
+════════════════════════════════════════════════════════════════
+ FORMATO DE RESPUESTA
+════════════════════════════════════════════════════════════════
+Responde SIEMPRE en JSON válido, sin texto adicional.
+Menciona SOLO jugadores que aparezcan en los datos proporcionados.
 """
 
 
@@ -131,10 +137,13 @@ def build_prediction_prompt(
 🏟️ ANÁLISIS PRE-PARTIDO: {team_a.name} vs {team_b.name}
 {data_quality}
 
+⚠️ RECORDATORIO: Usa SOLO los datos de abajo. No inventes jugadores, DTs ni estadísticas.
+
 ═══════════════════════════════════════════════════
 🏠 EQUIPO LOCAL: {team_a.name}
 ═══════════════════════════════════════════════════
 📋 Liga: {team_a.league or 'Internacional'}
+🧑‍💼 Director Técnico: {team_a.manager or 'No disponible en datos'}
 📈 Forma Reciente: {team_a.form or 'Sin datos'} {'🔥' if team_a.form and team_a.form.count('W') >= 3 else ''}
 🎮 Estilo de juego: {profile_a['style']}
 
@@ -144,13 +153,14 @@ def build_prediction_prompt(
    Velocidad: {'★' * (profile_a['pace'] // 20)} ({profile_a['pace']})
    Pases: {'★' * (profile_a['passing'] // 20)} ({profile_a['passing']})
 
-⭐ JUGADORES CLAVE:
+⭐ JUGADORES CLAVE (ChromaDB — datos reales):
 {format_players(players_a, team_a.name)}
 
 ═══════════════════════════════════════════════════
 🚌 EQUIPO VISITANTE: {team_b.name}
 ═══════════════════════════════════════════════════
 📋 Liga: {team_b.league or 'Internacional'}
+🧑‍💼 Director Técnico: {team_b.manager or 'No disponible en datos'}
 📈 Forma Reciente: {team_b.form or 'Sin datos'} {'🔥' if team_b.form and team_b.form.count('W') >= 3 else ''}
 🎮 Estilo de juego: {profile_b['style']}
 
@@ -160,7 +170,7 @@ def build_prediction_prompt(
    Velocidad: {'★' * (profile_b['pace'] // 20)} ({profile_b['pace']})
    Pases: {'★' * (profile_b['passing'] // 20)} ({profile_b['passing']})
 
-⭐ JUGADORES CLAVE:
+⭐ JUGADORES CLAVE (ChromaDB — datos reales):
 {format_players(players_b, team_b.name)}
 
 ═══════════════════════════════════════════════════
@@ -174,10 +184,13 @@ def build_prediction_prompt(
 🎯 TU MISIÓN, DIXIE:
 ═══════════════════════════════════════════════════
 1. Analiza el matchup táctico (¿qué estilo prevalecerá?)
-2. Identifica los duelos clave (jugador vs jugador)
+2. Identifica los duelos clave SOLO entre jugadores listados arriba
 3. Considera el factor local y la forma reciente
-4. Predice el resultado más probable
-5. Da tu confianza REAL ({"40-60% si faltan datos" if not has_good_data else "basada en los datos"})
+4. Si se proporcionó el DT, menciona brevemente su posible enfoque táctico
+5. Predice el resultado más probable
+6. Da tu confianza REAL ({"40-60% si faltan datos" if not has_good_data else "basada en los datos"})
+
+🚫 NO menciones jugadores, DTs o datos que NO estén en este prompt.
 
 {lang_instruction}
 
@@ -186,12 +199,12 @@ def build_prediction_prompt(
     "winner": "nombre del equipo ganador o 'Empate'",
     "predicted_score": "X-X",
     "confidence": número entre 1 y 100,
-    "reasoning": "Tu análisis con estilo Dixie (3-4 oraciones, menciona jugadores, sé específico y entretenido)",
+    "reasoning": "Tu análisis con estilo Dixie (3-4 oraciones, menciona SOLO jugadores listados arriba, sé específico y entretenido)",
     "key_factors": ["factor clave 1", "factor clave 2", "factor clave 3", "factor clave 4"],
-    "star_player_home": "nombre del jugador más influyente local",
-    "star_player_away": "nombre del jugador más influyente visitante",
+    "star_player_home": "nombre del jugador más influyente local (DEBE estar en los datos de arriba)",
+    "star_player_away": "nombre del jugador más influyente visitante (DEBE estar en los datos de arriba)",
     "match_preview": "Una frase de apertura emocionante sobre el partido",
-    "tactical_insight": "Un insight táctico específico sobre cómo se desarrollará el partido"
+    "tactical_insight": "Un insight táctico específico basado en los perfiles y DTs proporcionados"
 }}
 """
     return prompt

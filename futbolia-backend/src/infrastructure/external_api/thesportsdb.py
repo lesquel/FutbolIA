@@ -224,23 +224,35 @@ class TheSportsDBClient:
         if detailed_team:
             team_data = detailed_team
         
-        # Create Team entity
+        # Then get the squad
+        players_raw = await cls.get_team_squad(team_id)
+        
+        # Extract manager from squad (TheSportsDB lists manager as a player with position "Manager")
+        manager_name = team_data.get("strManager", "")
+        if not manager_name:
+            for p in players_raw:
+                if p.get("strPosition", "").lower() == "manager":
+                    manager_name = p.get("strPlayer", "")
+                    break
+        
+        # Update team entity with manager
         team = Team(
             id=f"tsdb_{team_id}",
             name=team_data.get("strTeam", team_name),
             short_name=team_data.get("strTeamShort", team_data.get("strTeam", team_name)[:3].upper()),
             logo_url=team_data.get("strTeamBadge", ""),
             country=team_data.get("strCountry", ""),
-            league=team_data.get("strLeague", ""),  # ✅ Extraer liga
+            league=team_data.get("strLeague", ""),
+            manager=manager_name,  # ✅ DT extraído del squad o del team data
         )
         
-        # Then get the squad
-        players_raw = await cls.get_team_squad(team_id)
-        
-        # Convert to our format with estimated overall ratings
+        # Convert to our format with estimated overall ratings — skip the manager
         player_list = []
         for p in players_raw:
             position = p.get("strPosition", "Midfielder")
+            # Skip manager entry — not a player
+            if position.lower() == "manager":
+                continue
             # Estimate overall based on position and team level
             base_overall = 72
             if position in ["Goalkeeper", "GK"]:

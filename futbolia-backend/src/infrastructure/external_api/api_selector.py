@@ -40,6 +40,18 @@ class UnifiedAPIClient:
                     if detailed_team:
                         team_data = detailed_team
                 
+                # Extract manager from squad (free tier doesn't include strManager in team data)
+                manager_name = team_data.get("strManager", "")
+                if not manager_name and team_id:
+                    try:
+                        squad = await TheSportsDBClient.get_team_squad(team_id)
+                        for p in squad:
+                            if p.get("strPosition", "").lower() == "manager":
+                                manager_name = p.get("strPlayer", "")
+                                break
+                    except Exception:
+                        pass
+                
                 return Team(
                     id=f"tsdb_{team_data.get('idTeam')}",
                     name=team_data.get("strTeam", team_name),
@@ -47,6 +59,7 @@ class UnifiedAPIClient:
                     logo_url=team_data.get("strTeamBadge", ""),
                     country=team_data.get("strCountry", ""),
                     league=team_data.get("strLeague", ""),  # ✅ Extraer liga
+                    manager=manager_name,  # ✅ DT extraído del squad
                 )
         except Exception as e:
             print(f"⚠️ TheSportsDB failed: {e}, trying fallback...")
